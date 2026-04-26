@@ -3,6 +3,18 @@ import requests
 from bs4 import BeautifulSoup
 import time
 from datetime import datetime
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+# Download NLTK data on first run if missing
+try:
+    nltk.data.find('tokenizers/punkt')
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('punkt')
+    nltk.download('stopwords')
 
 # Example RSS feeds for Bitcoin/Crypto news
 RSS_FEEDS = [
@@ -37,6 +49,24 @@ def clean_html(html_content):
     soup = BeautifulSoup(html_content, "html.parser")
     return soup.get_text(separator=" ").strip()
 
+def clean_text_advanced(text):
+    """Module 2: Advanced text cleaning using NLTK"""
+    if not text:
+        return ""
+        
+    # 1. Lowercase
+    text = text.lower()
+    
+    # 2. Remove special characters and numbers (keep only letters)
+    text = re.sub(r'[^a-z\s]', '', text)
+    
+    # 3. Tokenization & Stop words removal
+    stop_words = set(stopwords.words('english'))
+    tokens = word_tokenize(text)
+    cleaned_tokens = [word for word in tokens if word not in stop_words]
+    
+    return " ".join(cleaned_tokens)
+
 def run_scraper():
     print("Starting news scraper...")
     raw_articles = fetch_rss_news()
@@ -44,7 +74,10 @@ def run_scraper():
     # Clean the summaries/content
     cleaned_articles = []
     for article in raw_articles:
-        article["content_cleaned"] = clean_html(article["summary"])
+        # Step 1: Remove HTML tags
+        base_clean = clean_html(article["summary"])
+        # Step 2: Advanced NLP Text Cleaning (Module 2)
+        article["content_cleaned"] = clean_text_advanced(base_clean)
         cleaned_articles.append(article)
         
     print(f"Scraped {len(cleaned_articles)} articles.")
