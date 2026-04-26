@@ -6,6 +6,11 @@ export async function GET() {
   try {
     await connectToDatabase();
     
+    // Ensure the connection is established
+    if (!mongoose.connection.db) {
+      throw new Error("Database connection not established");
+    }
+
     // The python scraper inserts into the 'news' collection
     const collection = mongoose.connection.db.collection('news');
     
