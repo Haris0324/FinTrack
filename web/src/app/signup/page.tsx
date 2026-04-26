@@ -104,10 +104,10 @@ export default function SignUp() {
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4">
-          <button onClick={() => signIn("google")} className="flex items-center justify-center gap-2 py-2.5 border border-card-border rounded-lg hover:bg-card-border transition-colors text-sm font-medium">
+          <button type="button" onClick={() => signIn("google", { callbackUrl: "/dashboard" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border rounded-lg hover:bg-card-border transition-colors text-sm font-medium">
             Google
           </button>
-          <button onClick={() => signIn("github")} className="flex items-center justify-center gap-2 py-2.5 border border-card-border rounded-lg hover:bg-card-border transition-colors text-sm font-medium">
+          <button type="button" onClick={() => signIn("github", { callbackUrl: "/dashboard" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border rounded-lg hover:bg-card-border transition-colors text-sm font-medium">
             GitHub
           </button>
         </div>
