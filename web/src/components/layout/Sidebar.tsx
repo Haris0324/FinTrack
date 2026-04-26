@@ -20,7 +20,7 @@ export default function Sidebar() {
   return (
     <aside className="w-64 h-screen border-r border-card-border bg-background flex flex-col fixed left-0 top-0">
       <div className="p-6">
-        <Link href="/" className="flex items-center gap-2 mb-8">
+        <Link href="/dashboard" className="flex items-center gap-2 mb-8">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-xl">
             B
           </div>

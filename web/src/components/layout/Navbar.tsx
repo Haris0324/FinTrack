@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Navbar() {
   return (
     <nav className="fixed top-0 w-full z-50 glass px-4 md:px-6 py-3 md:py-4 flex items-center justify-between gap-2">
-      <div className="flex items-center gap-2 flex-1 min-w-0">
+      <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
         <div className="w-8 h-8 shrink-0 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-xl">
           B
         </div>
@@ -11,7 +11,7 @@ export default function Navbar() {
           <h1 className="text-lg md:text-xl font-bold tracking-tight text-foreground truncate">Fintrack</h1>
           <p className="text-[8px] md:text-[10px] text-muted-foreground uppercase tracking-wider text-muted truncate">Ai-Powered Market Intelligence</p>
         </div>
-      </div>
+      </Link>
       <div className="shrink-0">
         <Link 
           href="/signin" 

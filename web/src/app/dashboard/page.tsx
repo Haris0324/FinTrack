@@ -2,6 +2,7 @@
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { TrendingUp, Activity, BarChart3, ArrowUpRight, Search, Filter, Bell } from "lucide-react";
+import { useState, useEffect } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
 
 const mockPriceData = [
@@ -69,6 +70,26 @@ const mockNews = [
 ];
 
 export default function Dashboard() {
+  const [newsData, setNewsData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchNews() {
+      try {
+        const response = await fetch('/api/news');
+        if (response.ok) {
+          const data = await response.json();
+          setNewsData(data.news || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch news:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchNews();
+  }, []);
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
@@ -180,45 +201,53 @@ export default function Dashboard() {
           </div>
 
           <div className="divide-y divide-card-border">
-            {mockNews.map((news) => (
-              <div key={news.id} className="p-5 hover:bg-card-border/30 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${
-                      news.sentiment === 'POSITIVE' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
-                    }`}>
-                      {news.sentiment}
-                    </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${
-                      news.impact === 'HIGH IMPACT' ? 'bg-danger/20 text-danger' : 'bg-primary/20 text-primary'
-                    }`}>
-                      {news.impact}
-                    </span>
-                    {news.tags.map((tag, i) => (
-                      <span key={i} className="text-[10px] font-medium px-2 py-0.5 rounded-sm bg-background border border-card-border text-muted">
-                        {tag}
+            {isLoading ? (
+              <div className="p-8 text-center text-muted">Loading live news...</div>
+            ) : newsData.length === 0 ? (
+              <div className="p-8 text-center text-muted">No news articles found. Try running the data pipeline scraper.</div>
+            ) : (
+              newsData.map((news) => (
+                <div key={news._id} className="p-5 hover:bg-card-border/30 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${
+                        news.sentiment === 'POSITIVE' ? 'bg-success/10 text-success' : 
+                        news.sentiment === 'NEGATIVE' ? 'bg-danger/10 text-danger' : 
+                        'bg-muted/10 text-foreground'
+                      }`}>
+                        {news.sentiment}
                       </span>
-                    ))}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${
+                        news.impact === 'HIGH IMPACT' ? 'bg-danger/20 text-danger' : 'bg-primary/20 text-primary'
+                      }`}>
+                        {news.impact}
+                      </span>
+                      {(news.tags || ['Crypto']).map((tag: string, i: number) => (
+                        <span key={i} className="text-[10px] font-medium px-2 py-0.5 rounded-sm bg-background border border-card-border text-muted">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                    <h4 className="text-sm font-semibold text-foreground mb-1">{news.title}</h4>
+                    <div className="flex items-center gap-3 text-xs text-muted">
+                      <span>{new Date(news.published || news.scraped_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                      <span className="w-1 h-1 rounded-full bg-card-border"></span>
+                      <span>{news.source}</span>
+                      <span className="w-1 h-1 rounded-full bg-card-border"></span>
+                      <span>Relevance: {news.relevance || 'N/A'}</span>
+                    </div>
                   </div>
-                  <h4 className="text-sm font-semibold text-foreground mb-1">{news.title}</h4>
-                  <div className="flex items-center gap-3 text-xs text-muted">
-                    <span>{news.time}</span>
-                    <span className="w-1 h-1 rounded-full bg-card-border"></span>
-                    <span>{news.source}</span>
-                    <span className="w-1 h-1 rounded-full bg-card-border"></span>
-                    <span>Relevance: {news.relevance}</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`text-lg font-bold ${parseFloat(news.score) > 0 ? 'text-success' : parseFloat(news.score) < 0 ? 'text-danger' : 'text-muted'}`}>
+                      {parseFloat(news.score) > 0 ? `+${news.score}` : news.score}
+                    </span>
+                    <a href={news.link} target="_blank" rel="noopener noreferrer" className="text-xs text-muted hover:text-primary transition-colors flex items-center gap-1">
+                      Read More <ArrowUpRight className="w-3 h-3" />
+                    </a>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className={`text-lg font-bold ${parseFloat(news.score) > 0 ? 'text-success' : 'text-danger'}`}>
-                    {news.score}
-                  </span>
-                  <button className="text-xs text-muted hover:text-primary transition-colors flex items-center gap-1">
-                    Read More <ArrowUpRight className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
           
           <div className="p-4 border-t border-card-border flex justify-center">
