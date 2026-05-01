@@ -14,7 +14,20 @@ export default function AuthLayout({
   features: { title: string; description: string; icon?: React.ReactNode }[];
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background">
+      {/* Mobile Logo */}
+      <div className="lg:hidden w-full flex justify-center mb-8">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-2xl">
+            B
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Fintrack</h1>
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wider text-muted">Ai-Powered Market Intelligence</p>
+          </div>
+        </Link>
+      </div>
+
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
         {/* Left Side - Info */}
         <div className="hidden lg:flex flex-col max-w-md">
