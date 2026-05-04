@@ -1,7 +1,7 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { History, Calendar, CheckCircle2, Search, ArrowUpRight, ArrowDownRight, Activity, TrendingUp } from "lucide-react";
+import { Clock, Calendar, TrendingUp, Search, ArrowUpRight, ArrowDownRight, Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 const timelineData = [
@@ -29,41 +29,33 @@ export default function HistoricalPatterns() {
 
         {/* Top Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-4 rounded-xl bg-card border border-card-border flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-              <History className="w-5 h-5 text-primary" />
+          <div className="p-4 rounded-xl bg-card border border-card-border flex flex-col justify-center">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="w-5 h-5 text-orange-500" />
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-foreground">847</h3>
-              <p className="text-xs font-medium text-muted">Historical Events</p>
-            </div>
+            <h3 className="text-xl font-bold text-foreground">847</h3>
+            <p className="text-xs font-medium text-muted">Historical Events</p>
           </div>
-          <div className="p-4 rounded-xl bg-card border border-card-border flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+          <div className="p-4 rounded-xl bg-card border border-card-border flex flex-col justify-center">
+            <div className="flex items-center gap-2 mb-2">
               <Calendar className="w-5 h-5 text-blue-500" />
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-foreground">5 Years</h3>
-              <p className="text-xs font-medium text-muted">Data Coverage</p>
-            </div>
+            <h3 className="text-xl font-bold text-foreground">5 Years</h3>
+            <p className="text-xs font-medium text-muted">Data Coverage</p>
           </div>
-          <div className="p-4 rounded-xl bg-card border border-card-border flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-success/20 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-success" />
+          <div className="p-4 rounded-xl bg-card border border-card-border flex flex-col justify-center">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="w-5 h-5 text-success" />
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-foreground">87%</h3>
-              <p className="text-xs font-medium text-muted">Pattern Match Rate</p>
-            </div>
+            <h3 className="text-xl font-bold text-foreground">83%</h3>
+            <p className="text-xs font-medium text-muted">Pattern Match Rate</p>
           </div>
-          <div className="p-4 rounded-xl bg-card border border-card-border flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+          <div className="p-4 rounded-xl bg-card border border-card-border flex flex-col justify-center">
+            <div className="flex items-center gap-2 mb-2">
               <Search className="w-5 h-5 text-purple-500" />
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-foreground">3</h3>
-              <p className="text-xs font-medium text-muted">Similar Event Rules</p>
-            </div>
+            <h3 className="text-xl font-bold text-foreground">3</h3>
+            <p className="text-xs font-medium text-muted">Similar Events Today</p>
           </div>
         </div>
 
@@ -75,14 +67,13 @@ export default function HistoricalPatterns() {
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
               
-              <div className="p-3 rounded-lg border border-primary/50 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors">
+              <div className="p-3 rounded-lg border border-orange-500/30 bg-orange-500/5 cursor-pointer transition-colors">
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-sm bg-blue-500/20 text-blue-500 uppercase">Regulatory</span>
-                  <span className="text-xs text-muted">Jan 10, 2024</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-sm bg-success/20 text-success uppercase">Regulatory</span>
+                  <span className="text-xs text-muted">March 12, 2024</span>
                 </div>
                 <h4 className="text-sm font-semibold text-foreground mb-1">SEC Approves First Spot Bitcoin ETF</h4>
                 <div className="flex items-center gap-2">
-                  <ArrowUpRight className="w-4 h-4 text-success" />
                   <span className="text-xs font-bold text-success">+18.5%</span>
                   <span className="text-[10px] text-muted ml-auto">7 days</span>
                 </div>
@@ -123,43 +114,52 @@ export default function HistoricalPatterns() {
               <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-sm bg-blue-500/20 text-blue-500 uppercase">Regulatory</span>
-                    <span className="text-xs text-muted">January 10, 2024</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-sm bg-success/20 text-success uppercase">Regulatory</span>
+                    <span className="text-xs text-muted">March 12, 2024</span>
                   </div>
-                  <h3 className="text-lg font-bold text-foreground">SEC Approves First Spot Bitcoin ETF</h3>
-                  <p className="text-sm text-muted mt-1">Major regulatory milestone as SEC approves multiple spot Bitcoin ETF applications.</p>
+                  <h3 className="text-lg font-bold text-foreground mb-1">SEC Approves First Spot Bitcoin ETF</h3>
+                  <p className="text-sm text-muted">Major regulatory milestone as SEC approves multiple spot Bitcoin ETF applications</p>
                 </div>
-                <div className="flex gap-6 shrink-0">
-                  <div className="text-right">
-                    <p className="text-xs text-muted mb-1">Price Impact</p>
-                    <p className="text-xl font-bold text-success">+18.5%</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted mb-1">Timeframe</p>
-                    <p className="text-xl font-bold text-foreground">7 days</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted mb-1">Volatility</p>
-                    <p className="text-xl font-bold text-primary">High</p>
-                  </div>
+              </div>
+              <div className="flex gap-12 shrink-0 mb-8 mt-4">
+                <div className="text-left">
+                  <p className="text-xs text-muted mb-1">Price Impact</p>
+                  <p className="text-xl font-bold text-success">+18.5%</p>
+                </div>
+                <div className="text-left">
+                  <p className="text-xs text-muted mb-1">Timeframe</p>
+                  <p className="text-xl font-bold text-foreground">7 days</p>
+                </div>
+                <div className="text-left">
+                  <p className="text-xs text-muted mb-1">Volatility</p>
+                  <p className="text-xl font-bold text-orange-500">High</p>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-xs font-bold text-foreground mb-4 uppercase tracking-wider">Price Movement Timeline</h4>
-                <div className="h-[250px] w-full -ml-6">
+                <h4 className="text-sm font-bold text-foreground mb-4">Price Movement Timeline</h4>
+                <div className="h-[250px] w-full -ml-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={timelineData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={true} horizontal={true} />
                       <XAxis dataKey="day" stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} />
                       <YAxis stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} domain={['dataMin - 1000', 'dataMax + 1000']} />
                       <Tooltip 
-                        contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }}
-                        itemStyle={{ color: '#e2e8f0' }}
-                        formatter={(value) => [`$${value}`, 'Price']}
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-[#1e293b] border border-card-border p-3 rounded-lg shadow-xl min-w-[120px]">
+                                <p className="text-sm font-bold text-white mb-2">{label === '-5d' ? 'Day -5' : label}</p>
+                                <p className="text-sm text-success">price : {payload[0].value}</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                        cursor={{ stroke: '#9CA3AF', strokeWidth: 1 }}
                       />
                       <ReferenceLine x="Event Day" stroke="#F97316" strokeDasharray="3 3" label={{ position: 'insideTop', value: 'Event', fill: '#9CA3AF', fontSize: 12, dy: 50 }} />
-                      <Line type="monotone" dataKey="price" stroke="#10B981" strokeWidth={3} dot={{ r: 5, fill: '#10B981', strokeWidth: 0 }} activeDot={{ r: 7 }} isAnimationActive={false} />
+                      <Line type="monotone" dataKey="price" stroke="#10B981" strokeWidth={3} dot={{ r: 5, fill: '#10B981', strokeWidth: 2, stroke: '#1e293b' }} activeDot={{ r: 7 }} isAnimationActive={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>

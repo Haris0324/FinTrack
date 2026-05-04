@@ -8,13 +8,22 @@ import { useState } from "react";
 export default function HeaderActions() {
   const { data: session } = useSession();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [hasUnread, setHasUnread] = useState(true);
   
-  // Hardcoded recent event for demonstration
-  const recentEvent = {
-    title: "News Fetched",
-    desc: "12 new articles processed by data pipeline",
-    time: "2 mins ago"
-  };
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: "Live News Connected",
+      desc: "Real-time updates are flowing.",
+      time: "Just now"
+    },
+    {
+      id: 2,
+      title: "Welcome Back",
+      desc: "Your data has been refreshed.",
+      time: "1 min ago"
+    }
+  ]);
 
   const scrollToNews = () => {
     // We can use hash or just scrollIntoView
@@ -23,6 +32,13 @@ export default function HeaderActions() {
       newsElement.scrollIntoView({ behavior: 'smooth' });
     } else {
       window.location.hash = "#live-news";
+    }
+  };
+
+  const handleOpenNotifications = () => {
+    setShowNotifications(!showNotifications);
+    if (!showNotifications) {
+      setHasUnread(false);
     }
   };
 
@@ -38,11 +54,13 @@ export default function HeaderActions() {
       
       <div className="relative">
         <button 
-          onClick={() => setShowNotifications(!showNotifications)}
+          onClick={handleOpenNotifications}
           className="p-2 rounded-full hover:bg-card transition-colors relative focus:outline-none"
         >
           <Bell className="w-5 h-5 text-muted hover:text-foreground transition-colors" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-danger animate-pulse"></span>
+          {hasUnread && (
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-danger animate-pulse"></span>
+          )}
         </button>
 
         {showNotifications && (
@@ -52,23 +70,19 @@ export default function HeaderActions() {
               onClick={() => setShowNotifications(false)}
             />
             <div className="absolute right-0 mt-2 w-64 bg-card border border-card-border rounded-xl shadow-xl z-50 overflow-hidden">
-              <div className="p-3 border-b border-card-border">
+              <div className="p-3 border-b border-card-border flex justify-between items-center">
                 <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
               </div>
-              <div className="p-3 hover:bg-card-border/30 cursor-pointer transition-colors" onClick={() => setShowNotifications(false)}>
-                <div className="flex justify-between items-start mb-1">
-                  <h4 className="text-xs font-medium text-foreground">{recentEvent.title}</h4>
-                  <span className="text-[10px] text-muted">{recentEvent.time}</span>
-                </div>
-                <p className="text-[11px] text-muted">{recentEvent.desc}</p>
-              </div>
-              <div className="p-2 border-t border-card-border bg-background">
-                <button 
-                  onClick={() => setShowNotifications(false)}
-                  className="w-full text-center text-xs text-primary font-medium hover:underline"
-                >
-                  Mark all as read
-                </button>
+              <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                {notifications.map((notif) => (
+                  <div key={notif.id} className="p-3 hover:bg-card-border/30 cursor-pointer transition-colors border-b border-card-border last:border-0" onClick={() => setShowNotifications(false)}>
+                    <div className="flex justify-between items-start mb-1">
+                      <h4 className="text-xs font-medium text-foreground">{notif.title}</h4>
+                      <span className="text-[10px] text-muted whitespace-nowrap ml-2">{notif.time}</span>
+                    </div>
+                    <p className="text-[11px] text-muted">{notif.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </>

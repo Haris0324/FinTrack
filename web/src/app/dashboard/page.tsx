@@ -148,6 +148,10 @@ export default function Dashboard() {
     if (filter === 'Bitcoin') return (news.tags || []).includes('Bitcoin') || news.title.toLowerCase().includes('bitcoin');
     
     return true;
+  }).sort((a, b) => {
+    const dateA = new Date(a.published || a.scraped_at || 0).getTime();
+    const dateB = new Date(b.published || b.scraped_at || 0).getTime();
+    return dateB - dateA;
   });
 
   // Custom tooltips

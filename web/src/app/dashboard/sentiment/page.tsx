@@ -163,7 +163,7 @@ export default function SentimentAnalysis() {
             </div>
           </div>
           <div className="flex-1 w-full h-full -ml-4 min-h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart
                 data={sourceSentimentData}
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
