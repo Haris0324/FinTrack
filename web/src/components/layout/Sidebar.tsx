@@ -13,6 +13,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
     { icon: <LayoutDashboard className="w-5 h-5" />, label: "Dashboard", href: "/dashboard" },
     { icon: <History className="w-5 h-5" />, label: "Historical Patterns", href: "/dashboard/history" },
     { icon: <Bell className="w-5 h-5" />, label: "Predictions & Alerts", href: "/dashboard/alerts" },
+    { icon: <Settings className="w-5 h-5" />, label: "Sentiment Analysis", href: "/dashboard/sentiment" },
   ];
 
   if (session?.user && (session.user as any).role === "admin") {

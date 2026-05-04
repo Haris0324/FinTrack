@@ -146,24 +146,24 @@ export default function HistoricalPatterns() {
               </div>
 
               <div>
-                <h4 className="text-xs font-bold text-muted mb-4 uppercase tracking-wider">Price Movement Timeline</h4>
-                <div className="h-[250px] w-full">
+                <h4 className="text-xs font-bold text-foreground mb-4 uppercase tracking-wider">Price Movement Timeline</h4>
+                <div className="h-[250px] w-full -ml-6">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={timelineData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={true} horizontal={true} />
                       <XAxis dataKey="day" stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} />
-                      <YAxis stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} domain={['dataMin - 2000', 'dataMax + 2000']} />
+                      <YAxis stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} domain={['dataMin - 1000', 'dataMax + 1000']} />
                       <Tooltip 
                         contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }}
                         itemStyle={{ color: '#e2e8f0' }}
                         formatter={(value) => [`$${value}`, 'Price']}
                       />
-                      <ReferenceLine x="Event Day" stroke="#F97316" strokeDasharray="3 3" label={{ position: 'top', value: 'Event', fill: '#F97316', fontSize: 10 }} />
-                      <Line type="monotone" dataKey="price" stroke="#10B981" strokeWidth={2} dot={{ r: 3, fill: '#10B981' }} activeDot={{ r: 5 }} isAnimationActive={true} animationDuration={2500} animationEasing="ease-out" />
+                      <ReferenceLine x="Event Day" stroke="#F97316" strokeDasharray="3 3" label={{ position: 'insideTop', value: 'Event', fill: '#9CA3AF', fontSize: 12, dy: 50 }} />
+                      <Line type="monotone" dataKey="price" stroke="#10B981" strokeWidth={3} dot={{ r: 5, fill: '#10B981', strokeWidth: 0 }} activeDot={{ r: 7 }} isAnimationActive={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-                <p className="text-[10px] text-center text-muted mt-2">Metrics documented 7 days before and after the event</p>
+                <p className="text-[10px] text-center text-muted mt-2">Price movement 7 days before and after the event</p>
               </div>
             </div>
           </div>

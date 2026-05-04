@@ -7,12 +7,12 @@ import { useState } from "react";
 
 const predictionData = [
   { time: 'Now', price: 44280 },
+  { time: '1h', price: 44350 },
   { time: '4h', price: 44500 },
-  { time: '8h', price: 44750 },
-  { time: '12h', price: 44600 },
-  { time: '16h', price: 44800 },
-  { time: '20h', price: 45050 },
-  { time: '24h', price: 45230 },
+  { time: '12h', price: 44800 },
+  { time: '24h', price: 45200 },
+  { time: '48h', price: 45800 },
+  { time: '7d', price: 46800 },
 ];
 
 export default function PredictionsAlerts() {
@@ -95,7 +95,7 @@ export default function PredictionsAlerts() {
                 <button className="px-3 py-1 text-xs font-medium rounded-md bg-background border border-card-border text-muted hover:text-foreground">7d</button>
               </div>
             </div>
-            <div className="flex-1 w-full h-full relative">
+            <div className="flex-1 w-full h-full relative -ml-6">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={predictionData}>
                   <defs>
@@ -103,18 +103,15 @@ export default function PredictionsAlerts() {
                       <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
                       <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
                     </linearGradient>
-                    <pattern id="diagonalHatch" width="10" height="10" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-                      <line x1="0" y1="0" x2="0" y2="10" stroke="#10B981" strokeWidth="1" strokeOpacity="0.2" />
-                    </pattern>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#1F2937" />
                   <XAxis dataKey="time" stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} />
                   <YAxis stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} domain={['dataMin - 500', 'dataMax + 500']} />
                   <Tooltip 
                     contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }}
                     itemStyle={{ color: '#e2e8f0' }}
                   />
-                  <Area type="monotone" dataKey="price" stroke="#10B981" strokeDasharray="5 5" fillOpacity={1} fill="url(#colorPred)" isAnimationActive={true} animationDuration={2500} animationEasing="ease-out" />
+                  <Area type="monotone" dataKey="price" stroke="#10B981" strokeWidth={2} strokeDasharray="5 5" fillOpacity={1} fill="url(#colorPred)" isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>
               <div className="absolute bottom-2 right-4 text-right">

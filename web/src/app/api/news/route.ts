@@ -2,8 +2,13 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongoose';
 import mongoose from 'mongoose';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const skip = (page - 1) * limit;
+
     await connectToDatabase();
     
     // Ensure the connection is established
@@ -17,7 +22,8 @@ export async function GET() {
     const news = await collection
       .find({})
       .sort({ scraped_at: -1 })
-      .limit(20)
+      .skip(skip)
+      .limit(limit)
       .toArray();
 
     // Map `_id` from ObjectId to string so it serializes properly to JSON

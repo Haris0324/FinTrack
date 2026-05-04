@@ -2,24 +2,24 @@
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { TrendingUp, Activity, BarChart3, ArrowUpRight, Search, Filter, Bell } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
 
 const mockPriceData = [
-  { time: '00:00', price: 42000 }, { time: '04:00', price: 42500 },
-  { time: '08:00', price: 43200 }, { time: '12:00', price: 43800 },
-  { time: '16:00', price: 43500 }, { time: '20:00', price: 44100 },
-  { time: '24:00', price: 44280 },
+  { time: '00:00', price: 43200 }, { time: '04:00', price: 43100 },
+  { time: '08:00', price: 43500 }, { time: '12:00', price: 43780 },
+  { time: '16:00', price: 43600 }, { time: '20:00', price: 44100 },
+  { time: 'Now', price: 44300 },
 ];
 
 const mockSentimentData = [
-  { day: 'Mon', pos: 60, neg: 20, neu: 20 },
-  { day: 'Tue', pos: 65, neg: 15, neu: 20 },
-  { day: 'Wed', pos: 55, neg: 25, neu: 20 },
-  { day: 'Thu', pos: 70, neg: 10, neu: 20 },
-  { day: 'Fri', pos: 75, neg: 15, neu: 10 },
-  { day: 'Sat', pos: 65, neg: 20, neu: 15 },
-  { day: 'Sun', pos: 80, neg: 10, neu: 10 },
+  { day: 'Mon', pos: 45, neg: 20, neu: 20 },
+  { day: 'Tue', pos: 52, neg: 15, neu: 20 },
+  { day: 'Wed', pos: 38, neg: 25, neu: 20 },
+  { day: 'Thu', pos: 60, neg: 10, neu: 20 },
+  { day: 'Fri', pos: 55, neg: 15, neu: 10 },
+  { day: 'Sat', pos: 48, neg: 20, neu: 15 },
+  { day: 'Sun', pos: 66, neg: 10, neu: 10 },
 ];
 
 const mockNews = [
@@ -72,23 +72,67 @@ const mockNews = [
 export default function Dashboard() {
   const [newsData, setNewsData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Live BTC States
+  const [btcPrice, setBtcPrice] = useState<number | null>(null);
+  const [btcChange, setBtcChange] = useState<string>("+0.00%");
+  
+  // Ref for auto-scrolling to live news
+  const newsSectionRef = useRef<HTMLDivElement>(null);
+
+  // WebSocket for Live BTC Price
+  useEffect(() => {
+    const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@ticker');
+    
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.c) setBtcPrice(parseFloat(data.c));
+      if (data.P) {
+        const change = parseFloat(data.P);
+        setBtcChange(`${change >= 0 ? '+' : ''}${change.toFixed(2)}%`);
+      }
+    };
+
+    return () => ws.close();
+  }, []);
+
+  const fetchNews = async (pageNum: number, isInitial = false) => {
+    try {
+      if (isInitial) setIsLoading(true);
+      else setIsLoadingMore(true);
+
+      const response = await fetch(`/api/news?page=${pageNum}&limit=20`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.news.length < 20) setHasMore(false);
+        
+        if (isInitial) {
+          setNewsData(data.news || []);
+        } else {
+          setNewsData(prev => [...prev, ...data.news]);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch news:", error);
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchNews() {
-      try {
-        const response = await fetch('/api/news');
-        if (response.ok) {
-          const data = await response.json();
-          setNewsData(data.news || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch news:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchNews();
+    fetchNews(1, true);
   }, []);
+
+  const handleLoadMore = () => {
+    if (!hasMore || isLoadingMore) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchNews(nextPage, false);
+  };
 
   return (
     <DashboardLayout>
@@ -99,11 +143,13 @@ export default function Dashboard() {
           <div className="p-6 rounded-xl bg-card border border-card-border">
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs font-medium text-muted">Bitcoin Price</p>
-              <TrendingUp className="w-4 h-4 text-success" />
+              <TrendingUp className={`w-4 h-4 ${btcChange.startsWith('+') ? 'text-success' : 'text-danger'}`} />
             </div>
-            <h3 className="text-3xl font-bold text-foreground mb-1">$44,280</h3>
-            <p className="text-xs text-success flex items-center gap-1">
-              <ArrowUpRight className="w-3 h-3" /> +3.14% (24h)
+            <h3 className="text-3xl font-bold text-foreground mb-1">
+              {btcPrice ? `$${btcPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'Loading...'}
+            </h3>
+            <p className={`text-xs flex items-center gap-1 ${btcChange.startsWith('+') ? 'text-success' : 'text-danger'}`}>
+              <ArrowUpRight className={`w-3 h-3 ${btcChange.startsWith('-') && 'rotate-180'}`} /> {btcChange} (24h)
             </p>
           </div>
 
@@ -138,8 +184,8 @@ export default function Dashboard() {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[300px]">
           <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col">
-            <h3 className="text-sm font-medium text-muted mb-4">Bitcoin Price (24h)</h3>
-            <div className="flex-1 w-full h-full">
+            <h3 className="text-sm font-medium text-foreground mb-4">Bitcoin Price (24h)</h3>
+            <div className="flex-1 w-full h-full -ml-4">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={mockPriceData}>
                   <defs>
@@ -148,29 +194,40 @@ export default function Dashboard() {
                       <stop offset="95%" stopColor="#F97316" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={true} />
+                  <XAxis dataKey="time" stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} domain={['dataMin - 100', 'dataMax + 100']} />
                   <Tooltip 
                     contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }} 
                     itemStyle={{ color: '#e2e8f0' }}
+                    formatter={(value) => [`$${value}`, 'Price']}
                   />
-                  <Area type="monotone" dataKey="price" stroke="#F97316" fillOpacity={1} fill="url(#colorPrice)" isAnimationActive={true} animationDuration={2500} animationEasing="ease-out" />
+                  <Area type="monotone" dataKey="price" stroke="#F97316" strokeWidth={2} fillOpacity={1} fill="url(#colorPrice)" isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col">
-            <h3 className="text-sm font-medium text-muted mb-4">Sentiment Distribution (7 Days)</h3>
-            <div className="flex-1 w-full h-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-medium text-foreground">Sentiment Distribution (7 Days)</h3>
+              <div className="flex gap-4 text-[10px] font-medium">
+                <span className="flex items-center gap-1.5 text-muted"><span className="w-2 h-2 rounded-full bg-success"></span>Positive</span>
+                <span className="flex items-center gap-1.5 text-muted"><span className="w-2 h-2 rounded-full bg-danger"></span>Negative</span>
+                <span className="flex items-center gap-1.5 text-muted"><span className="w-2 h-2 rounded-full bg-muted"></span>Neutral</span>
+              </div>
+            </div>
+            <div className="flex-1 w-full h-full -ml-4">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={mockSentimentData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={true} />
                   <XAxis dataKey="day" stroke="#9CA3AF" fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#9CA3AF" fontSize={10} tickLine={false} axisLine={false} domain={[0, 80]} />
                   <Tooltip 
                     contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }} 
                   />
-                  <Line type="monotone" dataKey="pos" name="Positive" stroke="#10B981" strokeWidth={2} dot={false} isAnimationActive={true} animationDuration={2500} animationEasing="ease-out" />
-                  <Line type="monotone" dataKey="neg" name="Negative" stroke="#EF4444" strokeWidth={2} dot={false} isAnimationActive={true} animationDuration={2500} animationEasing="ease-out" />
-                  <Line type="monotone" dataKey="neu" name="Neutral" stroke="#9CA3AF" strokeWidth={2} dot={false} isAnimationActive={true} animationDuration={2500} animationEasing="ease-out" />
+                  {/* We only draw the Positive line (grayed out somewhat) with white dots to match Pic 1 exactly */}
+                  <Line type="natural" dataKey="pos" stroke="#9CA3AF" strokeWidth={2} dot={{ r: 3, fill: '#E5E7EB', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -178,7 +235,7 @@ export default function Dashboard() {
         </div>
 
         {/* Live News Feed */}
-        <div className="rounded-xl bg-card border border-card-border overflow-hidden flex flex-col">
+        <div id="live-news" ref={newsSectionRef} className="rounded-xl bg-card border border-card-border overflow-hidden flex flex-col scroll-mt-24">
           <div className="p-4 border-b border-card-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-medium text-foreground">Live News Feed</h3>
@@ -229,15 +286,15 @@ export default function Dashboard() {
                       ))}
                     </div>
                     <h4 className="text-sm font-semibold text-foreground mb-1">{news.title}</h4>
-                    <div className="flex items-center gap-3 text-xs text-muted">
-                      <span>{new Date(news.published || news.scraped_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs text-muted">
+                      <span>{new Date(news.published || news.scraped_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(news.published || news.scraped_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                       <span className="w-1 h-1 rounded-full bg-card-border"></span>
                       <span>{news.source}</span>
                       <span className="w-1 h-1 rounded-full bg-card-border"></span>
                       <span>Relevance: {news.relevance || 'N/A'}</span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex flex-col items-end gap-1 mt-2 sm:mt-0">
                     <span className={`text-lg font-bold ${parseFloat(news.score) > 0 ? 'text-success' : parseFloat(news.score) < 0 ? 'text-danger' : 'text-muted'}`}>
                       {parseFloat(news.score) > 0 ? `+${news.score}` : news.score}
                     </span>
@@ -250,11 +307,17 @@ export default function Dashboard() {
             )}
           </div>
           
-          <div className="p-4 border-t border-card-border flex justify-center">
-            <button className="text-xs font-medium text-muted hover:text-foreground transition-colors">
-              Load More Articles
-            </button>
-          </div>
+          {hasMore && newsData.length > 0 && (
+            <div className="p-4 border-t border-card-border flex justify-center">
+              <button 
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                className="text-xs font-medium text-muted hover:text-foreground transition-colors disabled:opacity-50"
+              >
+                {isLoadingMore ? "Loading..." : "Load More Articles"}
+              </button>
+            </div>
+          )}
         </div>
 
       </div>
