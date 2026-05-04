@@ -11,9 +11,9 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
 
   const navItems = [
     { icon: <LayoutDashboard className="w-5 h-5" />, label: "Dashboard", href: "/dashboard" },
+    { icon: <Settings className="w-5 h-5" />, label: "Sentiment Analysis", href: "/dashboard/sentiment" },
     { icon: <History className="w-5 h-5" />, label: "Historical Patterns", href: "/dashboard/history" },
     { icon: <Bell className="w-5 h-5" />, label: "Predictions & Alerts", href: "/dashboard/alerts" },
-    { icon: <Settings className="w-5 h-5" />, label: "Sentiment Analysis", href: "/dashboard/sentiment" },
   ];
 
   if (session?.user && (session.user as any).role === "admin") {
@@ -82,7 +82,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
           </div>
           <div className="overflow-hidden">
             <p className="text-sm font-medium text-foreground truncate">{session?.user?.name || "Guest"}</p>
-            <p className="text-xs text-muted truncate">{session?.user?.email ? ((session.user as any).role === 'admin' ? 'Administrator' : 'Free account') : "Not logged in"}</p>
+            <p className="text-xs text-muted truncate">{session?.user?.email || "Not logged in"}</p>
           </div>
         </div>
       </div>

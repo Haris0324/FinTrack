@@ -75,6 +75,8 @@ export default function Dashboard() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [filter, setFilter] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Live BTC States
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
@@ -134,6 +136,48 @@ export default function Dashboard() {
     fetchNews(nextPage, false);
   };
 
+  const filteredNews = newsData.filter(news => {
+    const matchesSearch = news.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (news.summary && news.summary.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    if (!matchesSearch) return false;
+    if (filter === 'All') return true;
+    if (filter === 'High Impact') return news.impact === 'HIGH IMPACT';
+    if (filter === 'Positive') return news.sentiment === 'POSITIVE';
+    if (filter === 'Negative') return news.sentiment === 'NEGATIVE';
+    if (filter === 'Bitcoin') return (news.tags || []).includes('Bitcoin') || news.title.toLowerCase().includes('bitcoin');
+    
+    return true;
+  });
+
+  // Custom tooltips
+  const CustomPriceTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-[#1e293b] border border-card-border p-3 rounded-lg shadow-xl min-w-[120px]">
+          <p className="text-sm font-bold text-white mb-2">{label}</p>
+          <p className="text-sm text-[#F97316]">price : {payload[0].value}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const CustomSentimentTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      // payload[0] is positive, payload[1] is negative, payload[2] is neutral
+      return (
+        <div className="bg-[#1e293b] border border-card-border p-4 rounded-xl shadow-xl min-w-[140px]">
+          <p className="text-sm font-bold text-white mb-3">{label}</p>
+          <p className="text-sm text-success mb-1.5">positive : {payload[0]?.payload.pos}</p>
+          <p className="text-sm text-danger mb-1.5">negative : {payload[0]?.payload.neg}</p>
+          <p className="text-sm text-muted">neutral : {payload[0]?.payload.neu}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
@@ -182,8 +226,8 @@ export default function Dashboard() {
         </div>
 
         {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[300px]">
-          <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col h-[300px] lg:h-auto min-h-[300px]">
             <h3 className="text-sm font-medium text-foreground mb-4">Bitcoin Price (24h)</h3>
             <div className="flex-1 w-full h-full -ml-4">
               <ResponsiveContainer width="100%" height="100%">
@@ -197,18 +241,14 @@ export default function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={true} />
                   <XAxis dataKey="time" stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} />
                   <YAxis stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} domain={['dataMin - 100', 'dataMax + 100']} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }} 
-                    itemStyle={{ color: '#e2e8f0' }}
-                    formatter={(value) => [`$${value}`, 'Price']}
-                  />
+                  <Tooltip content={<CustomPriceTooltip />} cursor={{ stroke: '#9CA3AF', strokeWidth: 1, strokeDasharray: '0' }} />
                   <Area type="monotone" dataKey="price" stroke="#F97316" strokeWidth={2} fillOpacity={1} fill="url(#colorPrice)" isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col">
+          <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col h-[300px] lg:h-auto min-h-[300px]">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-medium text-foreground">Sentiment Distribution (7 Days)</h3>
               <div className="flex gap-4 text-[10px] font-medium">
@@ -223,11 +263,10 @@ export default function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={true} />
                   <XAxis dataKey="day" stroke="#9CA3AF" fontSize={10} tickLine={false} axisLine={false} />
                   <YAxis stroke="#9CA3AF" fontSize={10} tickLine={false} axisLine={false} domain={[0, 80]} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }} 
-                  />
+                  <Tooltip content={<CustomSentimentTooltip />} cursor={{ stroke: '#9CA3AF', strokeWidth: 1 }} />
                   {/* We only draw the Positive line (grayed out somewhat) with white dots to match Pic 1 exactly */}
                   <Line type="natural" dataKey="pos" stroke="#9CA3AF" strokeWidth={2} dot={{ r: 3, fill: '#E5E7EB', strokeWidth: 0 }} activeDot={{ r: 5 }} isAnimationActive={false} />
+
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -245,14 +284,23 @@ export default function Dashboard() {
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {['All', 'High Impact', 'Positive', 'Negative', 'Bitcoin'].map((filter, i) => (
-                <button key={i} className={`px-3 py-1 rounded-full text-xs font-medium border ${i === 0 ? 'bg-primary border-primary text-white' : 'bg-background border-card-border text-muted hover:text-foreground'}`}>
-                  {filter}
+              {['All', 'High Impact', 'Positive', 'Negative', 'Bitcoin'].map((f, i) => (
+                <button 
+                  key={i} 
+                  onClick={() => setFilter(f)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border ${filter === f ? 'bg-primary border-primary text-white' : 'bg-background border-card-border text-muted hover:text-foreground transition-colors'}`}>
+                  {f}
                 </button>
               ))}
-              <div className="relative ml-2">
+              <div className="relative ml-2 w-full sm:w-auto mt-2 sm:mt-0">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted" />
-                <input type="text" placeholder="Search news..." className="bg-background border border-card-border rounded-full py-1.5 pl-8 pr-3 text-xs w-48 focus:outline-none focus:border-primary" />
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search news..." 
+                  className="bg-background border border-card-border rounded-full py-1.5 pl-8 pr-3 text-xs w-full sm:w-48 focus:outline-none focus:border-primary" 
+                />
               </div>
             </div>
           </div>
@@ -260,10 +308,10 @@ export default function Dashboard() {
           <div className="divide-y divide-card-border">
             {isLoading ? (
               <div className="p-8 text-center text-muted">Loading live news...</div>
-            ) : newsData.length === 0 ? (
-              <div className="p-8 text-center text-muted">No news articles found. Try running the data pipeline scraper.</div>
+            ) : filteredNews.length === 0 ? (
+              <div className="p-8 text-center text-muted">No news articles found matching your criteria.</div>
             ) : (
-              newsData.map((news) => (
+              filteredNews.map((news) => (
                 <div key={news._id} className="p-5 hover:bg-card-border/30 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
@@ -307,7 +355,7 @@ export default function Dashboard() {
             )}
           </div>
           
-          {hasMore && newsData.length > 0 && (
+          {hasMore && filteredNews.length > 0 && filter === 'All' && searchQuery === '' && (
             <div className="p-4 border-t border-card-border flex justify-center">
               <button 
                 onClick={handleLoadMore}

@@ -20,6 +20,9 @@ except LookupError:
 RSS_FEEDS = [
     "https://cointelegraph.com/rss",
     "https://www.coindesk.com/arc/outboundfeeds/rss/",
+    "https://cryptopanic.com/news/rss/",
+    "https://news.google.com/rss/search?q=bitcoin+reuters",
+    "https://news.google.com/rss/search?q=bitcoin+bloomberg"
 ]
 
 def fetch_rss_news():

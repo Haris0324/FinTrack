@@ -22,8 +22,8 @@ const sourceSentimentData = [
   { name: 'Bloomberg', pos: 85, neg: 35, neu: 20 },
   { name: 'CoinDesk', pos: 95, neg: 15, neu: 10 },
   { name: 'Reuters', pos: 70, neg: 40, neu: 30 },
-  { name: 'FT', pos: 60, neg: 50, neu: 25 },
-  { name: 'WSJ', pos: 75, neg: 45, neu: 20 },
+  { name: 'CryptoPanic', pos: 60, neg: 50, neu: 25 },
+  { name: 'CoinTelegraph', pos: 75, neg: 45, neu: 20 },
 ];
 
 export default function SentimentAnalysis() {
@@ -86,9 +86,9 @@ export default function SentimentAnalysis() {
         </div>
 
         {/* Charts Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[350px]">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           
-          <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col relative">
+          <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col relative min-h-[350px]">
             <h3 className="text-sm font-medium text-foreground mb-4">Overall Sentiment Distribution</h3>
             <div className="flex-1 w-full h-full flex items-center">
               <ResponsiveContainer width="60%" height="100%">
@@ -133,7 +133,7 @@ export default function SentimentAnalysis() {
             </div>
           </div>
 
-          <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col relative">
+          <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col relative min-h-[350px]">
             <h3 className="text-sm font-medium text-foreground mb-4">Topic Sentiment Scores</h3>
             <div className="flex-1 w-full h-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -153,8 +153,8 @@ export default function SentimentAnalysis() {
         </div>
 
         {/* Charts Row 2 */}
-        <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col h-[400px]">
-          <div className="flex justify-between items-center mb-6">
+        <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col min-h-[400px]">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
             <h3 className="text-sm font-medium text-foreground">Sentiment by News Source</h3>
             <div className="flex gap-4 text-[10px] font-medium">
               <span className="flex items-center gap-1.5 text-muted"><span className="w-2 h-2 rounded-full bg-success"></span>Positive</span>
@@ -162,7 +162,7 @@ export default function SentimentAnalysis() {
               <span className="flex items-center gap-1.5 text-muted"><span className="w-2 h-2 rounded-full bg-muted"></span>Neutral</span>
             </div>
           </div>
-          <div className="flex-1 w-full h-full -ml-4">
+          <div className="flex-1 w-full h-full -ml-4 min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={sourceSentimentData}
@@ -187,9 +187,7 @@ export default function SentimentAnalysis() {
                     return null;
                   }}
                 />
-                <Bar dataKey="pos" stackId="a" fill="#10B981" isAnimationActive={true} barSize={40} />
-                <Bar dataKey="neg" stackId="a" fill="#EF4444" isAnimationActive={true} />
-                <Bar dataKey="neu" stackId="a" fill="#6B7280" isAnimationActive={true} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="pos" fill="#64748b" isAnimationActive={true} barSize={40} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
