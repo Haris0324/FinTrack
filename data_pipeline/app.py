@@ -8,8 +8,8 @@ app = Flask(__name__)
 # Initialize the scheduler
 scheduler = BackgroundScheduler()
 
-# Add the scraper job to run every 5 minutes
-scheduler.add_job(func=process_and_store, trigger="interval", minutes=5)
+# Add the scraper job to run every 1 minute
+scheduler.add_job(func=process_and_store, trigger="interval", minutes=1)
 
 # Start the scheduler
 scheduler.start()

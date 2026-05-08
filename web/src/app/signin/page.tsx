@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import AuthLayout from "@/components/layout/AuthLayout";
-import { Eye, Mail, Lock, TrendingUp, Globe } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, TrendingUp, Globe } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { useState } from "react";
 
 export default function SignIn() {
+  const [showPassword, setShowPassword] = useState(false);
   const features = [
     {
       icon: <TrendingUp className="w-5 h-5 text-success" />,
@@ -47,11 +49,17 @@ export default function SignIn() {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter your password" 
                 className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-colors"
               />
-              <Eye className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted cursor-pointer hover:text-foreground" />
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground focus:outline-none"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
