@@ -6,6 +6,7 @@ import { Eye, EyeOff, Mail, User, Lock } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function SignUp() {
   const router = useRouter();
@@ -21,10 +22,9 @@ export default function SignUp() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -54,15 +54,16 @@ export default function SignUp() {
         });
 
         if (result?.error) {
-          setError(result.error);
+          toast.error(result.error);
         } else {
+          toast.success("Account created successfully!");
           router.push("/dashboard");
         }
       } else {
-        setError(data.message || "An error occurred");
+        toast.error(data.message || "An error occurred");
       }
     } catch (err) {
-      setError("Failed to register. Please try again.");
+      toast.error("Failed to register. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -96,12 +97,6 @@ export default function SignUp() {
       <div>
         <h2 className="text-2xl font-bold text-foreground mb-2">Create your Fintrack account</h2>
         <p className="text-sm text-muted mb-8">Start tracking Bitcoin sentiment today</p>
-
-        {error && (
-          <div className="mb-4 p-3 rounded-lg bg-danger/10 border border-danger/20 text-danger text-sm">
-            {error}
-          </div>
-        )}
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">

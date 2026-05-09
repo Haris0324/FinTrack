@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import NextAuthProvider from "@/components/providers/SessionProvider";
 
+import { Toaster } from "react-hot-toast";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -25,6 +27,24 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <NextAuthProvider>
+          <Toaster 
+            position="top-center" 
+            toastOptions={{
+              className: '!bg-card !text-foreground !border !border-card-border !text-sm !font-medium',
+              success: {
+                iconTheme: {
+                  primary: '#10B981',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#EF4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
           {children}
         </NextAuthProvider>
       </body>

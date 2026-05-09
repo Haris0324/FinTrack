@@ -5,9 +5,39 @@ import AuthLayout from "@/components/layout/AuthLayout";
 import { Eye, EyeOff, Mail, Lock, TrendingUp, Globe } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function SignIn() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Signed in successfully!");
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
   const features = [
     {
       icon: <TrendingUp className="w-5 h-5 text-success" />,
@@ -31,13 +61,16 @@ export default function SignIn() {
         <h2 className="text-2xl font-bold text-foreground mb-2">Sign in to Fintrack</h2>
         <p className="text-sm text-muted mb-8">Enter your credentials to access your account</p>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <label className="text-xs font-medium text-foreground">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input 
                 type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                 placeholder="Enter your email" 
                 className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
               />
@@ -50,6 +83,9 @@ export default function SignIn() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input 
                 type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
                 placeholder="Enter your password" 
                 className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-colors"
               />
@@ -75,8 +111,12 @@ export default function SignIn() {
             </Link>
           </div>
 
-          <button type="button" onClick={() => signIn("credentials", { callbackUrl: "/dashboard" })} className="w-full bg-primary hover:bg-primary-hover text-white font-medium rounded-lg py-3 mt-4 transition-colors">
-            Sign In
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-3 mt-4 transition-colors"
+          >
+            {loading ? "Signing In..." : "Sign In"}
           </button>
         </form>
 
