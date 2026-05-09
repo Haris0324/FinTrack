@@ -7,6 +7,7 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 
 export default function SignUp() {
   const router = useRouter();
@@ -19,9 +20,15 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!termsAccepted) {
+      toast.error("You must agree to the Terms of Service and Privacy Policy");
+      return;
+    }
 
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
@@ -46,19 +53,8 @@ export default function SignUp() {
       const data = await res.json();
 
       if (res.ok) {
-        // Sign in the user automatically
-        const result = await signIn("credentials", {
-          redirect: false,
-          email,
-          password,
-        });
-
-        if (result?.error) {
-          toast.error(result.error);
-        } else {
-          toast.success("Account created successfully!");
-          router.push("/dashboard");
-        }
+        toast.success(data.message || "Account created! Please check your email.");
+        setTimeout(() => router.push("/signin"), 3000);
       } else {
         toast.error(data.message || "An error occurred");
       }
@@ -94,8 +90,12 @@ export default function SignUp() {
       subtitle="Join thousands of traders using AI-powered sentiment analysis to make informed Bitcoin investment decisions."
       features={features}
     >
-      <div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">Create your Fintrack account</h2>
+      <motion.div 
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h2 className="text-3xl font-bold text-foreground mb-2">Create your <span className="text-gradient">Fintrack</span> account</h2>
         <p className="text-sm text-muted mb-8">Start tracking Bitcoin sentiment today</p>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -178,7 +178,13 @@ export default function SignUp() {
           </div>
 
           <div className="flex items-center gap-2 pt-2">
-            <input type="checkbox" id="terms" className="w-4 h-4 rounded border-card-border bg-background accent-primary" />
+            <input 
+              type="checkbox" 
+              id="terms" 
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="w-4 h-4 rounded border-card-border bg-background accent-primary" 
+            />
             <label htmlFor="terms" className="text-xs text-muted">
               I agree to Fintrack's <Link href="#" className="text-primary hover:underline">Terms of Service</Link> and <Link href="#" className="text-primary hover:underline">Privacy Policy</Link>
             </label>
@@ -210,7 +216,7 @@ export default function SignUp() {
         <p className="mt-8 text-center text-xs text-muted">
           Already have an account? <Link href="/signin" className="text-primary hover:underline font-medium">Sign in</Link>
         </p>
-      </div>
+      </motion.div>
     </AuthLayout>
   );
 }

@@ -65,10 +65,30 @@ export async function POST(req: Request) {
       password: hashedPassword,
       role: "user",
       providers: ["credentials"],
+      isVerified: false,
     });
 
+    // 5. Generate Verification Token and Send Email
+    const crypto = require("crypto");
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    const VerificationToken = require("@/models/VerificationToken").default;
+    await VerificationToken.create({ email, token, expires });
+
+    const { sendVerificationEmail } = require("@/lib/email");
+    try {
+      await sendVerificationEmail(email, token);
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
+      return NextResponse.json(
+        { message: "Account created but failed to send verification email. Please contact support." },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { message: "User registered successfully" },
+      { message: "Account created! Please check your email to verify your account." },
       { status: 201 }
     );
   } catch (error) {

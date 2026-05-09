@@ -7,6 +7,7 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 
 export default function SignIn() {
   const router = useRouter();
@@ -57,8 +58,12 @@ export default function SignIn() {
       subtitle="Access real-time Bitcoin sentiment analysis, AI-powered predictions, and intelligent market insights."
       features={features}
     >
-      <div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">Sign in to Fintrack</h2>
+      <motion.div 
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <h2 className="text-3xl font-bold text-foreground mb-2">Sign in to <span className="text-gradient">Fintrack</span></h2>
         <p className="text-sm text-muted mb-8">Enter your credentials to access your account</p>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -107,7 +112,7 @@ export default function SignIn() {
                 Remember me
               </label>
             </div>
-            <Link href="#" className="text-xs text-primary hover:underline font-medium">
+            <Link href="/forgot-password" className="text-xs text-primary hover:underline font-medium">
               Forgot password?
             </Link>
           </div>
@@ -138,7 +143,7 @@ export default function SignIn() {
         <p className="mt-8 text-center text-xs text-muted">
           Don't have an account? <Link href="/signup" className="text-primary hover:underline font-medium">Sign up for free</Link>
         </p>
-      </div>
+      </motion.div>
     </AuthLayout>
   );
 }

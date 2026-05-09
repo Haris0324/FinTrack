@@ -21,6 +21,10 @@ const UserSchema = new mongoose.Schema({
   providers: {
     type: [String],
     default: ['credentials'],
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
   }
 }, { timestamps: true });
 
