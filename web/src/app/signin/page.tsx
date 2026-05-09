@@ -27,7 +27,7 @@ export default function SignIn() {
       });
 
       if (result?.error) {
-        toast.error(result.error);
+        toast.error("Invalid email or password. Please try again.");
       } else {
         toast.success("Signed in successfully!");
         router.push("/dashboard");
@@ -92,9 +92,10 @@ export default function SignIn() {
               <button 
                 type="button" 
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground focus:outline-none z-10"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground focus:outline-none z-10 p-2"
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? <EyeOff className="w-4 h-4 pointer-events-none" /> : <Eye className="w-4 h-4 pointer-events-none" />}
               </button>
             </div>
           </div>

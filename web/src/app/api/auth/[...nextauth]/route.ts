@@ -29,17 +29,17 @@ export const authOptions: NextAuthOptions = {
         await connectToDatabase();
         const user = await User.findOne({ email: credentials.email });
         if (!user) {
-          throw new Error("No account found with this email. Please sign up.");
+          return null;
         }
         if (!user.password && user.providers?.length) {
-          throw new Error(`Please log in with your connected ${user.providers[0]} account.`);
+          return null;
         }
         if (!user.password) {
-          throw new Error("Invalid account configuration. Please contact support.");
+          return null;
         }
         const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
         if (!isPasswordCorrect) {
-          throw new Error("Incorrect password. Please try again.");
+          return null;
         }
         return { id: user._id.toString(), name: user.name, email: user.email, role: user.role };
       }
