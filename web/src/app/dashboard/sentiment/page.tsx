@@ -207,12 +207,12 @@ export default function SentimentAnalysis() {
               <span className="flex items-center gap-1.5 text-muted"><span className="w-2.5 h-2.5 rounded-sm bg-muted"></span>Neutral</span>
             </div>
           </div>
-          <div className="flex-1 w-full h-full -ml-4 min-h-[350px]">
+          <div className="flex-1 w-full h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={mappedSourceData}
-                margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
-                barCategoryGap="20%"
+                margin={{ top: 20, right: 10, left: 20, bottom: 20 }}
+                barCategoryGap="30%"
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />
                 <XAxis dataKey="name" stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} />
@@ -222,11 +222,13 @@ export default function SentimentAnalysis() {
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="bg-[#1e293b] border border-card-border p-4 rounded-xl shadow-xl">
+                        <div className="bg-[#1e293b] border border-card-border p-4 rounded-xl shadow-xl min-w-[150px]">
                           <p className="text-sm font-bold text-white mb-2">{label}</p>
-                          <p className="text-xs text-success mb-1">positive : {payload[0]?.payload?.pos || 0}</p>
-                          <p className="text-xs text-danger mb-1">negative : {payload[0]?.payload?.neg || 0}</p>
-                          <p className="text-xs text-muted">neutral : {payload[0]?.payload?.neu || 0}</p>
+                          <div className="space-y-1">
+                            <p className="text-xs text-success flex justify-between">positive<span>{payload[0]?.payload?.pos || 0}</span></p>
+                            <p className="text-xs text-danger flex justify-between">negative<span>{payload[0]?.payload?.neg || 0}</span></p>
+                            <p className="text-xs text-muted flex justify-between">neutral<span>{payload[0]?.payload?.neu || 0}</span></p>
+                          </div>
                         </div>
                       );
                     }
@@ -236,8 +238,8 @@ export default function SentimentAnalysis() {
                 <Bar 
                   dataKey="pos" 
                   fill="#64748b" 
-                  isAnimationActive={true} 
-                  barSize={32} 
+                  isAnimationActive={false} 
+                  barSize={40} 
                   radius={[4, 4, 0, 0]} 
                 />
               </BarChart>
