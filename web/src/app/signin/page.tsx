@@ -57,6 +57,8 @@ function SignInContent() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email })
           });
+        } else if (result.error === "ACCOUNT_NOT_VERIFIED") {
+          toast.error("Please verify your account. Check your email for the activation link.");
         } else {
           toast.error(result.error === "Invalid or expired 2FA code" ? result.error : "Invalid email or password.");
         }
