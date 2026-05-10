@@ -1,24 +1,31 @@
 import { NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongoose";
 import User from "@/models/User";
+import VerificationToken from "@/models/VerificationToken";
 import bcrypt from "bcrypt";
 import dns from "dns/promises";
+import crypto from "crypto";
+import { sendVerificationEmail } from "@/lib/email";
 
 async function verifyEmailDomain(email: string) {
   try {
     const domain = email.split("@")[1];
     if (!domain) return false;
     
-    // In some serverless environments, DNS lookups might be restricted.
-    // We try the MX lookup but if it fails with specific codes, we allow it.
-    const mxRecords = await dns.resolveMx(domain);
+    // Add a race to prevent hanging on DNS lookups
+    const timeout = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("DNS Timeout")), 3000)
+    );
+    
+    const mxRecords = await Promise.race([
+      dns.resolveMx(domain),
+      timeout
+    ]) as any[];
+    
     return mxRecords && mxRecords.length > 0;
   } catch (error: any) {
-    console.error("DNS MX lookup failed for:", email, error);
-    // If it's a timeout or ENOTFOUND, we might still want to allow it 
-    // because some domains might not have MX but still work (A records).
-    // Or the environment simply blocks DNS.
-    return true; // Fallback to true to avoid blocking users if DNS is flaky
+    console.error("DNS MX lookup skipped/failed for:", email, error.message);
+    return true; // Fallback to true
   }
 }
 
@@ -75,14 +82,11 @@ export async function POST(req: Request) {
     });
 
     // 5. Generate Verification Token and Send Email
-    const crypto = require("crypto");
     const token = crypto.randomBytes(32).toString("hex");
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    const VerificationToken = require("@/models/VerificationToken").default;
     await VerificationToken.create({ email, token, expires });
 
-    const { sendVerificationEmail } = require("@/lib/email");
     try {
       await sendVerificationEmail(email, token);
     } catch (emailError) {

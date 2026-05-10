@@ -21,7 +21,8 @@ transporter.verify(function (error, success) {
 });
 
 export const sendVerificationEmail = async (email: string, token: string) => {
-  const verifyUrl = `${process.env.NEXTAUTH_URL}/verify-email?token=${token}`;
+  const baseUrl = process.env.NEXTAUTH_URL || `https://${process.env.VERCEL_URL}`;
+  const verifyUrl = `${baseUrl}/verify-email?token=${token}`;
 
   await transporter.sendMail({
     from: `"FinTrack" <${emailUser}>`,
@@ -39,7 +40,8 @@ export const sendVerificationEmail = async (email: string, token: string) => {
 };
 
 export const sendPasswordResetEmail = async (email: string, token: string) => {
-  const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
+  const baseUrl = process.env.NEXTAUTH_URL || `https://${process.env.VERCEL_URL}`;
+  const resetUrl = `${baseUrl}/reset-password?token=${token}`;
 
   await transporter.sendMail({
     from: `"FinTrack" <${emailUser}>`,
