@@ -207,15 +207,16 @@ export default function SentimentAnalysis() {
               <span className="flex items-center gap-1.5 text-muted"><span className="w-2.5 h-2.5 rounded-sm bg-muted"></span>Neutral</span>
             </div>
           </div>
-          <div className="flex-1 w-full h-full -ml-4 min-h-[300px]">
-            <ResponsiveContainer width="100%" height={300}>
+          <div className="flex-1 w-full h-full -ml-4 min-h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={mappedSourceData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                margin={{ top: 20, right: 10, left: 10, bottom: 20 }}
+                barCategoryGap="20%"
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />
                 <XAxis dataKey="name" stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} />
-                <YAxis stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} />
+                <YAxis stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} width={50} />
                 <Tooltip 
                   cursor={{ fill: '#1E293B' }}
                   content={({ active, payload, label }) => {
@@ -232,7 +233,13 @@ export default function SentimentAnalysis() {
                     return null;
                   }}
                 />
-                <Bar dataKey="pos" fill="#64748b" isAnimationActive={true} barSize={40} radius={[4, 4, 0, 0]} />
+                <Bar 
+                  dataKey="pos" 
+                  fill="#64748b" 
+                  isAnimationActive={true} 
+                  barSize={32} 
+                  radius={[4, 4, 0, 0]} 
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
