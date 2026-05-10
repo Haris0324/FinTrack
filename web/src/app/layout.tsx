@@ -13,6 +13,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "FinTrack - AI-Powered Bitcoin News Analysis",
   description: "Advanced AI system that analyzes global news sentiment and predicts cryptocurrency price movements.",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
