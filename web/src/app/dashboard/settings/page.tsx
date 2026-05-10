@@ -22,6 +22,12 @@ export default function SettingsPage() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
+  // Modal States
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [twoFactorSetupCode, setTwoFactorSetupCode] = useState("");
+  const [verifying2FA, setVerifying2FA] = useState(false);
+
   // Logs & Sessions State
   const [activities, setActivities] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
@@ -142,7 +148,6 @@ export default function SettingsPage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!confirm('Are you absolutely sure you want to delete your account? This cannot be undone.')) return;
     try {
       const res = await fetch('/api/profile/delete', { method: 'DELETE' });
       if (res.ok) {
@@ -186,13 +191,85 @@ export default function SettingsPage() {
   };
 
   const toggle2FA = async () => {
-    const newState = !twoFactorEnabled;
+    if (twoFactorEnabled) {
+      // Disabling 2FA
+      try {
+        const res = await fetch('/api/2fa/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enable: false }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setTwoFactorEnabled(false);
+          toast.success(data.message);
+        } else {
+          toast.error(data.error || 'Failed to toggle 2FA');
+        }
+      } catch (e) {
+        toast.error('An error occurred');
+      }
+    } else {
+      // Enabling 2FA - Start Setup Flow
+      try {
+        const res = await fetch('/api/2fa/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: profile.email, purpose: 'setup' }),
+        });
+        if (res.ok) {
+          setShow2FAModal(true);
+        } else {
+          toast.error('Failed to send verification code');
+        }
+      } catch (e) {
+        toast.error('An error occurred');
+      }
+    }
+  };
+
+  const handleVerify2FASetup = async () => {
+    if (!twoFactorSetupCode || twoFactorSetupCode.length < 6) return;
+    setVerifying2FA(true);
     try {
-      const res = await fetch('/api/2fa/toggle', {
+      const res = await fetch('/api/2fa/verify-setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enable: newState }),
+        body: JSON.stringify({ code: twoFactorSetupCode }),
       });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        setTwoFactorEnabled(true);
+        setShow2FAModal(false);
+        setTwoFactorSetupCode("");
+      } else {
+        toast.error(data.error || 'Invalid code');
+      }
+    } catch (e) {
+      toast.error('An error occurred');
+    } finally {
+      setVerifying2FA(false);
+    }
+  };
+
+  const handleRevokeSession = async (sessionId: string) => {
+    try {
+      const res = await fetch('/api/sessions/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (res.ok) {
+        toast.success('Session revoked successfully');
+        fetchLogsData();
+      } else {
+        toast.error('Failed to revoke session');
+      }
+    } catch (e) {
+      toast.error('An error occurred');
+    }
+  };
       const data = await res.json();
       if (res.ok) {
         setTwoFactorEnabled(newState);
@@ -256,7 +333,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Phone Number</label>
-                  <input type="tel" value={profile?.phone || ''} onChange={(e) => setProfile({...profile, phone: e.target.value})} placeholder="+1 (555) 123-4567" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="tel" value={profile?.phone || ''} onChange={(e) => setProfile({...profile, phone: e.target.value})} placeholder="+92 1234567890" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Company</label>
@@ -281,7 +358,7 @@ export default function SettingsPage() {
             <div className="p-6 rounded-xl border border-danger/30 bg-danger/5">
               <h3 className="text-lg font-bold text-danger mb-1">Danger Zone</h3>
               <p className="text-sm text-muted mb-6">Once you delete your account, there is no going back. Please be certain.</p>
-              <button onClick={handleDeleteAccount} className="px-5 py-2 bg-danger text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2">
+              <button onClick={() => setShowDeleteModal(true)} className="px-5 py-2 bg-danger text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
                 Delete Account
               </button>
@@ -343,7 +420,14 @@ export default function SettingsPage() {
                         <p className="text-xs text-muted">IP: {sess.ip || 'Unknown'} • {new Date(sess.createdAt).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    {i === 0 && <span className="text-xs font-medium text-success">Current</span>}
+                    <div className="flex flex-col items-end gap-2">
+                      {i === 0 && <span className="text-xs font-medium text-success bg-success/10 px-2 py-0.5 rounded-sm">Current</span>}
+                      {i !== 0 && (
+                        <button onClick={() => handleRevokeSession(sess._id)} className="text-[10px] font-bold text-danger hover:underline">
+                          Revoke
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )) : (
                   <p className="text-xs text-muted">No recent sessions found.</p>
@@ -521,6 +605,78 @@ export default function SettingsPage() {
           </div>
           
         </div>
+
+        {/* Delete Account Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-card border border-card-border p-6 rounded-xl shadow-2xl max-w-md w-full"
+            >
+              <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-danger" />
+                Delete Account
+              </h3>
+              <p className="text-sm text-muted mb-6">
+                Are you absolutely sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button 
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-foreground hover:bg-card-border rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleDeleteAccount}
+                  className="px-4 py-2 bg-danger text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Confirm Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* 2FA Setup Modal */}
+        {show2FAModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-card border border-card-border p-6 rounded-xl shadow-2xl max-w-md w-full"
+            >
+              <h3 className="text-xl font-bold text-foreground mb-2">Verify 2FA Setup</h3>
+              <p className="text-sm text-muted mb-6">
+                We've sent a 6-digit verification code to your email. Enter it below to enable Two-Factor Authentication.
+              </p>
+              <input 
+                type="text" 
+                maxLength={6}
+                value={twoFactorSetupCode}
+                onChange={(e) => setTwoFactorSetupCode(e.target.value.replace(/[^0-9]/g, ''))}
+                placeholder="123456" 
+                className="w-full bg-background border border-card-border rounded-lg px-4 py-3 text-center text-2xl font-bold tracking-widest text-foreground focus:outline-none focus:border-primary transition-colors mb-6"
+              />
+              <div className="flex justify-end gap-3">
+                <button 
+                  onClick={() => { setShow2FAModal(false); setTwoFactorSetupCode(""); }}
+                  className="px-4 py-2 text-sm font-medium text-foreground hover:bg-card-border rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleVerify2FASetup}
+                  disabled={twoFactorSetupCode.length !== 6 || verifying2FA}
+                  className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
+                >
+                  {verifying2FA ? 'Verifying...' : 'Verify & Enable'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
 
       </motion.div>
     </DashboardLayout>

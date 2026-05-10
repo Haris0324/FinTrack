@@ -91,15 +91,16 @@ export const authOptions: NextAuthOptions = {
              ip
            });
 
-           await SessionLog.create({
+           const sessionLog = await SessionLog.create({
              userId: user._id,
              device,
              browser,
              ip
            });
+           (user as any).sessionId = sessionLog._id.toString();
         } catch(e) {}
 
-        return { id: user._id.toString(), name: user.name, email: user.email, role: user.role, profilePicture: user.profilePicture };
+        return { id: user._id.toString(), name: user.name, email: user.email, role: user.role, profilePicture: user.profilePicture, sessionId: (user as any).sessionId };
       }
     })
   ],
@@ -134,10 +135,27 @@ export const authOptions: NextAuthOptions = {
             token.role = (user as any).role || "user";
         }
         token.profilePicture = (user as any).profilePicture || "";
+        if ((user as any).sessionId) {
+          token.sessionId = (user as any).sessionId;
+        }
       }
+      
+      // Verify session exists in DB if token has sessionId
+      if (token.sessionId) {
+        await connectToDatabase();
+        const activeSession = await SessionLog.findById(token.sessionId);
+        if (!activeSession) {
+          // Force logout if session was revoked
+          return { ...token, error: "SessionRevoked" };
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
+      if (token.error === "SessionRevoked") {
+        return { ...session, error: "SessionRevoked" };
+      }
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;

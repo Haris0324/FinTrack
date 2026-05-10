@@ -1,12 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import HeaderActions from "./HeaderActions";
 import { Menu } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if ((session as any)?.error === "SessionRevoked") {
+      signOut({ callbackUrl: '/signin' });
+    }
+  }, [session]);
 
   return (
     <div className="min-h-screen bg-background">

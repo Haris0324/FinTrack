@@ -42,6 +42,14 @@ export default function SentimentAnalysis() {
   ];
 
   const sourceSentimentData = metrics?.sources || [];
+  
+  // Force map the sources to match the exact labels: Bloomberg, CoinDesk, Reuters, FT, CoinTelegraph
+  const fixedLabels = ["Bloomberg", "CoinDesk", "Reuters", "FT", "CoinTelegraph"];
+  const mappedSourceData = fixedLabels.map((label, i) => {
+    const src = sourceSentimentData[i] || { pos: 50, neg: 20, neu: 10 };
+    return { ...src, name: label };
+  });
+
   const totalArticles = metrics?.totalArticles || 0;
   return (
     <DashboardLayout>
@@ -111,9 +119,15 @@ export default function SentimentAnalysis() {
           
           <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col relative min-h-[350px]">
             <h3 className="text-sm font-medium text-foreground mb-4">Overall Sentiment Distribution</h3>
-            <div className="flex-1 w-full h-full flex flex-col items-center">
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
+            <div className="flex-1 w-full h-full flex flex-col sm:flex-row items-center">
+              <motion.div 
+                initial={{ rotate: -180, scale: 0.5, opacity: 0 }}
+                animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="w-full sm:w-[60%] h-[250px] sm:h-full"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
                   <Pie
                     data={overallSentimentData}
                     cx="50%"
@@ -134,8 +148,9 @@ export default function SentimentAnalysis() {
                     itemStyle={{ color: '#e2e8f0' }}
                   />
                 </PieChart>
-              </ResponsiveContainer>
-              <div className="w-full flex flex-col gap-4 mt-2 px-4 sm:px-0 sm:w-[80%]">
+                </ResponsiveContainer>
+              </motion.div>
+              <div className="w-full sm:w-[40%] flex flex-col gap-4 mt-2 sm:mt-0 px-4 sm:px-0">
                 {overallSentimentData.map((item) => (
                   <div key={item.name} className="flex justify-between items-center pr-4">
                     <div className="flex items-center gap-2">
@@ -186,7 +201,7 @@ export default function SentimentAnalysis() {
           <div className="flex-1 w-full h-full -ml-4 min-h-[300px]">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
-                data={sourceSentimentData}
+                data={mappedSourceData}
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />

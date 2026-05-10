@@ -6,7 +6,7 @@ import crypto from 'crypto';
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json();
+    const { email, purpose } = await req.json();
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true });
     }
 
-    if (!user.twoFactorEnabled) {
+    if (!user.twoFactorEnabled && purpose !== 'setup') {
       return NextResponse.json({ error: '2FA is not enabled for this account' }, { status: 400 });
     }
 
