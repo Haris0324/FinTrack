@@ -2,15 +2,9 @@
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { TrendingUp, Activity, BarChart3, ArrowUpRight, Search, Filter, Bell } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
-
-const mockPriceData = [
-  { time: '00:00', price: 43200 }, { time: '04:00', price: 43100 },
-  { time: '08:00', price: 43500 }, { time: '12:00', price: 43780 },
-  { time: '16:00', price: 43600 }, { time: '20:00', price: 44100 },
-  { time: 'Now', price: 44300 },
-];
+import { motion } from "framer-motion";
 
 const mockSentimentData = [
   { day: 'Mon', pos: 45, neg: 20, neu: 20 },
@@ -81,6 +75,7 @@ export default function Dashboard() {
   // Live BTC States
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
   const [btcChange, setBtcChange] = useState<string>("+0.00%");
+  const [chartData, setChartData] = useState<any[]>([]);
   
   // Ref for auto-scrolling to live news
   const newsSectionRef = useRef<HTMLDivElement>(null);
@@ -99,6 +94,34 @@ export default function Dashboard() {
     };
 
     return () => ws.close();
+  }, []);
+
+  // Fetch Historical BTC Data for Chart
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        const res = await fetch("https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1");
+        if (res.ok) {
+          const data = await res.json();
+          const prices = data.prices;
+          
+          // Downsample to roughly 24 points (every ~1 hour) for a cleaner chart
+          const formatted = prices.filter((_: any, i: number) => i % 12 === 0).map((point: [number, number]) => {
+            const date = new Date(point[0]);
+            return {
+              time: `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`,
+              price: parseFloat(point[1].toFixed(2))
+            };
+          });
+          
+          setChartData(formatted);
+        }
+      } catch (error) {
+        console.error("Failed to fetch BTC chart data", error);
+      }
+    };
+    
+    fetchChartData();
   }, []);
 
   const fetchNews = async (pageNum: number, isInitial = false) => {
@@ -160,7 +183,7 @@ export default function Dashboard() {
       return (
         <div className="bg-[#1e293b] border border-card-border p-3 rounded-lg shadow-xl min-w-[120px]">
           <p className="text-sm font-bold text-white mb-2">{label}</p>
-          <p className="text-sm text-[#F97316]">price : {payload[0].value}</p>
+          <p className="text-sm text-[#F97316]">price : ${payload[0]?.value?.toLocaleString()}</p>
         </div>
       );
     }
@@ -173,9 +196,9 @@ export default function Dashboard() {
       return (
         <div className="bg-[#1e293b] border border-card-border p-4 rounded-xl shadow-xl min-w-[140px]">
           <p className="text-sm font-bold text-white mb-3">{label}</p>
-          <p className="text-sm text-success mb-1.5">positive : {payload[0]?.payload.pos}</p>
-          <p className="text-sm text-danger mb-1.5">negative : {payload[0]?.payload.neg}</p>
-          <p className="text-sm text-muted">neutral : {payload[0]?.payload.neu}</p>
+          <p className="text-sm text-success mb-1.5">positive : {payload[0]?.payload?.pos || 0}</p>
+          <p className="text-sm text-danger mb-1.5">negative : {payload[0]?.payload?.neg || 0}</p>
+          <p className="text-sm text-muted">neutral : {payload[0]?.payload?.neu || 0}</p>
         </div>
       );
     }
@@ -184,7 +207,12 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col gap-6"
+      >
         
         {/* Top Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -235,7 +263,7 @@ export default function Dashboard() {
             <h3 className="text-sm font-medium text-foreground mb-4">Bitcoin Price (24h)</h3>
             <div className="flex-1 w-full h-full -ml-4">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={mockPriceData}>
+                <AreaChart data={chartData.length > 0 ? chartData : [{ time: 'Loading', price: 0 }]}>
                   <defs>
                     <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#F97316" stopOpacity={0.3}/>
@@ -372,7 +400,7 @@ export default function Dashboard() {
           )}
         </div>
 
-      </div>
+      </motion.div>
     </DashboardLayout>
   );
 }

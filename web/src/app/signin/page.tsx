@@ -4,7 +4,7 @@ import Link from "next/link";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { Eye, EyeOff, Mail, Lock, TrendingUp, Globe } from "lucide-react";
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
@@ -15,10 +15,25 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("fintrack_remembered_email");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (rememberMe) {
+      localStorage.setItem("fintrack_remembered_email", email);
+    } else {
+      localStorage.removeItem("fintrack_remembered_email");
+    }
 
     try {
       const result = await signIn("credentials", {
@@ -107,7 +122,13 @@ export default function SignIn() {
 
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-2">
-              <input type="checkbox" id="remember" className="w-4 h-4 rounded border-card-border bg-background accent-primary" />
+              <input 
+                type="checkbox" 
+                id="remember" 
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border-card-border bg-background accent-primary" 
+              />
               <label htmlFor="remember" className="text-xs text-muted">
                 Remember me
               </label>

@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -32,6 +33,7 @@ function VerifyEmailContent() {
         const data = await res.json();
 
         if (res.ok) {
+          await signOut({ redirect: false });
           setStatus("success");
           setMessage("Email verified successfully! You can now sign in.");
           setTimeout(() => router.push("/signin"), 3000);
