@@ -20,6 +20,8 @@ function SignInContent() {
   const [rememberMe, setRememberMe] = useState(false);
   const [requires2FA, setRequires2FA] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [resending, setResending] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("fintrack_remembered_email");
@@ -58,7 +60,8 @@ function SignInContent() {
             body: JSON.stringify({ email })
           });
         } else if (result.error === "ACCOUNT_NOT_VERIFIED") {
-          toast.error("Please verify your account. Check your email for the activation link.");
+          setUnverifiedEmail(email);
+          toast.error("Account not verified. Please check your email.");
         } else {
           toast.error(result.error === "Invalid or expired 2FA code" ? result.error : "Invalid email or password.");
         }
@@ -70,6 +73,31 @@ function SignInContent() {
       toast.error("An unexpected error occurred.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email && !unverifiedEmail) {
+      toast.error("Please enter your email address first.");
+      return;
+    }
+    setResending(true);
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email || unverifiedEmail }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        toast.success("Verification link sent! Check your inbox.");
+      } else {
+        toast.error(data.message || "Failed to resend link.");
+      }
+    } catch (err) {
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setResending(false);
     }
   };
   const features = [
@@ -106,6 +134,25 @@ function SignInContent() {
               <p className="text-sm font-bold text-danger">Session Expired</p>
               <p className="text-[10px] text-danger/80">Your session has timed out due to inactivity. Please sign in again.</p>
             </div>
+          </div>
+        )}
+
+        {unverifiedEmail && (
+          <div className="mb-6 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center gap-3">
+              <ShieldAlert className="w-5 h-5 text-orange-500" />
+              <div>
+                <p className="text-sm font-bold text-orange-500">Verify Your Account</p>
+                <p className="text-[10px] text-orange-500/80">You haven't activated your account yet. Please check your email or click below to resend the link.</p>
+              </div>
+            </div>
+            <button 
+              onClick={handleResendVerification}
+              disabled={resending}
+              className="text-[10px] font-bold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 py-1.5 rounded-md transition-colors shadow-sm"
+            >
+              {resending ? "Sending..." : "Resend Activation Email"}
+            </button>
           </div>
         )}
 
