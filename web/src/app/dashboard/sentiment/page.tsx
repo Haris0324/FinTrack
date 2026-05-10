@@ -41,6 +41,8 @@ export default function SentimentAnalysis() {
     { name: "Neutral", value: metrics?.overall?.neu || 0, color: "#64748b" },
   ];
 
+  const sourceSentimentData = metrics?.sources || [];
+
   // Force map the sources to match the exact labels
   const fixedLabels = ["Bloomberg", "CoinDesk", "Reuters", "CoinTelegraph"];
   const mockSourceData = [
