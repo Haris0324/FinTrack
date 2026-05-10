@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-export default function VerifyEmail() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -101,5 +101,17 @@ export default function VerifyEmail() {
         )}
       </motion.div>
     </AuthLayout>
+  );
+}
+
+export default function VerifyEmail() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="w-16 h-16 text-primary animate-spin" />
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import AuthLayout from "@/components/layout/AuthLayout";
 import { Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 
-export default function ResetPassword() {
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -142,5 +142,17 @@ export default function ResetPassword() {
         </form>
       </motion.div>
     </AuthLayout>
+  );
+}
+
+export default function ResetPassword() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="w-16 h-16 text-primary animate-spin" />
+      </div>
+    }>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
