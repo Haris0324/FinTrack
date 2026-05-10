@@ -274,7 +274,8 @@ export default function SettingsPage() {
       });
       if (res.ok) {
         toast.success('Session revoked successfully');
-        fetchLogsData();
+        // Remove the session from state immediately
+        setSessions(prev => prev.filter(s => s._id !== sessionId));
       } else {
         toast.error('Failed to revoke session');
       }
