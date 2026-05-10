@@ -43,8 +43,8 @@ export default function SentimentAnalysis() {
 
   const sourceSentimentData = metrics?.sources || [];
   
-  // Force map the sources to match the exact labels: Bloomberg, CoinDesk, Reuters, FT, CoinTelegraph
-  const fixedLabels = ["Bloomberg", "CoinDesk", "Reuters", "FT", "CoinTelegraph"];
+  // Force map the sources to match the exact labels: Bloomberg, CoinDesk, Reuters, CoinTelegraph
+  const fixedLabels = ["Bloomberg", "CoinDesk", "Reuters", "CoinTelegraph"];
   const mappedSourceData = fixedLabels.map((label, i) => {
     const src = sourceSentimentData[i] || { pos: 50, neg: 20, neu: 10 };
     return { ...src, name: label };
