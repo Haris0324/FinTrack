@@ -17,6 +17,11 @@ const topicSentimentData = [
 export default function SentimentAnalysis() {
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -75,7 +80,7 @@ export default function SentimentAnalysis() {
       >
         
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-1"><span className="text-gradient">NLP & Sentiment Analysis</span></h2>
             <p className="text-sm text-muted">FinBERT-powered sentiment classification and entity extraction</p>
@@ -208,42 +213,44 @@ export default function SentimentAnalysis() {
             </div>
           </div>
           <div className="w-full" style={{ height: '350px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={mappedSourceData.length > 0 ? mappedSourceData : mockSourceData}
-                margin={{ top: 20, right: 10, left: 0, bottom: 20 }}
-                barCategoryGap="30%"
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />
-                <XAxis dataKey="name" stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} />
-                <YAxis stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} width={40} />
-                <Tooltip 
-                  cursor={{ fill: '#1E293B' }}
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-[#1e293b] border border-card-border p-4 rounded-xl shadow-xl min-w-[150px]">
-                          <p className="text-sm font-bold text-white mb-2">{label}</p>
-                          <div className="space-y-1">
-                            <p className="text-xs text-success flex justify-between">positive<span>{payload[0]?.payload?.pos || 0}</span></p>
-                            <p className="text-xs text-danger flex justify-between">negative<span>{payload[0]?.payload?.neg || 0}</span></p>
-                            <p className="text-xs text-muted flex justify-between">neutral<span>{payload[0]?.payload?.neu || 0}</span></p>
+            {isMounted && (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={mappedSourceData.length > 0 ? mappedSourceData : mockSourceData}
+                  margin={{ top: 20, right: 10, left: 0, bottom: 20 }}
+                  barCategoryGap="30%"
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />
+                  <XAxis dataKey="name" stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} width={40} />
+                  <Tooltip 
+                    cursor={{ fill: '#1E293B' }}
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-[#1e293b] border border-card-border p-4 rounded-xl shadow-xl min-w-[150px]">
+                            <p className="text-sm font-bold text-white mb-2">{label}</p>
+                            <div className="space-y-1">
+                              <p className="text-xs text-success flex justify-between">positive<span>{payload[0]?.payload?.pos || 0}</span></p>
+                              <p className="text-xs text-danger flex justify-between">negative<span>{payload[0]?.payload?.neg || 0}</span></p>
+                              <p className="text-xs text-muted flex justify-between">neutral<span>{payload[0]?.payload?.neu || 0}</span></p>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Bar 
-                  dataKey="pos" 
-                  fill="#64748b" 
-                  isAnimationActive={false} 
-                  barSize={40} 
-                  radius={[4, 4, 0, 0]} 
-                />
-              </BarChart>
-            </ResponsiveContainer>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar 
+                    dataKey="pos" 
+                    fill="#64748b" 
+                    isAnimationActive={false} 
+                    barSize={40} 
+                    radius={[4, 4, 0, 0]} 
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
