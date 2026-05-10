@@ -6,7 +6,6 @@ import { User, Lock, Bell, Activity, Camera, LogOut, ShieldAlert, Monitor, Smart
 import { signOut, useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
-import { motion } from "framer-motion";
 
 export default function SettingsPage() {
   const { data: session, update: updateSession } = useSession();
