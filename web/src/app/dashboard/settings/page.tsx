@@ -270,17 +270,6 @@ export default function SettingsPage() {
       toast.error('An error occurred');
     }
   };
-      const data = await res.json();
-      if (res.ok) {
-        setTwoFactorEnabled(newState);
-        toast.success(data.message);
-      } else {
-        toast.error(data.error || 'Failed to toggle 2FA');
-      }
-    } catch (e) {
-      toast.error('An error occurred');
-    }
-  };
 
   const renderContent = () => {
     switch (activeTab) {
