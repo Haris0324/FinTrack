@@ -103,12 +103,12 @@ function SignInContent() {
   const features = [
     {
       icon: <TrendingUp className="w-5 h-5 text-success" />,
-      title: "87% Prediction Accuracy",
+      title: "80% Prediction Accuracy",
       description: "AI-powered market analysis",
     },
     {
       icon: <Globe className="w-5 h-5 text-primary" />,
-      title: "124+ News Sources",
+      title: "10+ News Sources",
       description: "Real-time monitoring",
     },
   ];
@@ -119,7 +119,7 @@ function SignInContent() {
       subtitle="Access real-time Bitcoin sentiment analysis, AI-powered predictions, and intelligent market insights."
       features={features}
     >
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
@@ -146,7 +146,7 @@ function SignInContent() {
                 <p className="text-[10px] text-orange-500/80">You haven't activated your account yet. Please check your email or click below to resend the link.</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={handleResendVerification}
               disabled={resending}
               className="text-[10px] font-bold text-white bg-orange-500 hover:bg-orange-600 disabled:opacity-50 py-1.5 rounded-md transition-colors shadow-sm"
@@ -161,12 +161,12 @@ function SignInContent() {
             <label className="text-xs font-medium text-foreground">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-              <input 
-                type="email" 
+              <input
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="Enter your email" 
+                placeholder="Enter your email"
                 className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
                 disabled={requires2FA}
               />
@@ -177,17 +177,17 @@ function SignInContent() {
             <label className="text-xs font-medium text-foreground">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-              <input 
+              <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="Enter your password" 
+                placeholder="Enter your password"
                 className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-colors"
                 disabled={requires2FA}
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground focus:outline-none z-10 p-2"
                 aria-label={showPassword ? "Hide password" : "Show password"}
@@ -199,7 +199,7 @@ function SignInContent() {
           </div>
 
           {requires2FA && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="space-y-2 pt-2"
@@ -207,12 +207,12 @@ function SignInContent() {
               <label className="text-xs font-medium text-foreground">2-Factor Authentication Code</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={twoFactorCode}
                   onChange={(e) => setTwoFactorCode(e.target.value)}
                   required
-                  placeholder="Enter 6-digit code from email" 
+                  placeholder="Enter 6-digit code from email"
                   className="w-full bg-background border border-primary/50 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
                   maxLength={6}
                 />
@@ -222,12 +222,12 @@ function SignInContent() {
 
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-2">
-              <input 
-                type="checkbox" 
-                id="remember" 
+              <input
+                type="checkbox"
+                id="remember"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-card-border bg-background accent-primary" 
+                className="w-4 h-4 rounded border-card-border bg-background accent-primary"
               />
               <label htmlFor="remember" className="text-xs text-muted">
                 Remember me
@@ -238,8 +238,8 @@ function SignInContent() {
             </Link>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className="w-full bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-3 mt-4 transition-colors"
           >

@@ -13,7 +13,7 @@ export default function SignUp() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -64,15 +64,15 @@ export default function SignUp() {
       setLoading(false);
     }
   };
-  
+
   const features = [
     {
       title: "Real-time News Analysis",
-      description: "Monitor 124+ sources with AI sentiment detection",
+      description: "Monitor 10+ sources with AI sentiment detection",
     },
     {
       title: "ML-Powered Predictions",
-      description: "87% accuracy in price movement predictions",
+      description: "80% accuracy in price movement predictions",
     },
     {
       title: "Instant Alerts",
@@ -90,7 +90,7 @@ export default function SignUp() {
       subtitle="Join thousands of traders using AI-powered sentiment analysis to make informed Bitcoin investment decisions."
       features={features}
     >
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
@@ -103,12 +103,12 @@ export default function SignUp() {
             <label className="text-xs font-medium text-foreground">Full Name</label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                placeholder="Enter your full name" 
+                placeholder="Enter your full name"
                 className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
               />
             </div>
@@ -118,12 +118,12 @@ export default function SignUp() {
             <label className="text-xs font-medium text-foreground">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-              <input 
-                type="email" 
+              <input
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="Enter your email" 
+                placeholder="Enter your email"
                 className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
               />
             </div>
@@ -133,17 +133,17 @@ export default function SignUp() {
             <label className="text-xs font-medium text-foreground">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-              <input 
+              <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                placeholder="Create a password" 
+                placeholder="Create a password"
                 className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-colors"
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground focus:outline-none z-10 p-2"
                 aria-label={showPassword ? "Hide password" : "Show password"}
@@ -157,17 +157,17 @@ export default function SignUp() {
             <label className="text-xs font-medium text-foreground">Confirm Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-              <input 
+              <input
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
-                placeholder="Confirm your password" 
+                placeholder="Confirm your password"
                 className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-colors"
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground focus:outline-none z-10 p-2"
                 aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
@@ -178,20 +178,20 @@ export default function SignUp() {
           </div>
 
           <div className="flex items-center gap-2 pt-2">
-            <input 
-              type="checkbox" 
-              id="terms" 
+            <input
+              type="checkbox"
+              id="terms"
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="w-4 h-4 rounded border-card-border bg-background accent-primary" 
+              className="w-4 h-4 rounded border-card-border bg-background accent-primary"
             />
             <label htmlFor="terms" className="text-xs text-muted">
               I agree to Fintrack's <Link href="#" className="text-primary hover:underline">Terms of Service</Link> and <Link href="#" className="text-primary hover:underline">Privacy Policy</Link>
             </label>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className="w-full bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-3 mt-4 transition-colors"
           >

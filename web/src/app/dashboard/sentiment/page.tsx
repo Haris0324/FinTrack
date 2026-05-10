@@ -72,7 +72,7 @@ export default function SentimentAnalysis() {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
-        
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
           <div>
@@ -82,7 +82,7 @@ export default function SentimentAnalysis() {
           <div className="flex items-center gap-4">
             <div className="px-4 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20 text-center">
               <p className="text-[10px] font-medium text-orange-500 mb-0.5">Model Accuracy</p>
-              <p className="text-sm font-bold text-orange-500">87.3%</p>
+              <p className="text-sm font-bold text-orange-500">80%</p>
             </div>
           </div>
         </div>
@@ -129,33 +129,33 @@ export default function SentimentAnalysis() {
 
         {/* Charts Row 1 */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          
+
           <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col relative min-h-[350px]">
             <h3 className="text-sm font-medium text-foreground mb-4">Overall Sentiment Distribution</h3>
             <div className="flex-1 w-full h-full flex flex-col sm:flex-row items-center">
               <div className="w-full sm:w-[60%] h-[250px] sm:h-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                  <Pie
-                    data={overallSentimentData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={75}
-                    outerRadius={95}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                    isAnimationActive={false}
-                  >
-                    {overallSentimentData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }}
-                    itemStyle={{ color: '#e2e8f0' }}
-                  />
-                </PieChart>
+                    <Pie
+                      data={overallSentimentData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={75}
+                      outerRadius={95}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                      isAnimationActive={false}
+                    >
+                      {overallSentimentData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }}
+                      itemStyle={{ color: '#e2e8f0' }}
+                    />
+                  </PieChart>
                 </ResponsiveContainer>
               </div>
               <div className="w-full sm:w-[40%] flex flex-col gap-6 mt-2 sm:mt-0 px-4 sm:px-0">
@@ -186,7 +186,7 @@ export default function SentimentAnalysis() {
                   <PolarAngleAxis dataKey="subject" tick={{ fill: '#9CA3AF', fontSize: 10 }} />
                   <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#64748B', fontSize: 10 }} axisLine={false} />
                   <Radar name="Sentiment" dataKey="A" stroke="#F97316" fill="#F97316" fillOpacity={0.3} isAnimationActive={true} />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }}
                   />
                 </RadarChart>
@@ -217,7 +217,7 @@ export default function SentimentAnalysis() {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />
                   <XAxis dataKey="name" stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} />
                   <YAxis stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} width={40} />
-                  <Tooltip 
+                  <Tooltip
                     cursor={{ fill: '#1E293B' }}
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
@@ -235,27 +235,27 @@ export default function SentimentAnalysis() {
                       return null;
                     }}
                   />
-                  <Bar 
-                    dataKey="pos" 
-                    fill="#22c55e" 
+                  <Bar
+                    dataKey="pos"
+                    fill="#22c55e"
                     stackId="a"
-                    isAnimationActive={false} 
-                    barSize={40} 
+                    isAnimationActive={false}
+                    barSize={40}
                   />
-                  <Bar 
-                    dataKey="neg" 
-                    fill="#ef4444" 
+                  <Bar
+                    dataKey="neg"
+                    fill="#ef4444"
                     stackId="a"
-                    isAnimationActive={false} 
-                    barSize={40} 
+                    isAnimationActive={false}
+                    barSize={40}
                   />
-                  <Bar 
-                    dataKey="neu" 
-                    fill="#64748b" 
+                  <Bar
+                    dataKey="neu"
+                    fill="#64748b"
                     stackId="a"
-                    isAnimationActive={false} 
-                    barSize={40} 
-                    radius={[4, 4, 0, 0]} 
+                    isAnimationActive={false}
+                    barSize={40}
+                    radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -269,7 +269,7 @@ export default function SentimentAnalysis() {
             <Zap className="w-4 h-4 text-orange-500" />
             <h3 className="text-sm font-medium text-foreground">Extracted Entities (Last 24h)</h3>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <div>
               <h4 className="text-xs font-semibold text-foreground mb-4">Cryptocurrencies</h4>
