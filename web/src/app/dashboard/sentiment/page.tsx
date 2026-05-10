@@ -207,16 +207,16 @@ export default function SentimentAnalysis() {
               <span className="flex items-center gap-1.5 text-muted"><span className="w-2.5 h-2.5 rounded-sm bg-muted"></span>Neutral</span>
             </div>
           </div>
-          <div className="flex-1 w-full h-[350px]">
+          <div className="w-full" style={{ height: '350px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={mappedSourceData}
-                margin={{ top: 20, right: 10, left: 20, bottom: 20 }}
+                data={mappedSourceData.length > 0 ? mappedSourceData : mockSourceData}
+                margin={{ top: 20, right: 10, left: 0, bottom: 20 }}
                 barCategoryGap="30%"
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />
                 <XAxis dataKey="name" stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} />
-                <YAxis stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} width={50} />
+                <YAxis stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} width={40} />
                 <Tooltip 
                   cursor={{ fill: '#1E293B' }}
                   content={({ active, payload, label }) => {
