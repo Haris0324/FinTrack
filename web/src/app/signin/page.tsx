@@ -60,7 +60,7 @@ export default function SignIn() {
         }
       } else {
         toast.success("Signed in successfully!");
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       }
     } catch (err) {
       toast.error("An unexpected error occurred.");

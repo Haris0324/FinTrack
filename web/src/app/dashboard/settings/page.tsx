@@ -25,8 +25,10 @@ export default function SettingsPage() {
   // Modal States
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [show2FAModal, setShow2FAModal] = useState(false);
+  const [showForgotPwdModal, setShowForgotPwdModal] = useState(false);
   const [twoFactorSetupCode, setTwoFactorSetupCode] = useState("");
   const [verifying2FA, setVerifying2FA] = useState(false);
+  const [forgotPwdState, setForgotPwdState] = useState({ code: '', newPassword: '', loading: false });
 
   // Logs & Sessions State
   const [activities, setActivities] = useState<any[]>([]);
@@ -66,7 +68,17 @@ export default function SettingsPage() {
       const data = await res.json();
       if (data.success) {
         setActivities(data.activities);
-        setSessions(data.sessions);
+        
+        const uniqueSessions: any[] = [];
+        const seen = new Set();
+        for (const sess of (data.sessions || [])) {
+          const key = `${sess.ip}-${sess.device}-${sess.browser}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueSessions.push(sess);
+          }
+        }
+        setSessions(uniqueSessions);
       }
     } catch (e) {
       toast.error('Failed to load activity logs');
@@ -271,6 +283,51 @@ export default function SettingsPage() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    try {
+      const res = await fetch('/api/2fa/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: profile.email, purpose: 'setup' }), // Using setup to bypass 2FA check
+      });
+      if (res.ok) {
+        setShowForgotPwdModal(true);
+        toast.success('Password reset code sent to your email');
+      } else {
+        toast.error('Failed to send reset code');
+      }
+    } catch (e) {
+      toast.error('An error occurred');
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (forgotPwdState.newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters');
+      return;
+    }
+    setForgotPwdState({ ...forgotPwdState, loading: true });
+    try {
+      const res = await fetch('/api/profile/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: forgotPwdState.code, newPassword: forgotPwdState.newPassword }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        setShowForgotPwdModal(false);
+        setForgotPwdState({ code: '', newPassword: '', loading: false });
+      } else {
+        toast.error(data.error || 'Failed to reset password');
+        setForgotPwdState({ ...forgotPwdState, loading: false });
+      }
+    } catch (e) {
+      toast.error('An error occurred');
+      setForgotPwdState({ ...forgotPwdState, loading: false });
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "profile":
@@ -363,7 +420,10 @@ export default function SettingsPage() {
               
               <div className="space-y-6 mb-8">
                 <div>
-                  <label className="block text-xs font-medium text-muted mb-2">Current Password</label>
+                  <div className="flex justify-between mb-2">
+                    <label className="block text-xs font-medium text-muted">Current Password</label>
+                    <button onClick={handleForgotPassword} className="text-[10px] font-semibold text-primary hover:underline">Forgot Password?</button>
+                  </div>
                   <input type="password" value={passwords.current} onChange={(e) => setPasswords({...passwords, current: e.target.value})} placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <div>
@@ -661,6 +721,60 @@ export default function SettingsPage() {
                   className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
                 >
                   {verifying2FA ? 'Verifying...' : 'Verify & Enable'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Forgot Password Modal */}
+        {showForgotPwdModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-card border border-card-border p-6 rounded-xl shadow-2xl max-w-md w-full"
+            >
+              <h3 className="text-xl font-bold text-foreground mb-2">Reset Password</h3>
+              <p className="text-sm text-muted mb-6">
+                Enter the 6-digit code sent to your email and your new password.
+              </p>
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-xs font-medium text-muted mb-2">Verification Code</label>
+                  <input 
+                    type="text" 
+                    maxLength={6}
+                    value={forgotPwdState.code}
+                    onChange={(e) => setForgotPwdState({...forgotPwdState, code: e.target.value.replace(/[^0-9]/g, '')})}
+                    placeholder="123456" 
+                    className="w-full bg-background border border-card-border rounded-lg px-4 py-3 text-center text-xl font-bold tracking-widest text-foreground focus:outline-none focus:border-primary transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-muted mb-2">New Password</label>
+                  <input 
+                    type="password" 
+                    value={forgotPwdState.newPassword}
+                    onChange={(e) => setForgotPwdState({...forgotPwdState, newPassword: e.target.value})}
+                    placeholder="••••••••" 
+                    className="w-full bg-background border border-card-border rounded-lg px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary transition-colors"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button 
+                  onClick={() => { setShowForgotPwdModal(false); setForgotPwdState({ code: '', newPassword: '', loading: false }); }}
+                  className="px-4 py-2 text-sm font-medium text-foreground hover:bg-card-border rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleResetPassword}
+                  disabled={forgotPwdState.code.length !== 6 || forgotPwdState.newPassword.length < 6 || forgotPwdState.loading}
+                  className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
+                >
+                  {forgotPwdState.loading ? 'Resetting...' : 'Reset Password'}
                 </button>
               </div>
             </motion.div>

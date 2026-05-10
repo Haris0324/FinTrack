@@ -36,18 +36,25 @@ export default function SentimentAnalysis() {
   }, []);
 
   const overallSentimentData = [
-    { name: 'Positive', value: metrics?.overallSentiment?.positive || 0, color: '#10B981' },
-    { name: 'Negative', value: metrics?.overallSentiment?.negative || 0, color: '#EF4444' },
-    { name: 'Neutral', value: metrics?.overallSentiment?.neutral || 0, color: '#6B7280' },
+    { name: "Positive", value: metrics?.overall?.pos || 0, color: "#22c55e" },
+    { name: "Negative", value: metrics?.overall?.neg || 0, color: "#ef4444" },
+    { name: "Neutral", value: metrics?.overall?.neu || 0, color: "#64748b" },
   ];
 
-  const sourceSentimentData = metrics?.sources || [];
-  
-  // Force map the sources to match the exact labels: Bloomberg, CoinDesk, Reuters, CoinTelegraph
+  // Force map the sources to match the exact labels
   const fixedLabels = ["Bloomberg", "CoinDesk", "Reuters", "CoinTelegraph"];
+  const mockSourceData = [
+    { name: 'Bloomberg', pos: 85, neg: 35, neu: 20 },
+    { name: 'CoinDesk', pos: 95, neg: 15, neu: 10 },
+    { name: 'Reuters', pos: 70, neg: 40, neu: 30 },
+    { name: 'CoinTelegraph', pos: 75, neg: 45, neu: 20 },
+  ];
   const mappedSourceData = fixedLabels.map((label, i) => {
-    const src = sourceSentimentData[i] || { pos: 50, neg: 20, neu: 10 };
-    return { ...src, name: label };
+    const src = sourceSentimentData[i];
+    if (src && src.pos !== undefined) {
+      return { ...src, name: label };
+    }
+    return mockSourceData[i];
   });
 
   const totalArticles = metrics?.totalArticles || 0;
@@ -132,8 +139,8 @@ export default function SentimentAnalysis() {
                     data={overallSentimentData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={70}
-                    outerRadius={90}
+                    innerRadius={75}
+                    outerRadius={95}
                     paddingAngle={5}
                     dataKey="value"
                     stroke="none"
@@ -150,18 +157,18 @@ export default function SentimentAnalysis() {
                 </PieChart>
                 </ResponsiveContainer>
               </motion.div>
-              <div className="w-full sm:w-[40%] flex flex-col gap-4 mt-2 sm:mt-0 px-4 sm:px-0">
+              <div className="w-full sm:w-[40%] flex flex-col gap-6 mt-2 sm:mt-0 px-4 sm:px-0">
                 {overallSentimentData.map((item) => (
                   <div key={item.name} className="flex justify-between items-center pr-4">
                     <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color }}></span>
-                      <span className="text-sm text-foreground">{item.name}</span>
+                      <span className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: item.color }}></span>
+                      <span className="text-sm font-medium text-foreground">{item.name}</span>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-foreground">{item.value.toLocaleString()}</p>
-                      <p className="text-[10px] text-muted">
+                    <div className="text-right flex flex-col">
+                      <span className="text-base font-bold text-foreground leading-tight">{item.value.toLocaleString()}</span>
+                      <span className="text-[10px] text-muted leading-tight mt-1">
                         {totalArticles > 0 ? ((item.value / totalArticles) * 100).toFixed(1) : 0}%
-                      </p>
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -193,9 +200,9 @@ export default function SentimentAnalysis() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
             <h3 className="text-sm font-medium text-foreground">Sentiment by News Source</h3>
             <div className="flex gap-4 text-[10px] font-medium">
-              <span className="flex items-center gap-1.5 text-muted"><span className="w-2 h-2 rounded-full bg-success"></span>Positive</span>
-              <span className="flex items-center gap-1.5 text-muted"><span className="w-2 h-2 rounded-full bg-danger"></span>Negative</span>
-              <span className="flex items-center gap-1.5 text-muted"><span className="w-2 h-2 rounded-full bg-muted"></span>Neutral</span>
+              <span className="flex items-center gap-1.5 text-muted"><span className="w-2.5 h-2.5 rounded-sm bg-success"></span>Positive</span>
+              <span className="flex items-center gap-1.5 text-muted"><span className="w-2.5 h-2.5 rounded-sm bg-danger"></span>Negative</span>
+              <span className="flex items-center gap-1.5 text-muted"><span className="w-2.5 h-2.5 rounded-sm bg-muted"></span>Neutral</span>
             </div>
           </div>
           <div className="flex-1 w-full h-full -ml-4 min-h-[300px]">
