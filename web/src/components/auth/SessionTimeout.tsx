@@ -17,7 +17,7 @@ export default function SessionTimeout() {
     const resetTimeout = () => {
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        signOut({ callbackUrl: '/auth/signin?error=SessionExpired' });
+        signOut({ callbackUrl: '/signin?error=SessionExpired' });
       }, TIMEOUT_MS);
     };
 

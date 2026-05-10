@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import AuthLayout from "@/components/layout/AuthLayout";
-import { Eye, EyeOff, Mail, Lock, TrendingUp, Globe } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, TrendingUp, Globe, ShieldAlert } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 
 export default function SignIn() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -94,6 +96,16 @@ export default function SignIn() {
       >
         <h2 className="text-3xl font-bold text-foreground mb-2">Sign in to <span className="text-gradient">Fintrack</span></h2>
         <p className="text-sm text-muted mb-8">Enter your credentials to access your account</p>
+
+        {error === "SessionExpired" && (
+          <div className="mb-6 p-3 rounded-lg bg-danger/10 border border-danger/20 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            <ShieldAlert className="w-5 h-5 text-danger" />
+            <div>
+              <p className="text-sm font-bold text-danger">Session Expired</p>
+              <p className="text-[10px] text-danger/80">Your session has timed out due to inactivity. Please sign in again.</p>
+            </div>
+          </div>
+        )}
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">

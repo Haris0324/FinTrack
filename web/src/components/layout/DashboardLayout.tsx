@@ -4,18 +4,31 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import HeaderActions from "./HeaderActions";
 import SessionTimeout from "../auth/SessionTimeout";
-import { Menu } from "lucide-react";
+import { Menu, Loader2 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/signin");
+    }
     if ((session as any)?.error === "SessionRevoked") {
       signOut({ callbackUrl: '/signin' });
     }
-  }, [session]);
+  }, [session, status, router]);
+
+  if (status === "loading" || status === "unauthenticated") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

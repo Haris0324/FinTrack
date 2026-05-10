@@ -145,7 +145,7 @@ export default function SentimentAnalysis() {
                     paddingAngle={5}
                     dataKey="value"
                     stroke="none"
-                    isAnimationActive={true}
+                    isAnimationActive={false}
                   >
                     {overallSentimentData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
