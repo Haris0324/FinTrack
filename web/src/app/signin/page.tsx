@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import AuthLayout from "@/components/layout/AuthLayout";
-import { Eye, EyeOff, Mail, Lock, TrendingUp, Globe, ShieldAlert } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, TrendingUp, Globe, ShieldAlert, Loader2 } from "lucide-react";
 import { signIn } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 
-export default function SignIn() {
+function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
@@ -217,5 +217,17 @@ export default function SignIn() {
         </p>
       </motion.div>
     </AuthLayout>
+  );
+}
+
+export default function SignIn() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   );
 }
