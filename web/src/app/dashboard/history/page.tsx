@@ -212,7 +212,9 @@ export default function HistoricalPatterns() {
                           if (active && payload && payload.length) {
                             return (
                               <div className="bg-[#1e293b] border border-card-border p-4 rounded-xl shadow-2xl min-w-[140px]">
-                                <p className="text-base font-bold text-white mb-2">{label.startsWith('-') || label.startsWith('+') ? `Day ${label.replace('d', '')}` : (label === 'Event Day' ? 'Day 0' : label)}</p>
+                                <p className="text-base font-bold text-white mb-2">
+                                  {label ? (label.startsWith('-') || label.startsWith('+') ? `Day ${label.replace('d', '')}` : (label === 'Event Day' ? 'Day 0' : label)) : ''}
+                                </p>
                                 <p className="text-sm text-success font-medium">price : {payload[0].value}</p>
                               </div>
                             );
