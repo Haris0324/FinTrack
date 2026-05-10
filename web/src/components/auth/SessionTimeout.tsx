@@ -3,8 +3,7 @@
 import { useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
 
-// const TIMEOUT_MS = 3 * 60 * 60 * 1000; // 3 hours
-const TIMEOUT_MS = 10000;
+const TIMEOUT_MS = 3 * 60 * 60 * 1000; // 3 hours
 
 export default function SessionTimeout() {
   const { data: session, status } = useSession();
