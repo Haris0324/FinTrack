@@ -1,12 +1,210 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { User, Lock, Bell, Activity, Camera, LogOut, ShieldAlert, Monitor, Smartphone, AlertTriangle } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { User, Lock, Bell, Activity, Camera, LogOut, ShieldAlert, Monitor, Smartphone, AlertTriangle, Loader2 } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import toast from "react-hot-toast";
+import { motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function SettingsPage() {
+  const { data: session, update: updateSession } = useSession();
   const [activeTab, setActiveTab] = useState("profile");
+  const [loading, setLoading] = useState(true);
+  
+  // Profile State
+  const [profile, setProfile] = useState<any>({});
+  const [savingProfile, setSavingProfile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Security State
+  const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+
+  // Logs & Sessions State
+  const [activities, setActivities] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [activitiesLimit, setActivitiesLimit] = useState(5);
+  const [loadingActivities, setLoadingActivities] = useState(false);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'activity' || activeTab === 'security') {
+      fetchLogsData();
+    }
+  }, [activeTab, activitiesLimit]);
+
+  const fetchProfileData = async () => {
+    try {
+      const res = await fetch('/api/profile/me');
+      const data = await res.json();
+      if (data.success) {
+        setProfile(data.user);
+        setTwoFactorEnabled(data.user.twoFactorEnabled || false);
+      }
+    } catch (e) {
+      toast.error('Failed to load profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLogsData = async () => {
+    setLoadingActivities(true);
+    try {
+      const res = await fetch(`/api/activity?limit=${activitiesLimit}`);
+      const data = await res.json();
+      if (data.success) {
+        setActivities(data.activities);
+        setSessions(data.sessions);
+      }
+    } catch (e) {
+      toast.error('Failed to load activity logs');
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+
+  const handleProfileSave = async () => {
+    setSavingProfile(true);
+    try {
+      const res = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: profile.name,
+          phone: profile.phone,
+          company: profile.company,
+          position: profile.position,
+        }),
+      });
+      if (res.ok) {
+        toast.success('Profile updated successfully');
+        await updateSession();
+      } else {
+        toast.error('Failed to update profile');
+      }
+    } catch (e) {
+      toast.error('An error occurred');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('File size must be less than 2MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      setProfile({ ...profile, profilePicture: base64String });
+      
+      try {
+        const res = await fetch('/api/profile/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profilePicture: base64String }),
+        });
+        if (res.ok) {
+          toast.success('Profile photo updated');
+          await updateSession();
+        }
+      } catch (e) {
+        toast.error('Failed to upload photo');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePhotoRemove = async () => {
+    setProfile({ ...profile, profilePicture: '' });
+    try {
+      await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profilePicture: '' }),
+      });
+      toast.success('Profile photo removed');
+      await updateSession();
+    } catch (e) {
+      toast.error('Failed to remove photo');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!confirm('Are you absolutely sure you want to delete your account? This cannot be undone.')) return;
+    try {
+      const res = await fetch('/api/profile/delete', { method: 'DELETE' });
+      if (res.ok) {
+        toast.success('Account deleted successfully');
+        signOut({ callbackUrl: '/signin' });
+      } else {
+        toast.error('Failed to delete account');
+      }
+    } catch (e) {
+      toast.error('An error occurred');
+    }
+  };
+
+  const handlePasswordUpdate = async () => {
+    if (passwords.new !== passwords.confirm) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    setSavingPassword(true);
+    try {
+      const res = await fetch('/api/profile/password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwords.current,
+          newPassword: passwords.new,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        setPasswords({ current: '', new: '', confirm: '' });
+      } else {
+        toast.error(data.error || 'Failed to update password');
+      }
+    } catch (e) {
+      toast.error('An error occurred');
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  const toggle2FA = async () => {
+    const newState = !twoFactorEnabled;
+    try {
+      const res = await fetch('/api/2fa/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enable: newState }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTwoFactorEnabled(newState);
+        toast.success(data.message);
+      } else {
+        toast.error(data.error || 'Failed to toggle 2FA');
+      }
+    } catch (e) {
+      toast.error('An error occurred');
+    }
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -19,21 +217,29 @@ export default function SettingsPage() {
               
               <div className="flex items-center gap-6 mb-8">
                 <div className="relative">
-                  <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-2xl font-bold text-white">
-                    JD
-                  </div>
-                  <button className="absolute bottom-0 right-0 p-1.5 rounded-full bg-card border border-card-border text-muted hover:text-foreground hover:border-primary transition-colors">
+                  {profile?.profilePicture ? (
+                    <img src={profile.profilePicture} alt="Profile" className="w-20 h-20 rounded-full object-cover border border-card-border" />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-2xl font-bold text-white">
+                      {profile?.name ? profile.name.substring(0, 2).toUpperCase() : 'JD'}
+                    </div>
+                  )}
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute bottom-0 right-0 p-1.5 rounded-full bg-card border border-card-border text-muted hover:text-foreground hover:border-primary transition-colors"
+                  >
                     <Camera className="w-3.5 h-3.5" />
                   </button>
+                  <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
                 </div>
                 <div>
                   <h4 className="text-sm font-semibold text-foreground mb-1">Profile Photo</h4>
                   <p className="text-xs text-muted mb-3">JPG, PNG or GIF. Max size 2MB</p>
                   <div className="flex gap-3">
-                    <button className="px-4 py-1.5 bg-primary text-white text-xs font-medium rounded-md hover:bg-primary-hover transition-colors">
+                    <button onClick={() => fileInputRef.current?.click()} className="px-4 py-1.5 bg-primary text-white text-xs font-medium rounded-md hover:bg-primary-hover transition-colors">
                       Upload Photo
                     </button>
-                    <button className="px-4 py-1.5 bg-transparent text-muted text-xs font-medium rounded-md hover:text-foreground transition-colors">
+                    <button onClick={handlePhotoRemove} className="px-4 py-1.5 bg-transparent text-muted text-xs font-medium rounded-md hover:text-foreground transition-colors">
                       Remove
                     </button>
                   </div>
@@ -43,32 +249,32 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Full Name</label>
-                  <input type="text" defaultValue="John Doe" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="text" value={profile?.name || ''} onChange={(e) => setProfile({...profile, name: e.target.value})} placeholder="John Doe" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Email Address</label>
-                  <input type="email" defaultValue="john.doe@example.com" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="email" value={profile?.email || ''} disabled className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground opacity-50 cursor-not-allowed transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Phone Number</label>
-                  <input type="tel" defaultValue="+1 (555) 123-4567" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="tel" value={profile?.phone || ''} onChange={(e) => setProfile({...profile, phone: e.target.value})} placeholder="+1 (555) 123-4567" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Company</label>
-                  <input type="text" defaultValue="Crypto Trading Inc." className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="text" value={profile?.company || ''} onChange={(e) => setProfile({...profile, company: e.target.value})} placeholder="Crypto Trading Inc." className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-xs font-medium text-muted mb-2">Role/Position</label>
-                  <input type="text" defaultValue="Senior Trader" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="text" value={profile?.position || ''} onChange={(e) => setProfile({...profile, position: e.target.value})} placeholder="Senior Trader" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
               </div>
 
               <div className="flex justify-end gap-4 border-t border-card-border pt-6">
-                <button className="px-5 py-2 text-sm font-medium text-muted hover:text-foreground transition-colors">
+                <button onClick={() => fetchProfileData()} className="px-5 py-2 text-sm font-medium text-muted hover:text-foreground transition-colors">
                   Cancel
                 </button>
-                <button className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors">
-                  Save Changes
+                <button disabled={savingProfile} onClick={handleProfileSave} className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors">
+                  {savingProfile ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </div>
@@ -76,7 +282,7 @@ export default function SettingsPage() {
             <div className="p-6 rounded-xl border border-danger/30 bg-danger/5">
               <h3 className="text-lg font-bold text-danger mb-1">Danger Zone</h3>
               <p className="text-sm text-muted mb-6">Once you delete your account, there is no going back. Please be certain.</p>
-              <button className="px-5 py-2 bg-danger text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2">
+              <button onClick={handleDeleteAccount} className="px-5 py-2 bg-danger text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
                 Delete Account
               </button>
@@ -93,61 +299,61 @@ export default function SettingsPage() {
               <div className="space-y-6 mb-8">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Current Password</label>
-                  <input type="password" placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="password" value={passwords.current} onChange={(e) => setPasswords({...passwords, current: e.target.value})} placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">New Password</label>
-                  <input type="password" placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="password" value={passwords.new} onChange={(e) => setPasswords({...passwords, new: e.target.value})} placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Confirm New Password</label>
-                  <input type="password" placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="password" value={passwords.confirm} onChange={(e) => setPasswords({...passwords, confirm: e.target.value})} placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
               </div>
 
               <div className="p-5 rounded-lg border border-card-border bg-background flex items-center justify-between mb-8">
                 <div className="flex items-start gap-3">
-                  <ShieldAlert className="w-5 h-5 text-success mt-0.5" />
+                  <ShieldAlert className={`w-5 h-5 ${twoFactorEnabled ? 'text-success' : 'text-muted'} mt-0.5`} />
                   <div>
                     <h4 className="text-sm font-bold text-foreground mb-1">Two-Factor Authentication</h4>
-                    <p className="text-xs text-muted mb-2">Add an extra layer of security to your account</p>
-                    <span className="flex items-center gap-1 text-xs text-success font-medium">
-                      <span className="w-1.5 h-1.5 rounded-full bg-success"></span> Enabled
-                    </span>
+                    <p className="text-xs text-muted mb-2">Add an extra layer of security to your account with Email OTPs</p>
+                    {twoFactorEnabled ? (
+                      <span className="flex items-center gap-1 text-xs text-success font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-success"></span> Enabled
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-xs text-muted font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-muted"></span> Disabled
+                      </span>
+                    )}
                   </div>
                 </div>
-                <button className="px-4 py-1.5 text-xs font-medium text-danger hover:bg-danger/10 rounded-md transition-colors">
-                  Disable
+                <button onClick={toggle2FA} className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${twoFactorEnabled ? 'text-danger hover:bg-danger/10' : 'text-primary bg-primary/10 hover:bg-primary/20'}`}>
+                  {twoFactorEnabled ? 'Disable' : 'Enable'}
                 </button>
               </div>
 
               <h4 className="text-sm font-bold text-foreground mb-4">Active Sessions</h4>
               <div className="space-y-3 mb-8">
-                <div className="p-4 rounded-lg border border-card-border bg-background flex items-center justify-between">
-                  <div className="flex items-start gap-3">
-                    <Monitor className="w-5 h-5 text-muted mt-0.5" />
-                    <div>
-                      <h4 className="text-sm font-semibold text-foreground mb-1">Current Session</h4>
-                      <p className="text-xs text-muted">Chrome on Windows • New York, USA</p>
+                {sessions.length > 0 ? sessions.map((sess, i) => (
+                  <div key={i} className="p-4 rounded-lg border border-card-border bg-background flex items-center justify-between">
+                    <div className="flex items-start gap-3">
+                      {sess.device.includes('Mobile') ? <Smartphone className="w-5 h-5 text-muted mt-0.5" /> : <Monitor className="w-5 h-5 text-muted mt-0.5" />}
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground mb-1">{sess.browser} on {sess.device}</h4>
+                        <p className="text-xs text-muted">IP: {sess.ip || 'Unknown'} • {new Date(sess.createdAt).toLocaleDateString()}</p>
+                      </div>
                     </div>
+                    {i === 0 && <span className="text-xs font-medium text-success">Current</span>}
                   </div>
-                  <span className="text-xs font-medium text-success">Active Now</span>
-                </div>
-                <div className="p-4 rounded-lg border border-card-border bg-background flex items-center justify-between">
-                  <div className="flex items-start gap-3">
-                    <Smartphone className="w-5 h-5 text-muted mt-0.5" />
-                    <div>
-                      <h4 className="text-sm font-semibold text-foreground mb-1">Mobile App</h4>
-                      <p className="text-xs text-muted">iOS App • Last active 2 hours ago</p>
-                    </div>
-                  </div>
-                  <button className="text-xs font-medium text-danger hover:underline">Revoke</button>
-                </div>
+                )) : (
+                  <p className="text-xs text-muted">No recent sessions found.</p>
+                )}
               </div>
 
               <div className="flex justify-end border-t border-card-border pt-6">
-                <button className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors">
-                  Update Password
+                <button disabled={savingPassword} onClick={handlePasswordUpdate} className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors">
+                  {savingPassword ? 'Updating...' : 'Update Password'}
                 </button>
               </div>
             </div>
@@ -198,32 +404,32 @@ export default function SettingsPage() {
               <p className="text-sm text-muted mb-8">Recent activity and login history</p>
               
               <div className="space-y-4 mb-8">
-                {[
-                  { action: "Logged in", time: "2 minutes ago", ip: "192.168.1.1", status: "Success", type: "success" },
-                  { action: "Updated alert settings", time: "1 hour ago", ip: "192.168.1.1", status: "Success", type: "success" },
-                  { action: "Changed password", time: "2 days ago", ip: "192.168.1.1", status: "Success", type: "success" },
-                  { action: "Failed login attempt", time: "3 days ago", ip: "192.168.1.50", status: "Warning", type: "warning" },
-                  { action: "Downloaded report", time: "5 days ago", ip: "192.168.1.1", status: "Success", type: "success" },
-                ].map((log, i) => (
+                {loadingActivities ? (
+                  <div className="flex justify-center p-4">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted" />
+                  </div>
+                ) : activities.length > 0 ? activities.map((log, i) => (
                   <div key={i} className="p-4 rounded-lg border border-card-border bg-background flex items-center justify-between hover:bg-card-border/30 transition-colors">
                     <div className="flex items-start gap-3">
-                      <Activity className={`w-4 h-4 mt-0.5 ${log.type === 'success' ? 'text-primary' : 'text-orange-500'}`} />
+                      <Activity className={`w-4 h-4 mt-0.5 ${log.type === 'success' ? 'text-primary' : log.type === 'warning' ? 'text-orange-500' : 'text-danger'}`} />
                       <div>
                         <h4 className="text-sm font-semibold text-foreground mb-1">{log.action}</h4>
-                        <p className="text-xs text-muted">{log.time} • IP: {log.ip}</p>
+                        <p className="text-xs text-muted">{new Date(log.createdAt).toLocaleString()} • IP: {log.ip || 'Unknown'}</p>
                       </div>
                     </div>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase ${
-                      log.type === 'success' ? 'bg-success/10 text-success' : 'bg-orange-500/10 text-orange-500'
+                      log.type === 'success' ? 'bg-success/10 text-success' : log.type === 'warning' ? 'bg-orange-500/10 text-orange-500' : 'bg-danger/10 text-danger'
                     }`}>
                       {log.status}
                     </span>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-xs text-muted">No activities found.</p>
+                )}
               </div>
 
               <div className="flex justify-center border-t border-card-border pt-6">
-                <button className="text-xs font-medium text-muted hover:text-foreground transition-colors">
+                <button onClick={() => setActivitiesLimit(activitiesLimit + 5)} className="text-xs font-medium text-muted hover:text-foreground transition-colors">
                   Load More Activities
                 </button>
               </div>
@@ -237,12 +443,17 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col gap-6"
+      >
         
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground mb-1">Account Settings</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-1"><span className="text-gradient">Account Settings</span></h2>
             <p className="text-sm text-muted">Manage your Fintrack account and preferences</p>
           </div>
           <button 
@@ -312,7 +523,7 @@ export default function SettingsPage() {
           
         </div>
 
-      </div>
+      </motion.div>
     </DashboardLayout>
   );
 }

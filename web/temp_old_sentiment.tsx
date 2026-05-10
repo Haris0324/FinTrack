@@ -1,10 +1,14 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Database, Activity, Brain, Zap, Target, PieChart as PieChartIcon, Loader2 } from "lucide-react";
+import { Database, Activity, Brain, Zap, Target, PieChart as PieChartIcon } from "lucide-react";
 import { PieChart, Pie, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { motion } from "framer-motion";
+
+const overallSentimentData = [
+  { name: 'Positive', value: 542, color: '#10B981' },
+  { name: 'Negative', value: 318, color: '#EF4444' },
+  { name: 'Neutral', value: 187, color: '#6B7280' },
+];
 
 const topicSentimentData = [
   { subject: 'Regulation', A: 85, fullMark: 100 },
@@ -14,48 +18,23 @@ const topicSentimentData = [
   { subject: 'Security', A: 50, fullMark: 100 },
 ];
 
+const sourceSentimentData = [
+  { name: 'Bloomberg', pos: 85, neg: 35, neu: 20 },
+  { name: 'CoinDesk', pos: 95, neg: 15, neu: 10 },
+  { name: 'Reuters', pos: 70, neg: 40, neu: 30 },
+  { name: 'CryptoPanic', pos: 60, neg: 50, neu: 25 },
+  { name: 'CoinTelegraph', pos: 75, neg: 45, neu: 20 },
+];
+
 export default function SentimentAnalysis() {
-  const [metrics, setMetrics] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        const res = await fetch('/api/metrics');
-        if (res.ok) {
-          const data = await res.json();
-          setMetrics(data);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMetrics();
-  }, []);
-
-  const overallSentimentData = [
-    { name: 'Positive', value: metrics?.overallSentiment?.positive || 0, color: '#10B981' },
-    { name: 'Negative', value: metrics?.overallSentiment?.negative || 0, color: '#EF4444' },
-    { name: 'Neutral', value: metrics?.overallSentiment?.neutral || 0, color: '#6B7280' },
-  ];
-
-  const sourceSentimentData = metrics?.sources || [];
-  const totalArticles = metrics?.totalArticles || 0;
   return (
     <DashboardLayout>
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col gap-6"
-      >
+      <div className="flex flex-col gap-6">
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-foreground mb-1"><span className="text-gradient">NLP & Sentiment Analysis</span></h2>
+            <h2 className="text-2xl font-bold text-foreground mb-1">NLP & Sentiment Analysis</h2>
             <p className="text-sm text-muted">FinBERT-powered sentiment classification and entity extraction</p>
           </div>
           <div className="flex items-center gap-4">
@@ -74,7 +53,7 @@ export default function SentimentAnalysis() {
             </div>
             <div>
               <p className="text-[10px] font-medium text-muted">Articles Scraped</p>
-              <h3 className="text-xl font-bold text-foreground">{loading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : totalArticles.toLocaleString()}</h3>
+              <h3 className="text-xl font-bold text-foreground">1,247</h3>
             </div>
           </div>
           <div className="p-4 rounded-xl bg-card border border-card-border flex items-center gap-4">
@@ -83,7 +62,7 @@ export default function SentimentAnalysis() {
             </div>
             <div>
               <p className="text-[10px] font-medium text-muted">Text Cleaned</p>
-              <h3 className="text-xl font-bold text-foreground">{loading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : (totalArticles * 0.96).toFixed(0).toLocaleString()}</h3>
+              <h3 className="text-xl font-bold text-foreground">1,198</h3>
             </div>
           </div>
           <div className="p-4 rounded-xl bg-card border border-card-border flex items-center gap-4">
@@ -92,7 +71,7 @@ export default function SentimentAnalysis() {
             </div>
             <div>
               <p className="text-[10px] font-medium text-muted">Sentiment Analyzed</p>
-              <h3 className="text-xl font-bold text-foreground">{loading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : totalArticles.toLocaleString()}</h3>
+              <h3 className="text-xl font-bold text-foreground">1,047</h3>
             </div>
           </div>
           <div className="p-4 rounded-xl bg-card border border-card-border flex items-center gap-4">
@@ -101,7 +80,7 @@ export default function SentimentAnalysis() {
             </div>
             <div>
               <p className="text-[10px] font-medium text-muted">Entities Extracted</p>
-              <h3 className="text-xl font-bold text-foreground">{loading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : (totalArticles * 2.3).toFixed(0).toLocaleString()}</h3>
+              <h3 className="text-xl font-bold text-foreground">1,047</h3>
             </div>
           </div>
         </div>
@@ -111,8 +90,8 @@ export default function SentimentAnalysis() {
           
           <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col relative min-h-[350px]">
             <h3 className="text-sm font-medium text-foreground mb-4">Overall Sentiment Distribution</h3>
-            <div className="flex-1 w-full h-full flex flex-col items-center">
-              <ResponsiveContainer width="100%" height={250}>
+            <div className="flex-1 w-full h-full flex items-center">
+              <ResponsiveContainer width="60%" height="100%">
                 <PieChart>
                   <Pie
                     data={overallSentimentData}
@@ -135,7 +114,7 @@ export default function SentimentAnalysis() {
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="w-full flex flex-col gap-4 mt-2 px-4 sm:px-0 sm:w-[80%]">
+              <div className="w-[40%] flex flex-col gap-4">
                 {overallSentimentData.map((item) => (
                   <div key={item.name} className="flex justify-between items-center pr-4">
                     <div className="flex items-center gap-2">
@@ -143,9 +122,9 @@ export default function SentimentAnalysis() {
                       <span className="text-sm text-foreground">{item.name}</span>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-foreground">{item.value.toLocaleString()}</p>
+                      <p className="text-sm font-bold text-foreground">{item.value}</p>
                       <p className="text-[10px] text-muted">
-                        {totalArticles > 0 ? ((item.value / totalArticles) * 100).toFixed(1) : 0}%
+                        {((item.value / 1047) * 100).toFixed(1)}%
                       </p>
                     </div>
                   </div>
@@ -199,9 +178,9 @@ export default function SentimentAnalysis() {
                       return (
                         <div className="bg-[#1e293b] border border-card-border p-4 rounded-xl shadow-xl">
                           <p className="text-sm font-bold text-white mb-2">{label}</p>
-                          <p className="text-xs text-success mb-1">positive : {payload[0]?.payload?.pos || 0}</p>
-                          <p className="text-xs text-danger mb-1">negative : {payload[0]?.payload?.neg || 0}</p>
-                          <p className="text-xs text-muted">neutral : {payload[0]?.payload?.neu || 0}</p>
+                          <p className="text-xs text-success mb-1">positive : {payload[0].value}</p>
+                          <p className="text-xs text-danger mb-1">negative : {payload[1].value}</p>
+                          <p className="text-xs text-muted">neutral : {payload[2].value}</p>
                         </div>
                       );
                     }
@@ -282,7 +261,7 @@ export default function SentimentAnalysis() {
           </div>
         </div>
 
-      </motion.div>
+      </div>
     </DashboardLayout>
   );
 }

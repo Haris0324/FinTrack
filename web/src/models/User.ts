@@ -25,6 +25,32 @@ const UserSchema = new mongoose.Schema({
   isVerified: {
     type: Boolean,
     default: false,
+  },
+  profilePicture: {
+    type: String,
+    default: "",
+  },
+  phone: {
+    type: String,
+    default: "",
+  },
+  company: {
+    type: String,
+    default: "",
+  },
+  position: {
+    type: String,
+    default: "",
+  },
+  twoFactorEnabled: {
+    type: Boolean,
+    default: false,
+  },
+  twoFactorCode: {
+    type: String,
+  },
+  twoFactorExpires: {
+    type: Date,
   }
 }, { timestamps: true });
 

@@ -4,7 +4,10 @@ import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
 import connectToDatabase from "@/lib/mongoose";
 import User from "@/models/User";
+import ActivityLog from "@/models/ActivityLog";
+import SessionLog from "@/models/SessionLog";
 import bcrypt from "bcrypt";
+import { UAParser } from "ua-parser-js";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -22,7 +25,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Invalid credentials");
         }
@@ -42,9 +45,60 @@ export const authOptions: NextAuthOptions = {
         }
         const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
         if (!isPasswordCorrect) {
+          // Log failed attempt
+          try {
+             const ip = req.headers?.['x-forwarded-for'] || 'Unknown IP';
+             await ActivityLog.create({
+               userId: user._id,
+               action: 'Failed login attempt',
+               status: 'Warning',
+               type: 'warning',
+               ip
+             });
+          } catch(e) {}
           return null;
         }
-        return { id: user._id.toString(), name: user.name, email: user.email, role: user.role };
+
+        // Check 2FA if enabled
+        if (user.twoFactorEnabled) {
+          if (!credentials?.twoFactorCode) {
+            throw new Error("2FA_REQUIRED");
+          }
+          if (user.twoFactorCode !== credentials.twoFactorCode || !user.twoFactorExpires || new Date() > user.twoFactorExpires) {
+            throw new Error("Invalid or expired 2FA code");
+          }
+          // Clear the code after successful use
+          user.twoFactorCode = undefined;
+          user.twoFactorExpires = undefined;
+          await user.save();
+        }
+
+        // Log success
+        try {
+           const ip = req.headers?.['x-forwarded-for'] || 'Unknown IP';
+           const userAgentStr = req.headers?.['user-agent'] || '';
+           const parser = new UAParser(userAgentStr);
+           const result = parser.getResult();
+           const device = result.device.type === 'mobile' ? 'Mobile App' : (result.os.name || 'Unknown Device');
+           const browser = result.browser.name || 'Unknown Browser';
+           
+           await ActivityLog.create({
+             userId: user._id,
+             action: 'Logged in',
+             status: 'Success',
+             type: 'success',
+             ip
+           });
+
+           await SessionLog.create({
+             userId: user._id,
+             device,
+             browser,
+             ip
+           });
+        } catch(e) {}
+
+        return { id: user._id.toString(), name: user.name, email: user.email, role: user.role, profilePicture: user.profilePicture };
       }
     })
   ],
@@ -78,6 +132,7 @@ export const authOptions: NextAuthOptions = {
         } else {
             token.role = (user as any).role || "user";
         }
+        token.profilePicture = (user as any).profilePicture || "";
       }
       return token;
     },
@@ -85,6 +140,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
+        (session.user as any).profilePicture = token.profilePicture;
       }
       return session;
     }

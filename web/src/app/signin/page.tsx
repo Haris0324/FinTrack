@@ -16,6 +16,8 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("fintrack_remembered_email");
@@ -40,10 +42,22 @@ export default function SignIn() {
         redirect: false,
         email,
         password,
+        twoFactorCode: requires2FA ? twoFactorCode : undefined,
       });
 
       if (result?.error) {
-        toast.error("Invalid email or password. Please try again.");
+        if (result.error === "2FA_REQUIRED") {
+          setRequires2FA(true);
+          toast.success("2FA code sent to your email!");
+          // Trigger the email sending API
+          await fetch('/api/2fa/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+        } else {
+          toast.error(result.error === "Invalid or expired 2FA code" ? result.error : "Invalid email or password.");
+        }
       } else {
         toast.success("Signed in successfully!");
         router.push("/dashboard");
@@ -93,6 +107,7 @@ export default function SignIn() {
                 required
                 placeholder="Enter your email" 
                 className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
+                disabled={requires2FA}
               />
             </div>
           </div>
@@ -108,17 +123,41 @@ export default function SignIn() {
                 required
                 placeholder="Enter your password" 
                 className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-colors"
+                disabled={requires2FA}
               />
               <button 
                 type="button" 
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground focus:outline-none z-10 p-2"
                 aria-label={showPassword ? "Hide password" : "Show password"}
+                disabled={requires2FA}
               >
                 {showPassword ? <EyeOff className="w-4 h-4 pointer-events-none" /> : <Eye className="w-4 h-4 pointer-events-none" />}
               </button>
             </div>
           </div>
+
+          {requires2FA && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="space-y-2 pt-2"
+            >
+              <label className="text-xs font-medium text-foreground">2-Factor Authentication Code</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary" />
+                <input 
+                  type="text" 
+                  value={twoFactorCode}
+                  onChange={(e) => setTwoFactorCode(e.target.value)}
+                  required
+                  placeholder="Enter 6-digit code from email" 
+                  className="w-full bg-background border border-primary/50 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
+                  maxLength={6}
+                />
+              </div>
+            </motion.div>
+          )}
 
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-2">
@@ -143,7 +182,7 @@ export default function SignIn() {
             disabled={loading}
             className="w-full bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-3 mt-4 transition-colors"
           >
-            {loading ? "Signing In..." : "Sign In"}
+            {loading ? "Signing In..." : requires2FA ? "Verify Code & Sign In" : "Sign In"}
           </button>
         </form>
 
