@@ -100,7 +100,7 @@ export const authOptions: NextAuthOptions = {
            (user as any).sessionId = sessionLog._id.toString();
         } catch(e) {}
 
-        return { id: user._id.toString(), name: user.name, email: user.email, role: user.role, profilePicture: user.profilePicture, sessionId: (user as any).sessionId };
+        return { id: user._id.toString(), name: user.name, email: user.email, role: user.role, sessionId: (user as any).sessionId };
       }
     })
   ],
@@ -134,7 +134,6 @@ export const authOptions: NextAuthOptions = {
         } else {
             token.role = (user as any).role || "user";
         }
-        token.profilePicture = (user as any).profilePicture || "";
         if ((user as any).sessionId) {
           token.sessionId = (user as any).sessionId;
         }
@@ -159,7 +158,6 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
-        (session.user as any).profilePicture = token.profilePicture;
       }
       return session;
     }

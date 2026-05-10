@@ -96,11 +96,16 @@ export default function HeaderActions() {
       </div>
 
       <Link href="/dashboard/settings" className="w-9 h-9 rounded-full bg-card border border-card-border flex items-center justify-center hover:bg-card-border transition-colors overflow-hidden shrink-0">
-        {(session?.user as any)?.profilePicture || session?.user?.image ? (
-            <img src={(session?.user as any)?.profilePicture || session?.user?.image!} alt="User" className="w-full h-full object-cover" />
-        ) : (
-            <UserIcon className="w-5 h-5 text-muted" />
-        )}
+        <img 
+          src={`/api/profile/avatar?t=${Date.now()}`} 
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = 'none';
+            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+          }}
+          alt="User" 
+          className="w-full h-full object-cover" 
+        />
+        <UserIcon className="w-5 h-5 text-muted hidden" />
       </Link>
     </div>
   );
