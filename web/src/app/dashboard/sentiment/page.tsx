@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Database, Activity, Brain, Zap, Target, PieChart as PieChartIcon, Loader2 } from "lucide-react";
 import { PieChart, Pie, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { motion } from "framer-motion";
 
 const topicSentimentData = [
   { subject: 'Regulation', A: 85, fullMark: 100 },
@@ -72,12 +71,7 @@ export default function SentimentAnalysis() {
   const totalArticles = metrics?.totalArticles > 0 ? metrics.totalArticles : (posVal + negVal + neuVal);
   return (
     <DashboardLayout>
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col gap-6"
-      >
+      <div className="flex flex-col gap-6">
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
@@ -243,7 +237,22 @@ export default function SentimentAnalysis() {
                   />
                   <Bar 
                     dataKey="pos" 
+                    fill="#22c55e" 
+                    stackId="a"
+                    isAnimationActive={false} 
+                    barSize={40} 
+                  />
+                  <Bar 
+                    dataKey="neg" 
+                    fill="#ef4444" 
+                    stackId="a"
+                    isAnimationActive={false} 
+                    barSize={40} 
+                  />
+                  <Bar 
+                    dataKey="neu" 
                     fill="#64748b" 
+                    stackId="a"
                     isAnimationActive={false} 
                     barSize={40} 
                     radius={[4, 4, 0, 0]} 
@@ -322,7 +331,7 @@ export default function SentimentAnalysis() {
           </div>
         </div>
 
-      </motion.div>
+      </div>
     </DashboardLayout>
   );
 }

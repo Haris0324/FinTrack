@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import HeaderActions from "./HeaderActions";
+import SessionTimeout from "../auth/SessionTimeout";
 import { Menu } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
@@ -18,6 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-background">
+      <SessionTimeout />
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <div className="md:pl-64 flex flex-col min-h-screen">
         <header className="h-16 border-b border-card-border bg-background/50 backdrop-blur-md flex items-center justify-between px-4 md:px-8 sticky top-0 z-40">
