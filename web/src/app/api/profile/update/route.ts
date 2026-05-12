@@ -5,6 +5,7 @@ import connectToDatabase from '@/lib/mongoose';
 import User from '@/models/User';
 import ActivityLog from '@/models/ActivityLog';
 import { uploadToCloudinary } from '@/lib/cloudinary';
+import { headers } from 'next/headers';
 
 export async function POST(req: Request) {
   try {
@@ -43,7 +44,8 @@ export async function POST(req: Request) {
 
     // Log Activity
     try {
-      const ip = req.headers.get('x-forwarded-for') || 'Unknown IP';
+      const headerList = await headers();
+      const ip = headerList.get('x-forwarded-for') || 'Unknown IP';
       await ActivityLog.create({
         userId: user._id,
         action: 'Updated profile information',

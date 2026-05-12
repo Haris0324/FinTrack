@@ -104,7 +104,7 @@ export default function SettingsPage() {
       });
       if (res.ok) {
         toast.success('Profile updated successfully');
-        await updateSession();
+        await updateSession(); // Refresh name/image in header/sidebar
       } else {
         toast.error('Failed to update profile');
       }
@@ -137,26 +137,36 @@ export default function SettingsPage() {
         });
         if (res.ok) {
           const data = await res.json();
+          setProfile({ ...profile, profilePicture: data.user.profilePicture });
           toast.success('Profile photo updated');
-          await updateSession({ image: data.user.profilePicture });
+          await updateSession(); // Will trigger JWT refresh from DB
+        } else {
+          const errData = await res.json();
+          toast.error(errData.error || 'Failed to update photo');
+          fetchProfileData(); // Reset to server state
         }
       } catch (e) {
         toast.error('Failed to upload photo');
+        fetchProfileData();
       }
     };
     reader.readAsDataURL(file);
   };
 
   const handlePhotoRemove = async () => {
-    setProfile({ ...profile, profilePicture: '' });
     try {
-      await fetch('/api/profile/update', {
+      const res = await fetch('/api/profile/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ profilePicture: '' }),
       });
-      toast.success('Profile photo removed');
-      await updateSession({ image: "" });
+      if (res.ok) {
+        setProfile({ ...profile, profilePicture: '' });
+        toast.success('Profile photo removed');
+        await updateSession();
+      } else {
+        toast.error('Failed to remove photo');
+      }
     } catch (e) {
       toast.error('Failed to remove photo');
     }

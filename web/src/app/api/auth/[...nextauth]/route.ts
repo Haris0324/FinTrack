@@ -164,8 +164,14 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      if (trigger === "update" && session?.image) {
-        token.image = session.image;
+      if (trigger === "update") {
+        await connectToDatabase();
+        const dbUser = await User.findById(token.id);
+        if (dbUser) {
+          token.image = dbUser.profilePicture;
+          token.name = dbUser.name;
+          token.role = dbUser.role;
+        }
       }
       
       // Verify session exists in DB
