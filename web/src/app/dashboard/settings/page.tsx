@@ -142,6 +142,7 @@ export default function SettingsPage() {
           await updateSession(); // Will trigger JWT refresh from DB
         } else {
           const errData = await res.json();
+          console.error("Upload failed:", errData.error);
           toast.error(errData.error || 'Failed to update photo');
           fetchProfileData(); // Reset to server state
         }

@@ -7,8 +7,13 @@ cloudinary.config({
 });
 
 export const uploadToCloudinary = async (base64Image: string, folder: string = "fintrack/profiles") => {
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    console.error("Cloudinary credentials missing");
+    throw new Error("Cloudinary configuration missing on server");
+  }
+
   try {
-    // Check if the string is already a URL (e.g. Google/GitHub profile pic)
+    // Check if the string is already a URL
     if (base64Image.startsWith('http')) {
       return base64Image;
     }
@@ -18,9 +23,9 @@ export const uploadToCloudinary = async (base64Image: string, folder: string = "
       resource_type: "auto",
     });
     return result.secure_url;
-  } catch (error) {
-    console.error("Cloudinary upload error:", error);
-    throw new Error("Failed to upload image to Cloudinary");
+  } catch (error: any) {
+    console.error("Cloudinary upload error details:", error);
+    throw new Error(error.message || "Failed to upload image to Cloudinary");
   }
 };
 
