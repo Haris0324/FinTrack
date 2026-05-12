@@ -12,7 +12,7 @@ export default function SettingsPage() {
   const { data: session, update: updateSession } = useSession();
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(true);
-  
+
   // Profile State
   const [profile, setProfile] = useState<any>({});
   const [savingProfile, setSavingProfile] = useState(false);
@@ -70,7 +70,7 @@ export default function SettingsPage() {
       const data = await res.json();
       if (data.success) {
         setActivities(data.activities);
-        
+
         const uniqueSessions: any[] = [];
         const seen = new Set();
         for (const sess of (data.sessions || [])) {
@@ -128,7 +128,7 @@ export default function SettingsPage() {
     reader.onloadend = async () => {
       const base64String = reader.result as string;
       setProfile({ ...profile, profilePicture: base64String });
-      
+
       try {
         const res = await fetch('/api/profile/update', {
           method: 'POST',
@@ -343,7 +343,7 @@ export default function SettingsPage() {
             <div className="p-6 rounded-xl bg-card border border-card-border">
               <h3 className="text-lg font-bold text-foreground mb-1">Profile Information</h3>
               <p className="text-sm text-muted mb-8">Update your account profile information and email address</p>
-              
+
               <div className="flex items-center gap-6 mb-8">
                 <div className="relative">
                   {profile?.profilePicture ? (
@@ -353,7 +353,7 @@ export default function SettingsPage() {
                       {profile?.name ? profile.name.substring(0, 2).toUpperCase() : 'JD'}
                     </div>
                   )}
-                  <button 
+                  <button
                     onClick={() => fileInputRef.current?.click()}
                     className="absolute bottom-0 right-0 p-1.5 rounded-full bg-card border border-card-border text-muted hover:text-foreground hover:border-primary transition-colors"
                   >
@@ -378,7 +378,7 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Full Name</label>
-                  <input type="text" value={profile?.name || ''} onChange={(e) => setProfile({...profile, name: e.target.value})} placeholder="John Doe" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="text" value={profile?.name || ''} onChange={(e) => setProfile({ ...profile, name: e.target.value })} placeholder="Haris" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Email Address</label>
@@ -386,15 +386,15 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Phone Number</label>
-                  <input type="tel" value={profile?.phone || ''} onChange={(e) => setProfile({...profile, phone: e.target.value})} placeholder="+92 1234567890" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="tel" value={profile?.phone || ''} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} placeholder="+92 1234567890" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Company</label>
-                  <input type="text" value={profile?.company || ''} onChange={(e) => setProfile({...profile, company: e.target.value})} placeholder="Crypto Trading Inc." className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="text" value={profile?.company || ''} onChange={(e) => setProfile({ ...profile, company: e.target.value })} placeholder="Crypto Trading Inc." className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-xs font-medium text-muted mb-2">Role/Position</label>
-                  <input type="text" value={profile?.position || ''} onChange={(e) => setProfile({...profile, position: e.target.value})} placeholder="Senior Trader" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="text" value={profile?.position || ''} onChange={(e) => setProfile({ ...profile, position: e.target.value })} placeholder="Senior Trader" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
               </div>
 
@@ -424,26 +424,26 @@ export default function SettingsPage() {
             <div className="p-6 rounded-xl bg-card border border-card-border">
               <h3 className="text-lg font-bold text-foreground mb-1">Security & Password</h3>
               <p className="text-sm text-muted mb-8">Manage your password and security settings</p>
-              
+
               <div className="space-y-6 mb-8">
                 <div>
                   <div className="flex justify-between mb-2">
                     <label className="block text-xs font-medium text-muted">Current Password</label>
                     <button onClick={handleForgotPassword} className="text-[10px] font-semibold text-primary hover:underline">Forgot Password?</button>
                   </div>
-                  <input type="password" value={passwords.current} onChange={(e) => setPasswords({...passwords, current: e.target.value})} placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="password" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">New Password</label>
-                  <input type="password" value={passwords.new} onChange={(e) => setPasswords({...passwords, new: e.target.value})} placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
-                  <PasswordStrengthIndicator 
-                    password={passwords.new} 
-                    onValidationChange={setIsPasswordStrong} 
+                  <input type="password" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <PasswordStrengthIndicator
+                    password={passwords.new}
+                    onValidationChange={setIsPasswordStrong}
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Confirm New Password</label>
-                  <input type="password" value={passwords.confirm} onChange={(e) => setPasswords({...passwords, confirm: e.target.value})} placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <input type="password" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
                 </div>
               </div>
 
@@ -508,7 +508,7 @@ export default function SettingsPage() {
             <div className="p-6 rounded-xl bg-card border border-card-border">
               <h3 className="text-lg font-bold text-foreground mb-1">Notification Preferences</h3>
               <p className="text-sm text-muted mb-8">Manage how you receive notifications from Fintrack</p>
-              
+
               <div className="space-y-4 mb-8">
                 {[
                   { title: "Email Alerts", desc: "Receive high-impact news alerts via email", checked: true },
@@ -545,7 +545,7 @@ export default function SettingsPage() {
             <div className="p-6 rounded-xl bg-card border border-card-border">
               <h3 className="text-lg font-bold text-foreground mb-1">Activity Log</h3>
               <p className="text-sm text-muted mb-8">Recent activity and login history</p>
-              
+
               <div className="space-y-4 mb-8">
                 {loadingActivities ? (
                   <div className="flex justify-center p-4">
@@ -560,9 +560,8 @@ export default function SettingsPage() {
                         <p className="text-xs text-muted">{new Date(log.createdAt).toLocaleString()} • IP: {log.ip || 'Unknown'}</p>
                       </div>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase ${
-                      log.type === 'success' ? 'bg-success/10 text-success' : log.type === 'warning' ? 'bg-orange-500/10 text-orange-500' : 'bg-danger/10 text-danger'
-                    }`}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase ${log.type === 'success' ? 'bg-success/10 text-success' : log.type === 'warning' ? 'bg-orange-500/10 text-orange-500' : 'bg-danger/10 text-danger'
+                      }`}>
                       {log.status}
                     </span>
                   </div>
@@ -586,20 +585,20 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="flex flex-col gap-6"
       >
-        
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-1"><span className="text-gradient">Account Settings</span></h2>
             <p className="text-sm text-muted">Manage your Fintrack account and preferences</p>
           </div>
-          <button 
+          <button
             onClick={() => signOut({ callbackUrl: '/signin' })}
             className="flex items-center gap-2 px-4 py-2 bg-card border border-card-border text-danger text-sm font-medium rounded-lg hover:bg-danger/10 transition-colors"
           >
@@ -610,49 +609,45 @@ export default function SettingsPage() {
 
         {/* Main Content Layout */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
-          
+
           {/* Inner Sidebar */}
           <div className="w-full lg:w-64 shrink-0 flex flex-col gap-2 p-4 rounded-xl bg-card border border-card-border">
-            <button 
+            <button
               onClick={() => setActiveTab("profile")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${
-                activeTab === "profile" 
-                  ? "bg-primary text-white" 
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${activeTab === "profile"
+                  ? "bg-primary text-white"
                   : "text-muted hover:bg-background hover:text-foreground"
-              }`}
+                }`}
             >
               <User className="w-4 h-4" />
               Profile Information
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab("security")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${
-                activeTab === "security" 
-                  ? "bg-primary text-white" 
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${activeTab === "security"
+                  ? "bg-primary text-white"
                   : "text-muted hover:bg-background hover:text-foreground"
-              }`}
+                }`}
             >
               <Lock className="w-4 h-4" />
               Security & Password
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab("notifications")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${
-                activeTab === "notifications" 
-                  ? "bg-primary text-white" 
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${activeTab === "notifications"
+                  ? "bg-primary text-white"
                   : "text-muted hover:bg-background hover:text-foreground"
-              }`}
+                }`}
             >
               <Bell className="w-4 h-4" />
               Notifications
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab("activity")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${
-                activeTab === "activity" 
-                  ? "bg-primary text-white" 
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${activeTab === "activity"
+                  ? "bg-primary text-white"
                   : "text-muted hover:bg-background hover:text-foreground"
-              }`}
+                }`}
             >
               <Activity className="w-4 h-4" />
               Activity Log
@@ -663,13 +658,13 @@ export default function SettingsPage() {
           <div className="flex-1 w-full">
             {renderContent()}
           </div>
-          
+
         </div>
 
         {/* Delete Account Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-card border border-card-border p-6 rounded-xl shadow-2xl max-w-md w-full"
@@ -682,13 +677,13 @@ export default function SettingsPage() {
                 Are you absolutely sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.
               </p>
               <div className="flex justify-end gap-3">
-                <button 
+                <button
                   onClick={() => setShowDeleteModal(false)}
                   className="px-4 py-2 text-sm font-medium text-foreground hover:bg-card-border rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={handleDeleteAccount}
                   className="px-4 py-2 bg-danger text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-colors"
                 >
@@ -702,7 +697,7 @@ export default function SettingsPage() {
         {/* 2FA Setup Modal */}
         {show2FAModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-card border border-card-border p-6 rounded-xl shadow-2xl max-w-md w-full"
@@ -711,22 +706,22 @@ export default function SettingsPage() {
               <p className="text-sm text-muted mb-6">
                 We've sent a 6-digit verification code to your email. Enter it below to enable Two-Factor Authentication.
               </p>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 maxLength={6}
                 value={twoFactorSetupCode}
                 onChange={(e) => setTwoFactorSetupCode(e.target.value.replace(/[^0-9]/g, ''))}
-                placeholder="123456" 
+                placeholder="123456"
                 className="w-full bg-background border border-card-border rounded-lg px-4 py-3 text-center text-2xl font-bold tracking-widest text-foreground focus:outline-none focus:border-primary transition-colors mb-6"
               />
               <div className="flex justify-end gap-3">
-                <button 
+                <button
                   onClick={() => { setShow2FAModal(false); setTwoFactorSetupCode(""); }}
                   className="px-4 py-2 text-sm font-medium text-foreground hover:bg-card-border rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={handleVerify2FASetup}
                   disabled={twoFactorSetupCode.length !== 6 || verifying2FA}
                   className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
@@ -741,7 +736,7 @@ export default function SettingsPage() {
         {/* Forgot Password Modal */}
         {showForgotPwdModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-card border border-card-border p-6 rounded-xl shadow-2xl max-w-md w-full"
@@ -753,34 +748,34 @@ export default function SettingsPage() {
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Verification Code</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     maxLength={6}
                     value={forgotPwdState.code}
-                    onChange={(e) => setForgotPwdState({...forgotPwdState, code: e.target.value.replace(/[^0-9]/g, '')})}
-                    placeholder="123456" 
+                    onChange={(e) => setForgotPwdState({ ...forgotPwdState, code: e.target.value.replace(/[^0-9]/g, '') })}
+                    placeholder="123456"
                     className="w-full bg-background border border-card-border rounded-lg px-4 py-3 text-center text-xl font-bold tracking-widest text-foreground focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">New Password</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     value={forgotPwdState.newPassword}
-                    onChange={(e) => setForgotPwdState({...forgotPwdState, newPassword: e.target.value})}
-                    placeholder="••••••••" 
+                    onChange={(e) => setForgotPwdState({ ...forgotPwdState, newPassword: e.target.value })}
+                    placeholder="••••••••"
                     className="w-full bg-background border border-card-border rounded-lg px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
               </div>
               <div className="flex justify-end gap-3">
-                <button 
+                <button
                   onClick={() => { setShowForgotPwdModal(false); setForgotPwdState({ code: '', newPassword: '', loading: false }); }}
                   className="px-4 py-2 text-sm font-medium text-foreground hover:bg-card-border rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={handleResetPassword}
                   disabled={forgotPwdState.code.length !== 6 || forgotPwdState.newPassword.length < 6 || forgotPwdState.loading}
                   className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"

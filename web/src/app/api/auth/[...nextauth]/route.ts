@@ -90,17 +90,39 @@ export const authOptions: NextAuthOptions = {
         await connectToDatabase();
         const existingUser = await User.findOne({ email: user.email });
         
+        const name = user.name || (profile as any)?.login || user.email?.split('@')[0] || "User";
+        const profilePicture = user.image || "";
+
         if (!existingUser) {
           // Auto-create user for OAuth
           await User.create({
-            name: user.name,
+            name,
             email: user.email,
             role: "user",
+            profilePicture,
             providers: [account.provider],
+            isVerified: true, // OAuth emails are verified
           });
-        } else if (!existingUser.providers.includes(account.provider)) {
-            existingUser.providers.push(account.provider);
-            await existingUser.save();
+        } else {
+            // Update existing user with name/picture if they are missing
+            let updated = false;
+            if (!existingUser.name) {
+                existingUser.name = name;
+                updated = true;
+            }
+            if (!existingUser.profilePicture) {
+                existingUser.profilePicture = profilePicture;
+                updated = true;
+            }
+            if (!existingUser.providers.includes(account.provider)) {
+                existingUser.providers.push(account.provider);
+                updated = true;
+            }
+            if (!existingUser.isVerified) {
+                existingUser.isVerified = true;
+                updated = true;
+            }
+            if (updated) await existingUser.save();
         }
       }
       return true;
