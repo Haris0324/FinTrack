@@ -3,6 +3,7 @@ import connectToDatabase from "@/lib/mongoose";
 import User from "@/models/User";
 import ResetToken from "@/models/ResetToken";
 import bcrypt from "bcrypt";
+import { validatePassword } from "@/lib/validation";
 
 export async function POST(req: Request) {
   try {
@@ -29,6 +30,11 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return NextResponse.json({ message: passwordValidation.message }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import AuthLayout from "@/components/layout/AuthLayout";
-import { Eye, EyeOff, Mail, User, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, User, Lock, ShieldCheck } from "lucide-react";
+import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -18,6 +19,7 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isPasswordStrong, setIsPasswordStrong] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -27,6 +29,11 @@ export default function SignUp() {
 
     if (!termsAccepted) {
       toast.error("You must agree to the Terms of Service and Privacy Policy");
+      return;
+    }
+
+    if (!isPasswordStrong) {
+      toast.error("Please choose a stronger password.");
       return;
     }
 
@@ -151,6 +158,10 @@ export default function SignUp() {
                 {showPassword ? <EyeOff className="w-4 h-4 pointer-events-none" /> : <Eye className="w-4 h-4 pointer-events-none" />}
               </button>
             </div>
+            <PasswordStrengthIndicator 
+              password={password} 
+              onValidationChange={setIsPasswordStrong} 
+            />
           </div>
 
           <div className="space-y-2">

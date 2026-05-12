@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { User, Lock, Bell, Activity, Camera, LogOut, ShieldAlert, Monitor, Smartphone, AlertTriangle, Loader2 } from "lucide-react";
+import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator";
 import { signOut, useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
@@ -19,6 +20,7 @@ export default function SettingsPage() {
 
   // Security State
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+  const [isPasswordStrong, setIsPasswordStrong] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
@@ -174,6 +176,10 @@ export default function SettingsPage() {
   };
 
   const handlePasswordUpdate = async () => {
+    if (!isPasswordStrong) {
+      toast.error('Please choose a stronger password');
+      return;
+    }
     if (passwords.new !== passwords.confirm) {
       toast.error('New passwords do not match');
       return;
@@ -430,6 +436,10 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">New Password</label>
                   <input type="password" value={passwords.new} onChange={(e) => setPasswords({...passwords, new: e.target.value})} placeholder="••••••••" className="w-full bg-background border border-card-border rounded-lg px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary transition-colors" />
+                  <PasswordStrengthIndicator 
+                    password={passwords.new} 
+                    onValidationChange={setIsPasswordStrong} 
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted mb-2">Confirm New Password</label>

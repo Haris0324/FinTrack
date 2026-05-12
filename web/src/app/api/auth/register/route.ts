@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import dns from "dns/promises";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/email";
+import { validatePassword } from "@/lib/validation";
 
 async function verifyEmailDomain(email: string) {
   try {
@@ -66,6 +67,12 @@ export async function POST(req: Request) {
         { message: "Email already exists. Please sign in." },
         { status: 400 }
       );
+    }
+
+    // 2.5 Validate Password Strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return NextResponse.json({ message: passwordValidation.message }, { status: 400 });
     }
 
     // 3. Hash Password

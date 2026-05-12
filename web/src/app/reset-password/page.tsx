@@ -6,6 +6,7 @@ import AuthLayout from "@/components/layout/AuthLayout";
 import { Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
+import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator";
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
@@ -17,12 +18,18 @@ function ResetPasswordContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isPasswordStrong, setIsPasswordStrong] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!token) {
       toast.error("Invalid or missing reset token.");
+      return;
+    }
+
+    if (!isPasswordStrong) {
+      toast.error("Please choose a stronger password.");
       return;
     }
 
@@ -103,6 +110,10 @@ function ResetPasswordContent() {
                 {showPassword ? <EyeOff className="w-4 h-4 pointer-events-none" /> : <Eye className="w-4 h-4 pointer-events-none" />}
               </button>
             </div>
+            <PasswordStrengthIndicator 
+              password={password} 
+              onValidationChange={setIsPasswordStrong} 
+            />
           </div>
 
           <div className="space-y-2">

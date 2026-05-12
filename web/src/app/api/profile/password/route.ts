@@ -5,6 +5,7 @@ import connectToDatabase from '@/lib/mongoose';
 import User from '@/models/User';
 import ActivityLog from '@/models/ActivityLog';
 import bcrypt from 'bcrypt';
+import { validatePassword } from '@/lib/validation';
 
 export async function POST(req: Request) {
   try {
@@ -35,6 +36,11 @@ export async function POST(req: Request) {
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
       return NextResponse.json({ error: 'Incorrect current password' }, { status: 400 });
+    }
+
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.isValid) {
+      return NextResponse.json({ error: passwordValidation.message }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);

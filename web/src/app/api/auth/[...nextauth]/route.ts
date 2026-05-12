@@ -8,6 +8,7 @@ import ActivityLog from "@/models/ActivityLog";
 import SessionLog from "@/models/SessionLog";
 import bcrypt from "bcrypt";
 import { UAParser } from "ua-parser-js";
+import { headers } from "next/headers";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -46,7 +47,7 @@ export const authOptions: NextAuthOptions = {
         }
         const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
         if (!isPasswordCorrect) {
-          // Log failed attempt
+          // Log failed attempt manually since events.signIn won't trigger
           try {
              const ip = req.headers?.['x-forwarded-for'] || 'Unknown IP';
              await ActivityLog.create({
@@ -74,37 +75,15 @@ export const authOptions: NextAuthOptions = {
           await user.save();
         }
 
-        // Log success
-        try {
-           const ip = req.headers?.['x-forwarded-for'] || 'Unknown IP';
-           const userAgentStr = req.headers?.['user-agent'] || '';
-           const parser = new UAParser(userAgentStr);
-           const result = parser.getResult();
-           const device = result.device.type === 'mobile' ? 'Mobile App' : (result.os.name || 'Unknown Device');
-           const browser = result.browser.name || 'Unknown Browser';
-           
-           await ActivityLog.create({
-             userId: user._id,
-             action: 'Logged in',
-             status: 'Success',
-             type: 'success',
-             ip
-           });
-
-           const sessionLog = await SessionLog.create({
-             userId: user._id,
-             device,
-             browser,
-             ip
-           });
-           (user as any).sessionId = sessionLog._id.toString();
-        } catch(e) {}
-
-        return { id: user._id.toString(), name: user.name, email: user.email, role: user.role, sessionId: (user as any).sessionId };
+        return { id: user._id.toString(), name: user.name, email: user.email, role: user.role };
       }
     })
   ],
-  session: { strategy: "jwt" },
+  session: { 
+    strategy: "jwt",
+    maxAge: 3 * 60 * 60, // 3 hours absolute expiry
+    updateAge: 30 * 60, // Refresh every 30 mins
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === "google" || account?.provider === "github") {
@@ -119,32 +98,56 @@ export const authOptions: NextAuthOptions = {
             role: "user",
             providers: [account.provider],
           });
+        } else if (!existingUser.providers.includes(account.provider)) {
+            existingUser.providers.push(account.provider);
+            await existingUser.save();
         }
       }
       return true;
     },
     async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id;
-        // If logged in via OAuth, we need to fetch role from DB if it exists
-        if (account?.provider === "google" || account?.provider === "github") {
-            await connectToDatabase();
-            const dbUser = await User.findOne({ email: user.email });
-            token.role = dbUser ? dbUser.role : "user";
-        } else {
-            token.role = (user as any).role || "user";
-        }
-        if ((user as any).sessionId) {
-          token.sessionId = (user as any).sessionId;
+        await connectToDatabase();
+        const dbUser = await User.findOne({ email: token.email });
+        
+        if (dbUser) {
+          token.id = dbUser._id.toString();
+          token.role = dbUser.role;
+
+          // If it's a fresh sign in (user object is present), create a session log
+          // Note: for Credentials, authorize already created it (passed via user.sessionId)
+          // For OAuth, we need to create it here.
+          if (!(user as any).sessionId) {
+            try {
+              const headerList = headers();
+              const ip = headerList.get('x-forwarded-for') || 'Unknown IP';
+              const userAgentStr = headerList.get('user-agent') || '';
+              const parser = new UAParser(userAgentStr);
+              const result = parser.getResult();
+              const device = result.device.type === 'mobile' ? 'Mobile App' : (result.os.name || 'Unknown Device');
+              const browser = result.browser.name || 'Unknown Browser';
+
+              const sessionLog = await SessionLog.create({
+                userId: dbUser._id,
+                device,
+                browser,
+                ip
+              });
+              token.sessionId = sessionLog._id.toString();
+            } catch (e) {
+              console.error("Failed to create session log in JWT callback", e);
+            }
+          } else {
+            token.sessionId = (user as any).sessionId;
+          }
         }
       }
       
-      // Verify session exists in DB if token has sessionId
+      // Verify session exists in DB
       if (token.sessionId) {
         await connectToDatabase();
         const activeSession = await SessionLog.findById(token.sessionId);
         if (!activeSession) {
-          // Force logout if session was revoked
           return { ...token, error: "SessionRevoked" };
         }
       }
@@ -158,8 +161,32 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
+        (session.user as any).sessionId = token.sessionId;
       }
       return session;
+    }
+  },
+  events: {
+    async signIn({ user, account }) {
+      try {
+        await connectToDatabase();
+        const dbUser = await User.findOne({ email: user.email });
+        if (!dbUser) return;
+
+        const headerList = headers();
+        const ip = headerList.get('x-forwarded-for') || 'Unknown IP';
+
+        // Log Activity (This creates the "Logged in" notification)
+        await ActivityLog.create({
+          userId: dbUser._id,
+          action: 'Logged in',
+          status: 'Success',
+          type: 'success',
+          ip
+        });
+      } catch (err) {
+        console.error("Error in signIn event:", err);
+      }
     }
   },
   pages: {
