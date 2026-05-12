@@ -6,7 +6,15 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
 import { motion } from "framer-motion";
 
-
+const mockSentimentData = [
+  { day: 'Mon', pos: 45, neg: 20, neu: 20 },
+  { day: 'Tue', pos: 52, neg: 15, neu: 20 },
+  { day: 'Wed', pos: 38, neg: 25, neu: 20 },
+  { day: 'Thu', pos: 60, neg: 10, neu: 20 },
+  { day: 'Fri', pos: 55, neg: 15, neu: 10 },
+  { day: 'Sat', pos: 48, neg: 20, neu: 15 },
+  { day: 'Sun', pos: 66, neg: 10, neu: 10 },
+];
 
 export default function Dashboard() {
   const [newsData, setNewsData] = useState<any[]>([]);
@@ -236,7 +244,7 @@ export default function Dashboard() {
             </div>
             <div className="flex-1 w-full h-full -ml-4">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={[]}>
+                <LineChart data={mockSentimentData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={true} />
                   <XAxis dataKey="day" stroke="#9CA3AF" fontSize={10} tickLine={false} axisLine={false} />
                   <YAxis stroke="#9CA3AF" fontSize={10} tickLine={false} axisLine={false} domain={[0, 80]} />
