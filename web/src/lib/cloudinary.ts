@@ -7,10 +7,22 @@ cloudinary.config({
 });
 
 export const uploadToCloudinary = async (base64Image: string, folder: string = "fintrack/profiles") => {
-  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  console.log(`Cloudinary Config - Name length: ${cloudName?.length}, Key length: ${apiKey?.length}, Secret length: ${apiSecret?.length}`);
+
+  if (!cloudName || !apiKey || !apiSecret) {
     console.error("Cloudinary credentials missing");
-    throw new Error("Cloudinary configuration missing on server");
+    throw new Error("Cloudinary configuration missing on server. Check Vercel Env Variables.");
   }
+
+  cloudinary.config({
+    cloud_name: cloudName,
+    api_key: apiKey,
+    api_secret: apiSecret,
+  });
 
   try {
     // Check if the string is already a URL
