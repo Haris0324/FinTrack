@@ -4,6 +4,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectToDatabase from '@/lib/mongoose';
 import User from '@/models/User';
 import ActivityLog from '@/models/ActivityLog';
+import { uploadToCloudinary } from '@/lib/cloudinary';
 
 export async function POST(req: Request) {
   try {
@@ -23,7 +24,12 @@ export async function POST(req: Request) {
     if (phone !== undefined) updateData.phone = phone;
     if (company !== undefined) updateData.company = company;
     if (position !== undefined) updateData.position = position;
-    if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
+    
+    if (profilePicture) {
+      updateData.profilePicture = await uploadToCloudinary(profilePicture);
+    } else if (profilePicture === "") {
+      updateData.profilePicture = ""; // Handle removal
+    }
 
     const user = await User.findByIdAndUpdate(
       (session.user as any).id,

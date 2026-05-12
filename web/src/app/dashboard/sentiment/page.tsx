@@ -5,13 +5,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Database, Activity, Brain, Zap, Target, PieChart as PieChartIcon, Loader2 } from "lucide-react";
 import { PieChart, Pie, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const topicSentimentData = [
-  { subject: 'Regulation', A: 85, fullMark: 100 },
-  { subject: 'Adoption', A: 78, fullMark: 100 },
-  { subject: 'Technology', A: 92, fullMark: 100 },
-  { subject: 'Market', A: 65, fullMark: 100 },
-  { subject: 'Security', A: 50, fullMark: 100 },
-];
+
 
 export default function SentimentAnalysis() {
   const [metrics, setMetrics] = useState<any>(null);
@@ -39,10 +33,9 @@ export default function SentimentAnalysis() {
     fetchMetrics();
   }, []);
 
-  const overallFallback = { pos: 542, neg: 318, neu: 187 };
-  const posVal = metrics?.overall?.pos > 0 ? metrics.overall.pos : overallFallback.pos;
-  const negVal = metrics?.overall?.neg > 0 ? metrics.overall.neg : overallFallback.neg;
-  const neuVal = metrics?.overall?.neu > 0 ? metrics.overall.neu : overallFallback.neu;
+  const posVal = metrics?.overallSentiment?.positive || 0;
+  const negVal = metrics?.overallSentiment?.negative || 0;
+  const neuVal = metrics?.overallSentiment?.neutral || 0;
 
   const overallSentimentData = [
     { name: "Positive", value: posVal, color: "#22c55e" },
@@ -52,21 +45,9 @@ export default function SentimentAnalysis() {
 
   const sourceSentimentData = metrics?.sources || [];
 
-  // Force map the sources to match the exact labels
-  const fixedLabels = ["Bloomberg", "CoinDesk", "Reuters", "CoinTelegraph"];
-  const mockSourceData = [
-    { name: 'Bloomberg', pos: 85, neg: 35, neu: 20 },
-    { name: 'CoinDesk', pos: 95, neg: 15, neu: 10 },
-    { name: 'Reuters', pos: 70, neg: 40, neu: 30 },
-    { name: 'CoinTelegraph', pos: 75, neg: 45, neu: 20 },
+  const mappedSourceData = sourceSentimentData.length > 0 ? sourceSentimentData : [
+    { name: 'Loading...', pos: 0, neg: 0, neu: 0 },
   ];
-  const mappedSourceData = fixedLabels.map((label, i) => {
-    const src = sourceSentimentData[i];
-    if (src && (src.pos > 0 || src.neg > 0 || src.neu > 0)) {
-      return { ...src, name: label };
-    }
-    return mockSourceData[i];
-  });
 
   const totalArticles = metrics?.totalArticles > 0 ? metrics.totalArticles : (posVal + negVal + neuVal);
   return (

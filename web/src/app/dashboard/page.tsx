@@ -6,62 +6,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
 import { motion } from "framer-motion";
 
-const mockSentimentData = [
-  { day: 'Mon', pos: 45, neg: 20, neu: 20 },
-  { day: 'Tue', pos: 52, neg: 15, neu: 20 },
-  { day: 'Wed', pos: 38, neg: 25, neu: 20 },
-  { day: 'Thu', pos: 60, neg: 10, neu: 20 },
-  { day: 'Fri', pos: 55, neg: 15, neu: 10 },
-  { day: 'Sat', pos: 48, neg: 20, neu: 15 },
-  { day: 'Sun', pos: 66, neg: 10, neu: 10 },
-];
 
-const mockNews = [
-  {
-    id: 1,
-    title: "Federal Reserve Signals Potential Rate Cuts in Q3 2024",
-    time: "2 min ago",
-    source: "Bloomberg",
-    relevance: "98%",
-    sentiment: "POSITIVE",
-    impact: "HIGH IMPACT",
-    tags: ["Macroeconomics"],
-    score: "+0.85",
-  },
-  {
-    id: 2,
-    title: "Major Institutional Investors Increase Bitcoin Holdings by 15%",
-    time: "8 min ago",
-    source: "CoinDesk",
-    relevance: "95%",
-    sentiment: "POSITIVE",
-    impact: "HIGH IMPACT",
-    tags: ["Bitcoin"],
-    score: "+0.78",
-  },
-  {
-    id: 3,
-    title: "SEC Approves New Cryptocurrency ETF Framework",
-    time: "12 min ago",
-    source: "Reuters",
-    relevance: "92%",
-    sentiment: "POSITIVE",
-    impact: "MEDIUM IMPACT",
-    tags: ["Regulation"],
-    score: "+0.72",
-  },
-  {
-    id: 4,
-    title: "Concerns Over Tether Reserves Spark Market Uncertainty",
-    time: "25 min ago",
-    source: "Financial Times",
-    relevance: "75%",
-    sentiment: "NEGATIVE",
-    impact: "MEDIUM IMPACT",
-    tags: ["Stablecoin"],
-    score: "-0.58",
-  }
-];
 
 export default function Dashboard() {
   const [newsData, setNewsData] = useState<any[]>([]);
@@ -252,8 +197,8 @@ export default function Dashboard() {
               <p className="text-xs font-medium text-muted">High Impact News</p>
               <Bell className="w-4 h-4 text-danger" />
             </div>
-            <h3 className="text-3xl font-bold text-danger mb-1">12</h3>
-            <p className="text-xs text-danger">3 in last hour</p>
+            <h3 className="text-3xl font-bold text-danger mb-1">{newsData.length > 0 ? newsData.filter(n => n.impact === 'HIGH IMPACT').length : '0'}</h3>
+            <p className="text-xs text-danger">Real-time alerts</p>
           </div>
         </div>
 
@@ -291,7 +236,7 @@ export default function Dashboard() {
             </div>
             <div className="flex-1 w-full h-full -ml-4">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={mockSentimentData}>
+                <LineChart data={[]}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={true} />
                   <XAxis dataKey="day" stroke="#9CA3AF" fontSize={10} tickLine={false} axisLine={false} />
                   <YAxis stroke="#9CA3AF" fontSize={10} tickLine={false} axisLine={false} domain={[0, 80]} />
