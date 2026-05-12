@@ -127,7 +127,7 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         await connectToDatabase();
         const dbUser = await User.findOne({ email: token.email });
@@ -135,10 +135,9 @@ export const authOptions: NextAuthOptions = {
         if (dbUser) {
           token.id = dbUser._id.toString();
           token.role = dbUser.role;
+          token.image = dbUser.profilePicture;
 
           // If it's a fresh sign in (user object is present), create a session log
-          // Note: for Credentials, authorize already created it (passed via user.sessionId)
-          // For OAuth, we need to create it here.
           if (!(user as any).sessionId) {
             try {
               const headerList = await headers();
@@ -164,6 +163,10 @@ export const authOptions: NextAuthOptions = {
           }
         }
       }
+
+      if (trigger === "update" && session?.image) {
+        token.image = session.image;
+      }
       
       // Verify session exists in DB
       if (token.sessionId) {
@@ -184,6 +187,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
         (session.user as any).sessionId = token.sessionId;
+        session.user.image = token.image as string;
       }
       return session;
     }

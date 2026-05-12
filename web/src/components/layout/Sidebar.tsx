@@ -75,12 +75,9 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-card border border-card-border flex items-center justify-center overflow-hidden">
             <img 
-              src={`/api/profile/avatar?t=${Date.now()}`} 
+              src={session?.user?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || 'Guest')}&background=random`} 
               alt="User" 
               className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(session?.user?.name || 'Guest')}&background=random`;
-              }}
             />
           </div>
           <div className="overflow-hidden">

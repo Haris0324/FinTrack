@@ -136,8 +136,9 @@ export default function SettingsPage() {
           body: JSON.stringify({ profilePicture: base64String }),
         });
         if (res.ok) {
+          const data = await res.json();
           toast.success('Profile photo updated');
-          await updateSession();
+          await updateSession({ image: data.user.profilePicture });
         }
       } catch (e) {
         toast.error('Failed to upload photo');
@@ -155,7 +156,7 @@ export default function SettingsPage() {
         body: JSON.stringify({ profilePicture: '' }),
       });
       toast.success('Profile photo removed');
-      await updateSession();
+      await updateSession({ image: "" });
     } catch (e) {
       toast.error('Failed to remove photo');
     }
