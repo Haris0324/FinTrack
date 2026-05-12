@@ -119,7 +119,7 @@ export const authOptions: NextAuthOptions = {
           // For OAuth, we need to create it here.
           if (!(user as any).sessionId) {
             try {
-              const headerList = headers();
+              const headerList = await headers();
               const ip = headerList.get('x-forwarded-for') || 'Unknown IP';
               const userAgentStr = headerList.get('user-agent') || '';
               const parser = new UAParser(userAgentStr);
@@ -173,7 +173,7 @@ export const authOptions: NextAuthOptions = {
         const dbUser = await User.findOne({ email: user.email });
         if (!dbUser) return;
 
-        const headerList = headers();
+        const headerList = await headers();
         const ip = headerList.get('x-forwarded-for') || 'Unknown IP';
 
         // Log Activity (This creates the "Logged in" notification)
