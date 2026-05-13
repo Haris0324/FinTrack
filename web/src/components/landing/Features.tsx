@@ -7,12 +7,12 @@ const features = [
   {
     icon: <Globe className="w-5 h-5 text-primary" />,
     title: "Real-Time News Scraping",
-    description: "Continuously collect global financial and crypto news from 120+ RSS feeds and sources"
+    description: "Continuously collect global financial and crypto news from 10+ RSS feeds and sources"
   },
   {
     icon: <Brain className="w-5 h-5 text-primary" />,
     title: "AI Sentiment Analysis",
-    description: "Advanced FinBERT model analyzes sentiment and predicts market impact with 87% accuracy"
+    description: "Advanced FinBERT model analyzes sentiment and predicts market impact with 80% accuracy"
   },
   {
     icon: <LineChart className="w-5 h-5 text-primary" />,
@@ -54,7 +54,7 @@ export default function Features() {
 
   return (
     <section className="py-24 px-6 max-w-6xl mx-auto">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
@@ -64,8 +64,8 @@ export default function Features() {
         <h2 className="text-3xl md:text-4xl font-bold mb-4">Complete Intelligence Pipeline</h2>
         <p className="text-muted">From data collection to actionable predictions in real-time</p>
       </motion.div>
-      
-      <motion.div 
+
+      <motion.div
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
@@ -73,7 +73,7 @@ export default function Features() {
         className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         {features.map((feature, index) => (
-          <motion.div 
+          <motion.div
             key={index}
             variants={itemVariants}
             className="p-8 rounded-2xl bg-card border border-card-border hover:border-primary/50 transition-colors flex flex-col items-start text-left"
