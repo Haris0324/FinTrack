@@ -63,12 +63,18 @@ export const authOptions: NextAuthOptions = {
 
         // Check 2FA if enabled
         if (user.twoFactorEnabled) {
-          if (!credentials?.twoFactorCode) {
+          const providedCode = credentials?.twoFactorCode?.trim();
+          
+          // If no code provided, or it's just whitespace, or it's the string "undefined"
+          // ALSO, if no code is currently pending in the DB, we MUST request a new one
+          if (!providedCode || providedCode === "" || providedCode === "undefined" || !user.twoFactorCode) {
             throw new Error("2FA_REQUIRED");
           }
-          if (user.twoFactorCode !== credentials.twoFactorCode || !user.twoFactorExpires || new Date() > user.twoFactorExpires) {
+
+          if (user.twoFactorCode !== providedCode || !user.twoFactorExpires || new Date() > user.twoFactorExpires) {
             throw new Error("Invalid or expired 2FA code");
           }
+
           // Clear the code after successful use
           user.twoFactorCode = undefined;
           user.twoFactorExpires = undefined;

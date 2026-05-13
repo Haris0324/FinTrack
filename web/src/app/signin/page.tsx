@@ -210,9 +210,10 @@ function SignInContent() {
                 <input
                   type="text"
                   value={twoFactorCode}
-                  onChange={(e) => setTwoFactorCode(e.target.value)}
+                  onChange={(e) => setTwoFactorCode(e.target.value.replace(/[^0-9]/g, ''))}
                   required
                   placeholder="Enter 6-digit code from email"
+                  autoComplete="one-time-code"
                   className="w-full bg-background border border-primary/50 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
                   maxLength={6}
                 />
