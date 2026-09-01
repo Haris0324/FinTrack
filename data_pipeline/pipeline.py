@@ -16,7 +16,7 @@ if os.path.exists(web_env_path):
     load_dotenv(web_env_path)
 load_dotenv()
 
-MONGO_URI = os.getenv("MONGODB_URI", "mongodb+srv://harislaeeq2403_db_user:YbukRI6WfzNaLRbP@cluster0.h31hxog.mongodb.net/fintrack?appName=Cluster0")
+MONGO_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/fintrack")
 DB_NAME = "fintrack"
 COLLECTION_NAME = "news"
 FINBERT_API_URL = os.getenv("FINBERT_API_URL", "http://localhost:8000/predict")
