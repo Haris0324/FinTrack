@@ -8,13 +8,16 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
-# Download NLTK data on first run if missing
-try:
-    nltk.data.find('tokenizers/punkt')
-    nltk.data.find('corpora/stopwords')
-except LookupError:
-    nltk.download('punkt')
-    nltk.download('stopwords')
+# Download NLTK data on first run if missing (including punkt_tab for NLTK >= 3.9)
+for resource in ['tokenizers/punkt', 'tokenizers/punkt_tab', 'corpora/stopwords']:
+    try:
+        nltk.data.find(resource)
+    except LookupError:
+        res_name = resource.split('/')[-1]
+        try:
+            nltk.download(res_name, quiet=True)
+        except Exception:
+            pass
 
 # Example RSS feeds for Bitcoin/Crypto news
 RSS_FEEDS = [
@@ -53,7 +56,7 @@ def clean_html(html_content):
     return soup.get_text(separator=" ").strip()
 
 def clean_text_advanced(text):
-    """Module 2: Advanced text cleaning using NLTK"""
+    """Module 2: Advanced text cleaning using NLTK with robust fallback"""
     if not text:
         return ""
         
@@ -63,12 +66,16 @@ def clean_text_advanced(text):
     # 2. Remove special characters and numbers (keep only letters)
     text = re.sub(r'[^a-z\s]', '', text)
     
-    # 3. Tokenization & Stop words removal
-    stop_words = set(stopwords.words('english'))
-    tokens = word_tokenize(text)
-    cleaned_tokens = [word for word in tokens if word not in stop_words]
-    
-    return " ".join(cleaned_tokens)
+    # 3. Tokenization & Stop words removal with fallback
+    try:
+        stop_words = set(stopwords.words('english'))
+        tokens = word_tokenize(text)
+        cleaned_tokens = [word for word in tokens if word not in stop_words]
+        return " ".join(cleaned_tokens)
+    except Exception:
+        # Fallback basic whitespace splitting if NLTK tokenizer files are missing
+        tokens = text.split()
+        return " ".join(tokens)
 
 def run_scraper():
     print("Starting news scraper...")

@@ -16,12 +16,11 @@ export async function GET(request: Request) {
       throw new Error("Database connection not established");
     }
 
-    // The python scraper inserts into the 'news' collection
     const collection = mongoose.connection.db.collection('news');
     
     const news = await collection
       .find({})
-      .sort({ scraped_at: -1 })
+      .sort({ scraped_at: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .toArray();

@@ -82,7 +82,7 @@ export default function SentimentAnalysis() {
           <div className="flex items-center gap-4">
             <div className="px-4 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20 text-center">
               <p className="text-[10px] font-medium text-orange-500 mb-0.5">Model Accuracy</p>
-              <p className="text-sm font-bold text-orange-500">80%</p>
+              <p className="text-sm font-bold text-orange-500">{metrics?.modelAccuracy ? `${metrics.modelAccuracy}%` : '83.9%'}</p>
             </div>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function SentimentAnalysis() {
             </div>
             <div>
               <p className="text-[10px] font-medium text-muted">Articles Scraped</p>
-              <h3 className="text-xl font-bold text-foreground">{loading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : totalArticles.toLocaleString()}</h3>
+              <h3 className="text-xl font-bold text-foreground">{loading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : (metrics?.cumulativeStats?.articlesScraped || totalArticles).toLocaleString()}</h3>
             </div>
           </div>
           <div className="p-4 rounded-xl bg-card border border-card-border flex items-center gap-4">
@@ -104,7 +104,7 @@ export default function SentimentAnalysis() {
             </div>
             <div>
               <p className="text-[10px] font-medium text-muted">Text Cleaned</p>
-              <h3 className="text-xl font-bold text-foreground">{loading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : (totalArticles * 0.96).toFixed(0).toLocaleString()}</h3>
+              <h3 className="text-xl font-bold text-foreground">{loading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : (metrics?.cumulativeStats?.textCleaned || totalArticles).toLocaleString()}</h3>
             </div>
           </div>
           <div className="p-4 rounded-xl bg-card border border-card-border flex items-center gap-4">
@@ -113,7 +113,7 @@ export default function SentimentAnalysis() {
             </div>
             <div>
               <p className="text-[10px] font-medium text-muted">Sentiment Analyzed</p>
-              <h3 className="text-xl font-bold text-foreground">{loading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : totalArticles.toLocaleString()}</h3>
+              <h3 className="text-xl font-bold text-foreground">{loading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : (metrics?.cumulativeStats?.sentimentAnalyzed || totalArticles).toLocaleString()}</h3>
             </div>
           </div>
           <div className="p-4 rounded-xl bg-card border border-card-border flex items-center gap-4">
@@ -122,7 +122,7 @@ export default function SentimentAnalysis() {
             </div>
             <div>
               <p className="text-[10px] font-medium text-muted">Entities Extracted</p>
-              <h3 className="text-xl font-bold text-foreground">{loading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : (totalArticles * 2.3).toFixed(0).toLocaleString()}</h3>
+              <h3 className="text-xl font-bold text-foreground">{loading ? <Loader2 className="w-4 h-4 animate-spin mt-1" /> : (metrics?.cumulativeStats?.entitiesExtracted || (totalArticles * 2.3).toFixed(0)).toLocaleString()}</h3>
             </div>
           </div>
         </div>

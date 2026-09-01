@@ -1,0 +1,34 @@
+# Datasets (Do not push heavy CSV training datasets to Git)
+*.csv
+CryptoVision A Comprehensive Dataset for Crypto Ne/
+crypto news headlines and price movements/
+historic news/
+archive*/
+merged_daily.csv
+
+# Heavy Binary Model Weights (Exceeds GitHub 100MB Limit)
+nlp_engine/finbert_finetuned/
+*.safetensors
+*.bin
+*.h5
+*.onnx
+*.pkl_trimmed
+xgboost_engine/data/preprocessor_pipeline_trimmed.pkl
+
+# Environment & Private Keys
+.env
+.env.local
+data_pipeline/.env
+
+# Node & Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Python & IDE
+__pycache__/
+*.pyc
+.vscode/
+.idea/
