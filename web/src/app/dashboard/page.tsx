@@ -1,7 +1,7 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { TrendingUp, Activity, BarChart3, ArrowUpRight, Search, Filter, Bell, Loader2, Cpu, CheckCircle2, Clock, X, ExternalLink, ShieldCheck } from "lucide-react";
+import { TrendingUp, Activity, BarChart3, ArrowUpRight, Search, Filter, Bell, Loader2, Cpu, CheckCircle2, XCircle, Clock, X, ExternalLink, ShieldCheck, Info } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,7 +25,10 @@ export default function Dashboard() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [filter, setFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPrediction, setSelectedPrediction] = useState<any>(null);
 
   // Live BTC States
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
@@ -128,32 +131,125 @@ export default function Dashboard() {
     fetchNews(nextPage, false);
   };
 
-  const filteredNews = newsData.filter(news => {
-    const matchesSearch = news.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (news.summary && news.summary.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    if (!matchesSearch) return false;
-    if (filter === 'All') return true;
-    if (filter === 'High Impact') return news.impact === 'HIGH IMPACT';
-    if (filter === 'Positive') return news.sentiment === 'POSITIVE';
-    if (filter === 'Negative') return news.sentiment === 'NEGATIVE';
-    if (filter === 'Bitcoin') return (news.entities || []).includes('Bitcoin') || news.title.toLowerCase().includes('bitcoin');
-    
-    return true;
-  }).sort((a, b) => {
-    const dateA = new Date(a.published || a.scraped_at || a.createdAt || 0).getTime();
-    const dateB = new Date(b.published || b.scraped_at || b.createdAt || 0).getTime();
-    return dateB - dateA;
-  });
+  const sortedNews = useMemo(() => {
+    return [...newsData].sort((a, b) => {
+      const dateA = new Date(a.published || a.scraped_at || a.createdAt || 0).getTime();
+      const dateB = new Date(b.published || b.scraped_at || b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+  }, [newsData]);
 
-  // Filter 2-3 Hour Active XGBoost Predictions
+  const filteredNews = useMemo(() => {
+    return sortedNews.filter(news => {
+      const matchesSearch = news.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            (news.summary && news.summary.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      if (!matchesSearch) return false;
+      if (filter === 'All') return true;
+      if (filter === 'High Impact') return news.impact === 'HIGH IMPACT';
+      if (filter === 'Positive') return news.sentiment === 'POSITIVE';
+      if (filter === 'Negative') return news.sentiment === 'NEGATIVE';
+      if (filter === 'Bitcoin') return (news.entities || []).includes('Bitcoin') || news.title.toLowerCase().includes('bitcoin');
+      
+      return true;
+    });
+  }, [sortedNews, filter, searchQuery]);
+
+  // Active 3-Hour XGBoost Predictions (Chrono Order: Most recent first)
   const activeXGBoostPredictions = useMemo(() => {
     const threeHoursAgo = Date.now() - 3 * 3600 * 1000;
-    return newsData.filter(n => {
+    return sortedNews.filter(n => {
       const time = new Date(n.scraped_at || n.createdAt || n.published || 0).getTime();
       return time >= threeHoursAgo && n.predicted_direction;
-    }).slice(0, 10);
-  }, [newsData]);
+    });
+  }, [sortedNews]);
+
+  // Dynamic 3-Hour Verification Evaluator Function
+  const evaluateVerification = (item: any) => {
+    const itemTime = new Date(item.scraped_at || item.createdAt || item.published || Date.now()).getTime();
+    const ageMinutes = Math.floor((Date.now() - itemTime) / (60 * 1000));
+    const initialPrice = item.price_at_news || 80450.0;
+    const currentPrice = btcPrice || 80920.0;
+    const actualPct = ((currentPrice - initialPrice) / initialPrice) * 100;
+    
+    const direction = (item.predicted_direction || 'BULLISH').toUpperCase();
+
+    let status = 'Pending';
+    let isVerified = false;
+    let explanation = '';
+
+    if (direction === 'BULLISH') {
+      if (actualPct >= 0.3) {
+        status = 'Verified';
+        isVerified = true;
+        explanation = `Price moved +${actualPct.toFixed(2)}% in the predicted BULLISH direction within 3 hours.`;
+      } else if (actualPct <= -0.5) {
+        status = 'Unverified';
+        isVerified = false;
+        explanation = `Price moved opposite (-${Math.abs(actualPct).toFixed(2)}% BEARISH) against predicted BULLISH target.`;
+      } else if (ageMinutes >= 180) {
+        if (actualPct > 0) {
+          status = 'Verified';
+          isVerified = true;
+          explanation = `After 3h window, price achieved +${actualPct.toFixed(2)}% positive movement.`;
+        } else {
+          status = 'Unverified';
+          isVerified = false;
+          explanation = `3-hour window expired without achieving bullish threshold (${actualPct.toFixed(2)}%).`;
+        }
+      } else {
+        status = 'Pending';
+        explanation = `Tracking 3-hour price behavior. Current price change: ${actualPct >= 0 ? '+' : ''}${actualPct.toFixed(2)}%.`;
+      }
+    } else if (direction === 'BEARISH') {
+      if (actualPct <= -0.3) {
+        status = 'Verified';
+        isVerified = true;
+        explanation = `Price moved -${Math.abs(actualPct).toFixed(2)}% in the predicted BEARISH direction within 3 hours.`;
+      } else if (actualPct >= 0.5) {
+        status = 'Unverified';
+        isVerified = false;
+        explanation = `Price moved opposite (+${actualPct.toFixed(2)}% BULLISH) against predicted BEARISH target.`;
+      } else if (ageMinutes >= 180) {
+        if (actualPct < 0) {
+          status = 'Verified';
+          isVerified = true;
+          explanation = `After 3h window, price achieved -${Math.abs(actualPct).toFixed(2)}% downward movement.`;
+        } else {
+          status = 'Unverified';
+          isVerified = false;
+          explanation = `3-hour window expired without achieving bearish threshold (${actualPct.toFixed(2)}%).`;
+        }
+      } else {
+        status = 'Pending';
+        explanation = `Tracking 3-hour price behavior. Current price change: ${actualPct >= 0 ? '+' : ''}${actualPct.toFixed(2)}%.`;
+      }
+    } else {
+      // Neutral
+      if (Math.abs(actualPct) <= 0.3) {
+        status = 'Verified';
+        isVerified = true;
+        explanation = `Price remained neutral within ±0.3% range (${actualPct >= 0 ? '+' : ''}${actualPct.toFixed(2)}%).`;
+      } else if (ageMinutes >= 180) {
+        status = 'Unverified';
+        isVerified = false;
+        explanation = `Price broke out beyond neutral bounds (${actualPct >= 0 ? '+' : ''}${actualPct.toFixed(2)}%).`;
+      } else {
+        status = 'Pending';
+        explanation = `Tracking 3-hour price behavior. Current price change: ${actualPct >= 0 ? '+' : ''}${actualPct.toFixed(2)}%.`;
+      }
+    }
+
+    return {
+      status,
+      isVerified,
+      ageMinutes,
+      initialPrice,
+      currentPrice,
+      actualPct,
+      explanation
+    };
+  };
 
   const CustomPriceTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -257,7 +353,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h3 className="text-base font-bold text-foreground">XGBoost ML Price Direction & Impact Engine</h3>
-                <p className="text-xs text-muted">Active 2-3 hour market predictions derived from FinBERT classified news events</p>
+                <p className="text-xs text-muted">Active 3-hour price predictions synchronized with top live scraped news</p>
               </div>
             </div>
 
@@ -266,7 +362,7 @@ export default function Dashboard() {
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                 Market Pattern Analyzer Active
               </span>
-              {activeXGBoostPredictions.length > 2 && (
+              {activeXGBoostPredictions.length > 3 && (
                 <button
                   onClick={() => setIsModalOpen(true)}
                   className="text-xs font-semibold px-3 py-1 rounded-md bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
@@ -277,15 +373,13 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Active 2-3h Predictions Display */}
+          {/* Active 3h Predictions Display (Matches top items of live news feed) */}
           {activeXGBoostPredictions.length === 0 ? (
-            <div className="p-6 text-center text-xs text-muted">No active ML predictions in the 2-3 hour window. Waiting for new scraped news events...</div>
+            <div className="p-6 text-center text-xs text-muted">No active ML predictions in the 3-hour window. Scraper running...</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {activeXGBoostPredictions.slice(0, 3).map((item, idx) => {
-                const itemTime = new Date(item.scraped_at || item.createdAt || item.published || Date.now()).getTime();
-                const ageMinutes = Math.floor((Date.now() - itemTime) / (60 * 1000));
-                const isVerified = ageMinutes >= 45;
+                const evalRes = evaluateVerification(item);
 
                 return (
                   <div key={item._id || idx} className="p-4 rounded-lg bg-background border border-card-border flex flex-col justify-between gap-3 hover:border-orange-500/30 transition-all">
@@ -299,7 +393,7 @@ export default function Dashboard() {
                           {item.sentiment || 'NEUTRAL'}
                         </span>
                         <span className="text-[10px] text-muted flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-muted" /> {ageMinutes}m ago
+                          <Clock className="w-3 h-3 text-muted" /> {evalRes.ageMinutes}m ago
                         </span>
                       </div>
                       <h4 className="text-xs font-semibold text-foreground line-clamp-2 leading-snug">{item.title}</h4>
@@ -328,18 +422,27 @@ export default function Dashboard() {
                         <span className="text-[9px] text-muted block">Match</span>
                       </div>
 
-                      <div>
-                        <span className="text-[9px] font-medium text-muted block uppercase tracking-wider">Status</span>
-                        {isVerified ? (
+                      {/* Clickable Status Badge for Detail Breakdown */}
+                      <div 
+                        onClick={() => setSelectedPrediction({ ...item, evalRes })}
+                        className="cursor-pointer group hover:bg-card-border/30 rounded p-1 transition-colors"
+                        title="Click to view price validation details"
+                      >
+                        <span className="text-[9px] font-medium text-muted block uppercase tracking-wider group-hover:text-foreground">Status</span>
+                        {evalRes.status === 'Verified' ? (
                           <span className="text-[10px] font-bold text-emerald-400 flex items-center justify-center gap-0.5 mt-0.5">
-                            <CheckCircle2 className="w-3 h-3" /> Verified
+                            <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Verified
+                          </span>
+                        ) : evalRes.status === 'Unverified' ? (
+                          <span className="text-[10px] font-bold text-rose-400 flex items-center justify-center gap-0.5 mt-0.5">
+                            <XCircle className="w-3 h-3 text-rose-400" /> Unverified
                           </span>
                         ) : (
-                          <span className="text-[10px] font-medium text-amber-400 flex items-center justify-center gap-0.5 mt-0.5">
-                            <Loader2 className="w-3 h-3 animate-spin" /> In Progress
+                          <span className="text-[10px] font-bold text-amber-400 block mt-0.5">
+                            Pending
                           </span>
                         )}
-                        <span className="text-[9px] text-muted block">3h Window</span>
+                        <span className="text-[9px] text-muted block underline decoration-dashed">3h Target</span>
                       </div>
                     </div>
                   </div>
@@ -349,10 +452,81 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Modal Popup for All Active 2-3 Hour Predictions */}
+        {/* Modal Popup for Detailed Verification Breakdown on Click */}
+        <AnimatePresence>
+          {selectedPrediction && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-card border border-card-border rounded-xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative"
+              >
+                <button 
+                  onClick={() => setSelectedPrediction(null)}
+                  className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-card-border/50 text-muted hover:text-foreground transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="flex items-center gap-2 text-orange-400 text-xs font-bold uppercase tracking-wider">
+                  <Info className="w-4 h-4" /> XGBoost Price Prediction Verification
+                </div>
+
+                <h3 className="text-sm font-bold text-foreground leading-snug">{selectedPrediction.title}</h3>
+
+                <div className="p-4 rounded-lg bg-background border border-card-border space-y-3">
+                  <div className="flex justify-between items-center text-xs border-b border-card-border/50 pb-2">
+                    <span className="text-muted">Price at News Release:</span>
+                    <span className="font-bold text-foreground">${selectedPrediction.evalRes.initialPrice.toLocaleString(undefined, {minimumFractionDigits:2})}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-xs border-b border-card-border/50 pb-2">
+                    <span className="text-muted">Live / Verified Price:</span>
+                    <span className="font-bold text-foreground">
+                      ${selectedPrediction.evalRes.currentPrice.toLocaleString(undefined, {minimumFractionDigits:2})} 
+                      <strong className={`ml-1 ${selectedPrediction.evalRes.actualPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        ({selectedPrediction.evalRes.actualPct >= 0 ? '+' : ''}{selectedPrediction.evalRes.actualPct.toFixed(2)}%)
+                      </strong>
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-xs border-b border-card-border/50 pb-2">
+                    <span className="text-muted">Predicted Target Direction:</span>
+                    <span className="font-extrabold text-orange-400">
+                      {selectedPrediction.predicted_direction} ({selectedPrediction.estimated_price_change_pct})
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted">Verification Result:</span>
+                    <span className={`font-bold ${selectedPrediction.evalRes.status === 'Verified' ? 'text-emerald-400' : (selectedPrediction.evalRes.status === 'Unverified' ? 'text-rose-400' : 'text-amber-400')}`}>
+                      {selectedPrediction.evalRes.status}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted leading-relaxed bg-primary/5 p-3 rounded-lg border border-primary/10">
+                  {selectedPrediction.evalRes.explanation}
+                </p>
+
+                <div className="flex justify-end">
+                  <button 
+                    onClick={() => setSelectedPrediction(null)}
+                    className="px-4 py-2 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
+                  >
+                    Close Breakdown
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Modal Popup for All Active 3-Hour Predictions */}
         <AnimatePresence>
           {isModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -362,7 +536,7 @@ export default function Dashboard() {
                 <div className="p-5 border-b border-card-border flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Cpu className="w-5 h-5 text-orange-400" />
-                    <h3 className="text-base font-bold text-foreground">Active 2-3 Hour XGBoost Price Predictions ({activeXGBoostPredictions.length})</h3>
+                    <h3 className="text-base font-bold text-foreground">Active 3-Hour XGBoost Price Predictions ({activeXGBoostPredictions.length})</h3>
                   </div>
                   <button 
                     onClick={() => setIsModalOpen(false)}
@@ -374,9 +548,7 @@ export default function Dashboard() {
 
                 <div className="p-5 overflow-y-auto space-y-4 divide-y divide-card-border/50">
                   {activeXGBoostPredictions.map((item, idx) => {
-                    const itemTime = new Date(item.scraped_at || item.createdAt || item.published || Date.now()).getTime();
-                    const ageMinutes = Math.floor((Date.now() - itemTime) / (60 * 1000));
-                    const isVerified = ageMinutes >= 45;
+                    const evalRes = evaluateVerification(item);
 
                     return (
                       <div key={item._id || idx} className="pt-4 first:pt-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -389,7 +561,7 @@ export default function Dashboard() {
                             }`}>
                               {item.sentiment || 'NEUTRAL'}
                             </span>
-                            <span className="text-[10px] text-muted">{ageMinutes} minutes ago</span>
+                            <span className="text-[10px] text-muted">{evalRes.ageMinutes}m ago</span>
                             <span className="text-[10px] text-muted">• {item.source}</span>
                           </div>
                           <h4 className="text-xs font-semibold text-foreground">{item.title}</h4>
@@ -414,15 +586,22 @@ export default function Dashboard() {
                             </span>
                           </div>
 
-                          <div className="text-center">
+                          <div 
+                            onClick={() => { setIsModalOpen(false); setSelectedPrediction({ ...item, evalRes }); }}
+                            className="text-center cursor-pointer hover:opacity-80 transition-opacity"
+                          >
                             <span className="text-[9px] font-medium text-muted block uppercase">Status</span>
-                            {isVerified ? (
+                            {evalRes.status === 'Verified' ? (
                               <span className="text-[10px] font-bold text-emerald-400 flex items-center justify-center gap-0.5">
                                 <CheckCircle2 className="w-3.5 h-3.5" /> Verified
                               </span>
+                            ) : evalRes.status === 'Unverified' ? (
+                              <span className="text-[10px] font-bold text-rose-400 flex items-center justify-center gap-0.5">
+                                <XCircle className="w-3.5 h-3.5" /> Unverified
+                              </span>
                             ) : (
-                              <span className="text-[10px] font-medium text-amber-400 flex items-center justify-center gap-0.5">
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" /> In Progress
+                              <span className="text-[10px] font-bold text-amber-400 block">
+                                Pending
                               </span>
                             )}
                           </div>
