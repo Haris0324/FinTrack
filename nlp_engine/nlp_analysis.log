@@ -258,3 +258,72 @@
 2026-09-01 12:15:40,163 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9966 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
 2026-09-01 12:15:40,164 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9968 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
 2026-09-01 12:15:40,165 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.9999 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,216 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
+2026-09-02 14:35:49,219 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.998 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,220 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.9769 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,220 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.9976 | Relevance=General Cryptocurrency | Impact=HIGH IMPACT
+2026-09-02 14:35:49,221 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9999 | Relevance=Irrelevant Content | Impact=HIGH IMPACT
+2026-09-02 14:35:49,221 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9977 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,222 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9984 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,222 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.9988 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,222 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.6924 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
+2026-09-02 14:35:49,223 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=Global Financial Markets | Impact=LOW IMPACT
+2026-09-02 14:35:49,223 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.9999 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,224 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9983 | Relevance=Irrelevant Content | Impact=LOW IMPACT
+2026-09-02 14:35:49,224 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9968 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,224 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9998 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
+2026-09-02 14:35:49,224 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9959 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,225 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.9662 | Relevance=General Cryptocurrency | Impact=HIGH IMPACT
+2026-09-02 14:35:49,225 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.5229 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
+2026-09-02 14:35:49,225 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.5624 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
+2026-09-02 14:35:49,225 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9996 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
+2026-09-02 14:35:49,226 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.999 | Relevance=Irrelevant Content | Impact=HIGH IMPACT
+2026-09-02 14:35:49,227 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
+2026-09-02 14:35:49,227 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=Irrelevant Content | Impact=LOW IMPACT
+2026-09-02 14:35:49,227 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.9861 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,227 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.8515 | Relevance=General Cryptocurrency | Impact=HIGH IMPACT
+2026-09-02 14:35:49,227 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
+2026-09-02 14:35:49,228 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.988 | Relevance=General Cryptocurrency | Impact=HIGH IMPACT
+2026-09-02 14:35:49,228 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.999 | Relevance=Irrelevant Content | Impact=LOW IMPACT
+2026-09-02 14:35:49,228 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
+2026-09-02 14:35:49,228 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.9997 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,229 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,229 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.9966 | Relevance=General Cryptocurrency | Impact=HIGH IMPACT
+2026-09-02 14:35:49,229 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.5776 | Relevance=Irrelevant Content | Impact=LOW IMPACT
+2026-09-02 14:35:49,230 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.9999 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,230 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9282 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,230 - INFO - Analyzed: Sentiment=POSITIVE | Score=1.0 | Relevance=Irrelevant Content | Impact=HIGH IMPACT
+2026-09-02 14:35:49,230 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9859 | Relevance=Irrelevant Content | Impact=LOW IMPACT
+2026-09-02 14:35:49,231 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.7054 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,231 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.5079 | Relevance=Global Financial Markets | Impact=LOW IMPACT
+2026-09-02 14:35:49,232 - INFO - Analyzed: Sentiment=NEGATIVE | Score=1.0 | Relevance=General Cryptocurrency | Impact=HIGH IMPACT
+2026-09-02 14:35:49,232 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9993 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,232 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.7478 | Relevance=Irrelevant Content | Impact=LOW IMPACT
+2026-09-02 14:35:49,232 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.7895 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,233 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.584 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,233 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.9999 | Relevance=Irrelevant Content | Impact=HIGH IMPACT
+2026-09-02 14:35:49,233 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9997 | Relevance=Irrelevant Content | Impact=LOW IMPACT
+2026-09-02 14:35:49,233 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.9955 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,234 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9849 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,234 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9144 | Relevance=Irrelevant Content | Impact=LOW IMPACT
+2026-09-02 14:35:49,235 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9954 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,235 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9937 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,236 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
+2026-09-02 14:35:49,236 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.9998 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,236 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,236 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9999 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,236 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9973 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
+2026-09-02 14:35:49,237 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.6853 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,237 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.9951 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,237 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.9998 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,237 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,237 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.9994 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,238 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.997 | Relevance=Irrelevant Content | Impact=HIGH IMPACT
+2026-09-02 14:35:49,238 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9999 | Relevance=Irrelevant Content | Impact=LOW IMPACT
+2026-09-02 14:35:49,239 - INFO - Analyzed: Sentiment=NEGATIVE | Score=0.9999 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,239 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9987 | Relevance=Bitcoin-Specific | Impact=HIGH IMPACT
+2026-09-02 14:35:49,239 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,239 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=General Cryptocurrency | Impact=LOW IMPACT
+2026-09-02 14:35:49,240 - INFO - Analyzed: Sentiment=NEUTRAL | Score=0.9808 | Relevance=Irrelevant Content | Impact=LOW IMPACT
+2026-09-02 14:35:49,240 - INFO - Analyzed: Sentiment=POSITIVE | Score=0.5961 | Relevance=Bitcoin-Specific | Impact=LOW IMPACT
+2026-09-02 14:35:49,240 - INFO - Analyzed: Sentiment=NEUTRAL | Score=1.0 | Relevance=Irrelevant Content | Impact=LOW IMPACT

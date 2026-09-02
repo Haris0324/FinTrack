@@ -21,7 +21,7 @@ DB_NAME = "fintrack"
 COLLECTION_NAME = "news"
 FINBERT_API_URL = os.getenv("FINBERT_API_URL", "http://localhost:8000/predict")
 FINBERT_BATCH_API_URL = os.getenv("FINBERT_BATCH_API_URL", "http://localhost:8000/predict/batch")
-EXPIRY_SECONDS = 24 * 3600  # 24-Hour (1 Day) Expiry constant
+EXPIRY_SECONDS = 48 * 3600  # 48-Hour (2 Days) Expiry constant
 DEFAULT_BATCH_SIZE = 32  # FE-2 Batch Size for minimal latency
 
 # ─────────────────────────────────────────────────────────────
