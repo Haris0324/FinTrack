@@ -11,16 +11,26 @@ export async function GET(request: Request) {
 
     await connectToDatabase();
     
-    // Ensure the connection is established
     if (!mongoose.connection.db) {
       throw new Error("Database connection not established");
     }
 
     const collection = mongoose.connection.db.collection('news');
     
+    // Strict 48-Hour (2 Days) Filter at API level
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 3600 * 1000);
+    
+    const query = {
+      $or: [
+        { published_at: { $gte: fortyEightHoursAgo } },
+        { scraped_at: { $gte: fortyEightHoursAgo } },
+        { createdAt: { $gte: fortyEightHoursAgo } }
+      ]
+    };
+
     const news = await collection
-      .find({})
-      .sort({ scraped_at: -1, createdAt: -1 })
+      .find(query)
+      .sort({ published_at: -1, scraped_at: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .toArray();
