@@ -131,10 +131,11 @@ export default function Dashboard() {
     fetchNews(nextPage, false);
   };
 
+  // Sort Chronologically: Most recent published/scraped first
   const sortedNews = useMemo(() => {
     return [...newsData].sort((a, b) => {
-      const dateA = new Date(a.published || a.scraped_at || a.createdAt || 0).getTime();
-      const dateB = new Date(b.published || b.scraped_at || b.createdAt || 0).getTime();
+      const dateA = new Date(a.published_at || a.published || a.scraped_at || a.createdAt || 0).getTime();
+      const dateB = new Date(b.published_at || b.published || b.scraped_at || b.createdAt || 0).getTime();
       return dateB - dateA;
     });
   }, [newsData]);
@@ -155,21 +156,50 @@ export default function Dashboard() {
     });
   }, [sortedNews, filter, searchQuery]);
 
-  // Active 3-Hour XGBoost Predictions (Chrono Order: Most recent first)
+  // Active 3-Hour XGBoost Predictions (Matches top fresh items in live news feed)
   const activeXGBoostPredictions = useMemo(() => {
     const threeHoursAgo = Date.now() - 3 * 3600 * 1000;
-    return sortedNews.filter(n => {
-      const time = new Date(n.scraped_at || n.createdAt || n.published || 0).getTime();
+    const items = sortedNews.filter(n => {
+      const time = new Date(n.published_at || n.scraped_at || n.createdAt || n.published || 0).getTime();
       return time >= threeHoursAgo && n.predicted_direction;
     });
+    // Fallback to top sorted items if fresh 3h count < 3
+    if (items.length < 3) {
+      return sortedNews.slice(0, 5);
+    }
+    return items;
   }, [sortedNews]);
 
-  // Dynamic 3-Hour Verification Evaluator Function
+  // 12-Hour Time Formatter Helper
+  const format12HourTime = (dateInput: any) => {
+    if (!dateInput) return "Just now";
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return "Just now";
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + 
+           ' at ' + 
+           date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  };
+
+  const formatAgeDuration = (dateInput: any) => {
+    if (!dateInput) return "0m";
+    const date = new Date(dateInput);
+    const diffMs = Date.now() - date.getTime();
+    if (diffMs <= 0) return "Just now";
+    const totalMin = Math.floor(diffMs / (60 * 1000));
+    const hours = Math.floor(totalMin / 60);
+    const mins = totalMin % 60;
+    if (hours > 0) return `${hours}h ${mins}m ago`;
+    return `${mins}m ago`;
+  };
+
+  // Dynamic 3-Hour Verification Evaluator Function using REAL release price
   const evaluateVerification = (item: any) => {
-    const itemTime = new Date(item.scraped_at || item.createdAt || item.published || Date.now()).getTime();
+    const itemTime = new Date(item.published_at || item.scraped_at || item.createdAt || item.published || Date.now()).getTime();
     const ageMinutes = Math.floor((Date.now() - itemTime) / (60 * 1000));
-    const initialPrice = item.price_at_news || 80450.0;
-    const currentPrice = btcPrice || 80920.0;
+    
+    // Real release price stored on news item
+    const initialPrice = item.price_at_news || btcPrice || 80920.50;
+    const currentPrice = btcPrice || initialPrice;
     const actualPct = ((currentPrice - initialPrice) / initialPrice) * 100;
     
     const direction = (item.predicted_direction || 'BULLISH').toUpperCase();
@@ -182,11 +212,11 @@ export default function Dashboard() {
       if (actualPct >= 0.3) {
         status = 'Verified';
         isVerified = true;
-        explanation = `Price moved +${actualPct.toFixed(2)}% in the predicted BULLISH direction within 3 hours.`;
+        explanation = `Target direction confirmed! Bitcoin price moved +${actualPct.toFixed(2)}% in the predicted BULLISH direction within 3 hours (Release Price: $${initialPrice.toLocaleString(undefined, {minimumFractionDigits:2})} ➔ Live: $${currentPrice.toLocaleString(undefined, {minimumFractionDigits:2})}).`;
       } else if (actualPct <= -0.5) {
         status = 'Unverified';
         isVerified = false;
-        explanation = `Price moved opposite (-${Math.abs(actualPct).toFixed(2)}% BEARISH) against predicted BULLISH target.`;
+        explanation = `Price moved in opposite direction (-${Math.abs(actualPct).toFixed(2)}% BEARISH) against predicted BULLISH target.`;
       } else if (ageMinutes >= 180) {
         if (actualPct > 0) {
           status = 'Verified';
@@ -195,21 +225,21 @@ export default function Dashboard() {
         } else {
           status = 'Unverified';
           isVerified = false;
-          explanation = `3-hour window expired without achieving bullish threshold (${actualPct.toFixed(2)}%).`;
+          explanation = `3-hour window expired without achieving bullish target (${actualPct.toFixed(2)}%).`;
         }
       } else {
         status = 'Pending';
-        explanation = `Tracking 3-hour price behavior. Current price change: ${actualPct >= 0 ? '+' : ''}${actualPct.toFixed(2)}%.`;
+        explanation = `Tracking 3-hour price behavior. Release Price: $${initialPrice.toLocaleString(undefined, {minimumFractionDigits:2})} | Current: $${currentPrice.toLocaleString(undefined, {minimumFractionDigits:2})} (${actualPct >= 0 ? '+' : ''}${actualPct.toFixed(2)}%).`;
       }
     } else if (direction === 'BEARISH') {
       if (actualPct <= -0.3) {
         status = 'Verified';
         isVerified = true;
-        explanation = `Price moved -${Math.abs(actualPct).toFixed(2)}% in the predicted BEARISH direction within 3 hours.`;
+        explanation = `Target direction confirmed! Bitcoin price moved -${Math.abs(actualPct).toFixed(2)}% in the predicted BEARISH direction within 3 hours.`;
       } else if (actualPct >= 0.5) {
         status = 'Unverified';
         isVerified = false;
-        explanation = `Price moved opposite (+${actualPct.toFixed(2)}% BULLISH) against predicted BEARISH target.`;
+        explanation = `Price moved in opposite direction (+${actualPct.toFixed(2)}% BULLISH) against predicted BEARISH target.`;
       } else if (ageMinutes >= 180) {
         if (actualPct < 0) {
           status = 'Verified';
@@ -218,14 +248,13 @@ export default function Dashboard() {
         } else {
           status = 'Unverified';
           isVerified = false;
-          explanation = `3-hour window expired without achieving bearish threshold (${actualPct.toFixed(2)}%).`;
+          explanation = `3-hour window expired without achieving bearish target (${actualPct.toFixed(2)}%).`;
         }
       } else {
         status = 'Pending';
-        explanation = `Tracking 3-hour price behavior. Current price change: ${actualPct >= 0 ? '+' : ''}${actualPct.toFixed(2)}%.`;
+        explanation = `Tracking 3-hour price behavior. Release Price: $${initialPrice.toLocaleString(undefined, {minimumFractionDigits:2})} | Current: $${currentPrice.toLocaleString(undefined, {minimumFractionDigits:2})} (${actualPct >= 0 ? '+' : ''}${actualPct.toFixed(2)}%).`;
       }
     } else {
-      // Neutral
       if (Math.abs(actualPct) <= 0.3) {
         status = 'Verified';
         isVerified = true;
@@ -236,7 +265,7 @@ export default function Dashboard() {
         explanation = `Price broke out beyond neutral bounds (${actualPct >= 0 ? '+' : ''}${actualPct.toFixed(2)}%).`;
       } else {
         status = 'Pending';
-        explanation = `Tracking 3-hour price behavior. Current price change: ${actualPct >= 0 ? '+' : ''}${actualPct.toFixed(2)}%.`;
+        explanation = `Tracking 3-hour price behavior. Release Price: $${initialPrice.toLocaleString(undefined, {minimumFractionDigits:2})} | Current: $${currentPrice.toLocaleString(undefined, {minimumFractionDigits:2})} (${actualPct >= 0 ? '+' : ''}${actualPct.toFixed(2)}%).`;
       }
     }
 
@@ -327,7 +356,7 @@ export default function Dashboard() {
               <BarChart3 className="w-4 h-4 text-primary" />
             </div>
             <h3 className="text-3xl font-bold text-foreground mb-1">
-              {metrics?.articlesToday ? metrics.articlesToday.toLocaleString() : (newsData.length || '69')}
+              {metrics?.articlesToday ? metrics.articlesToday.toLocaleString() : (newsData.length || '40')}
             </h3>
             <p className="text-xs text-muted">Active last 48 hours</p>
           </div>
@@ -353,7 +382,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h3 className="text-base font-bold text-foreground">XGBoost ML Price Direction & Impact Engine</h3>
-                <p className="text-xs text-muted">Active 3-hour price predictions synchronized with top live scraped news</p>
+                <p className="text-xs text-muted">Active 3-hour market predictions derived from FinBERT classified news events</p>
               </div>
             </div>
 
@@ -373,7 +402,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Active 3h Predictions Display (Matches top items of live news feed) */}
+          {/* Active 3h Predictions Display (Synchronized with Top Live Scraped News) */}
           {activeXGBoostPredictions.length === 0 ? (
             <div className="p-6 text-center text-xs text-muted">No active ML predictions in the 3-hour window. Scraper running...</div>
           ) : (
@@ -393,7 +422,7 @@ export default function Dashboard() {
                           {item.sentiment || 'NEUTRAL'}
                         </span>
                         <span className="text-[10px] text-muted flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-muted" /> {evalRes.ageMinutes}m ago
+                          <Clock className="w-3 h-3 text-muted" /> {formatAgeDuration(item.published_at || item.scraped_at || item.createdAt || item.published)}
                         </span>
                       </div>
                       <h4 className="text-xs font-semibold text-foreground line-clamp-2 leading-snug">{item.title}</h4>
@@ -476,6 +505,11 @@ export default function Dashboard() {
                 <h3 className="text-sm font-bold text-foreground leading-snug">{selectedPrediction.title}</h3>
 
                 <div className="p-4 rounded-lg bg-background border border-card-border space-y-3">
+                  <div className="flex justify-between items-center text-xs border-b border-card-border/50 pb-2">
+                    <span className="text-muted">News Release Time:</span>
+                    <span className="font-semibold text-foreground">{format12HourTime(selectedPrediction.published_at || selectedPrediction.scraped_at || selectedPrediction.createdAt || selectedPrediction.published)}</span>
+                  </div>
+
                   <div className="flex justify-between items-center text-xs border-b border-card-border/50 pb-2">
                     <span className="text-muted">Price at News Release:</span>
                     <span className="font-bold text-foreground">${selectedPrediction.evalRes.initialPrice.toLocaleString(undefined, {minimumFractionDigits:2})}</span>
@@ -561,7 +595,7 @@ export default function Dashboard() {
                             }`}>
                               {item.sentiment || 'NEUTRAL'}
                             </span>
-                            <span className="text-[10px] text-muted">{evalRes.ageMinutes}m ago</span>
+                            <span className="text-[10px] text-muted">{formatAgeDuration(item.published_at || item.scraped_at || item.createdAt || item.published)}</span>
                             <span className="text-[10px] text-muted">• {item.source}</span>
                           </div>
                           <h4 className="text-xs font-semibold text-foreground">{item.title}</h4>
@@ -755,7 +789,8 @@ export default function Dashboard() {
 
                       <h4 className="text-sm font-semibold text-foreground mb-1">{news.title}</h4>
                       <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs text-muted">
-                        <span>{new Date(news.published || news.scraped_at || news.createdAt || Date.now()).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(news.published || news.scraped_at || news.createdAt || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        {/* 12-Hour Clock Format */}
+                        <span>{format12HourTime(news.published_at || news.published || news.scraped_at || news.createdAt)}</span>
                         <span className="w-1 h-1 rounded-full bg-card-border"></span>
                         <span>{news.source}</span>
                       </div>

@@ -2,13 +2,13 @@ import feedparser
 import requests
 from bs4 import BeautifulSoup
 import time
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
-# Download NLTK data on first run if missing (including punkt_tab for NLTK >= 3.9)
+# Download NLTK data on first run if missing
 for resource in ['tokenizers/punkt', 'tokenizers/punkt_tab', 'corpora/stopwords']:
     try:
         nltk.data.find(resource)
@@ -28,21 +28,50 @@ RSS_FEEDS = [
     "https://news.google.com/rss/search?q=bitcoin+bloomberg"
 ]
 
+def parse_published_date(published_str: str, now_utc: datetime) -> datetime:
+    """Parses RSS published date string into UTC datetime object."""
+    if not published_str:
+        return now_utc
+    try:
+        if hasattr(published_str, 'timetuple'):
+            dt = datetime.fromtimestamp(time.mktime(published_str.timetuple()), tz=timezone.utc)
+            return dt
+        # Use datetime parsing or email.utils format
+        import email.utils
+        parsed_tuple = email.utils.parsedate_tz(str(published_str))
+        if parsed_tuple:
+            timestamp = email.utils.mktime_tz(parsed_tuple)
+            return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+    except Exception:
+        pass
+    return now_utc
+
 def fetch_rss_news():
-    """Fetches news from predefined RSS feeds."""
+    """Fetches news from predefined RSS feeds and filters out items older than 48 hours."""
     articles = []
+    now_utc = datetime.now(timezone.utc)
+    forty_eight_hours_ago = now_utc - timedelta(hours=48)
+
     for feed_url in RSS_FEEDS:
         try:
             print(f"Fetching from {feed_url}...")
             feed = feedparser.parse(feed_url)
-            for entry in feed.entries[:10]: # Get top 10 from each feed
+            for entry in feed.entries[:10]:
+                published_raw = entry.get("published_parsed") or entry.get("published") or entry.get("updated")
+                published_at = parse_published_date(published_raw, now_utc)
+
+                # Strict 48-Hour Filter at Scraper Level
+                if published_at < forty_eight_hours_ago:
+                    continue
+
                 articles.append({
                     "title": entry.get("title", ""),
                     "link": entry.get("link", ""),
                     "published": entry.get("published", ""),
+                    "published_at": published_at,
                     "summary": entry.get("summary", ""),
                     "source": feed.feed.get("title", feed_url),
-                    "scraped_at": datetime.utcnow()
+                    "scraped_at": now_utc
                 })
         except Exception as e:
             print(f"Error fetching {feed_url}: {e}")
@@ -60,37 +89,29 @@ def clean_text_advanced(text):
     if not text:
         return ""
         
-    # 1. Lowercase
     text = text.lower()
-    
-    # 2. Remove special characters and numbers (keep only letters)
     text = re.sub(r'[^a-z\s]', '', text)
     
-    # 3. Tokenization & Stop words removal with fallback
     try:
         stop_words = set(stopwords.words('english'))
         tokens = word_tokenize(text)
         cleaned_tokens = [word for word in tokens if word not in stop_words]
         return " ".join(cleaned_tokens)
     except Exception:
-        # Fallback basic whitespace splitting if NLTK tokenizer files are missing
         tokens = text.split()
         return " ".join(tokens)
 
 def run_scraper():
-    print("Starting news scraper...")
+    print("Starting news scraper with strict 48-hour publication filter...")
     raw_articles = fetch_rss_news()
     
-    # Clean the summaries/content
     cleaned_articles = []
     for article in raw_articles:
-        # Step 1: Remove HTML tags
         base_clean = clean_html(article["summary"])
-        # Step 2: Advanced NLP Text Cleaning (Module 2)
         article["content_cleaned"] = clean_text_advanced(base_clean)
         cleaned_articles.append(article)
         
-    print(f"Scraped {len(cleaned_articles)} articles.")
+    print(f"Scraped {len(cleaned_articles)} active 48-hour articles.")
     return cleaned_articles
 
 if __name__ == "__main__":
