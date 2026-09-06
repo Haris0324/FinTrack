@@ -156,18 +156,9 @@ export default function Dashboard() {
     });
   }, [sortedNews, filter, searchQuery]);
 
-  // Active 3-Hour XGBoost Predictions (Matches top fresh items in live news feed)
+  // All XGBoost Predictions derived from news articles in live feed
   const activeXGBoostPredictions = useMemo(() => {
-    const threeHoursAgo = Date.now() - 3 * 3600 * 1000;
-    const items = sortedNews.filter(n => {
-      const time = new Date(n.published_at || n.scraped_at || n.createdAt || n.published || 0).getTime();
-      return time >= threeHoursAgo && n.predicted_direction;
-    });
-    // Fallback to top sorted items if fresh 3h count < 3
-    if (items.length < 3) {
-      return sortedNews.slice(0, 5);
-    }
-    return items;
+    return sortedNews.filter(n => n.predicted_direction);
   }, [sortedNews]);
 
   // 12-Hour Time Formatter Helper
