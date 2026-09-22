@@ -35,7 +35,8 @@ def cleanup_mongodb_atlas():
     print(f"Total articles in MongoDB Atlas before cleanup: {len(articles)}")
 
     now_utc = datetime.now(timezone.utc)
-    forty_eight_hours_ago = now_utc - timedelta(hours=48)
+    twenty_four_hours_ago = now_utc - timedelta(hours=24)
+    three_hours_ago = now_utc - timedelta(hours=3)
 
     deleted_count = 0
     updated_count = 0
@@ -52,8 +53,8 @@ def cleanup_mongodb_atlas():
         pub_raw = a.get("published_at") or a.get("published") or a.get("scraped_at") or a.get("createdAt")
         dt_val = parse_date(pub_raw, now_utc)
 
-        # Check if older than 48 hours (2 days)
-        if dt_val < forty_eight_hours_ago:
+        # Delete if older than 24 hours (1 day) EXCEPT if published within last 3 hours (pending verification)
+        if dt_val < twenty_four_hours_ago and dt_val < three_hours_ago:
             col.delete_one({"_id": a["_id"]})
             deleted_count += 1
         else:
@@ -61,6 +62,15 @@ def cleanup_mongodb_atlas():
             sentiment = a.get("sentiment", "NEUTRAL")
             score = float(a.get("score", 0.85))
             relevance = a.get("relevance", "Bitcoin-Specific")
+
+            # Obtain exact release price
+            release_price = a.get("price_at_news")
+            if not release_price or release_price in (80920.50, 80450.0, 80000.0):
+                try:
+                    from pipeline import fetch_btc_price_at
+                    release_price = fetch_btc_price_at(dt_val)
+                except Exception:
+                    release_price = live_btc
 
             if predict_market_impact:
                 xgb_res = predict_market_impact(
@@ -72,12 +82,12 @@ def cleanup_mongodb_atlas():
                     entities      = a.get("entities", []),
                     source        = a.get("source", ""),
                     published_at  = dt_val,
-                    price_at_news = live_btc,
+                    price_at_news = release_price,
                     title         = a.get("title", ""),
                 )
                 direction = xgb_res.get("predicted_direction", "NEUTRAL")
                 est_pct   = xgb_res.get("estimated_price_change_pct", "+0.00%")
-                sim       = xgb_res.get("historical_pattern_similarity", "88.5%")
+                sim       = xgb_res.get("historical_pattern_similarity", "82.0%")
             else:
                 direction = "BULLISH" if sentiment == "POSITIVE" else ("BEARISH" if sentiment == "NEGATIVE" else "NEUTRAL")
                 _hash = int(round(score * 10000)) % 17
@@ -87,18 +97,10 @@ def cleanup_mongodb_atlas():
                     est_pct = f"-{round(1.10 + score * 3.60 + (_hash % 11) * 0.07, 2):.2f}%"
                 else:
                     _mag = round(0.05 + score * 0.40 + (_hash % 7) * 0.04, 2)
-                    est_pct = f"+{_mag:.2f}%" if _hash % 2 == 0 else f"-{_mag:.2f}%"
+                    est_change = f"+{_mag:.2f}%" if _hash % 2 == 0 else f"-{_mag:.2f}%"
                 _rel_w = {"Bitcoin-Specific": 1.0, "General Cryptocurrency": 0.82, "Global Financial Markets": 0.68}.get(relevance, 0.70)
                 _sim_val = round(min(96.0, max(70.0, 70.0 + score * _rel_w * 22.0 + (_hash % 7) * 0.45 - 1.5)), 1)
                 sim = f"{_sim_val}%"
-
-            # Calculate realistic release price based on article age if missing
-            age_hours = (now_utc - dt_val).total_seconds() / 3600.0
-            release_price = a.get("price_at_news")
-            if not release_price or release_price == 80450.0:
-                # Vary release price realistically around live price
-                offset = (age_hours * 12.50) if sentiment == "POSITIVE" else (-age_hours * 14.20)
-                release_price = round(live_btc - offset, 2)
 
             col.update_one(
                 {"_id": a["_id"]},
@@ -115,8 +117,8 @@ def cleanup_mongodb_atlas():
             updated_count += 1
 
     remaining = col.count_documents({})
-    print(f"[CLEANUP COMPLETE] Deleted {deleted_count} articles older than 48 hours.")
-    print(f"[ACTIVE FEED] Total active 48-hour news articles in MongoDB Atlas: {remaining}")
+    print(f"[CLEANUP COMPLETE] Deleted {deleted_count} articles older than 24 hours (with completed 3h evaluation).")
+    print(f"[ACTIVE FEED] Total active news articles in MongoDB Atlas (24h / Pending Grace Period): {remaining}")
 
     # Maintain cumulative stats in pipelinestats
     try:

@@ -194,8 +194,10 @@ export default function Dashboard() {
     const itemTime = new Date(item.published_at || item.scraped_at || item.createdAt || item.published || Date.now()).getTime();
     const ageMinutes = Math.floor((Date.now() - itemTime) / (60 * 1000));
     
-    // Real release price stored on news item
-    const initialPrice = item.price_at_news || btcPrice || 80920.50;
+    // Real release price stored on news item (from Binance 1m candlestick at publication time)
+    const initialPrice = (item.price_at_news && item.price_at_news !== 80920.50) 
+      ? item.price_at_news 
+      : (btcPrice || 86500.00);
     const currentPrice = btcPrice || initialPrice;
     const actualPct = ((currentPrice - initialPrice) / initialPrice) * 100;
     

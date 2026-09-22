@@ -25,6 +25,15 @@ def apply_xgboost_predictions():
         score = a.get("score", 0.50)
         relevance = a.get("relevance", "Bitcoin-Specific")
         
+        pub_dt = a.get("published_at") or a.get("scraped_at") or a.get("createdAt")
+        price_at_news = a.get("price_at_news")
+        if not price_at_news or price_at_news in (80920.50, 80000.0, 80450.0):
+            try:
+                from pipeline import fetch_btc_price_at
+                price_at_news = fetch_btc_price_at(pub_dt)
+            except Exception:
+                price_at_news = 86500.0
+        
         # Run trained news-driven XGBoost prediction engine
         xgb_res = predict_market_impact(
             sentiment     = sentiment,
@@ -34,18 +43,19 @@ def apply_xgboost_predictions():
             urgency       = a.get("urgency", False),
             entities      = a.get("entities", []),
             source        = a.get("source", ""),
-            published_at  = a.get("published_at"),
-            price_at_news = a.get("price_at_news", 80000.0),
+            published_at  = pub_dt,
+            price_at_news = price_at_news,
             title         = a.get("title", ""),
         )
         
         col.update_one(
             {"_id": a["_id"]},
             {"$set": {
+                "price_at_news": price_at_news,
                 "predicted_direction": xgb_res.get("predicted_direction", "NEUTRAL"),
                 "impact": xgb_res.get("impact_level", a.get("impact", "LOW IMPACT")),
                 "estimated_price_change_pct": xgb_res.get("estimated_price_change_pct", "0.00%"),
-                "historical_pattern_similarity": xgb_res.get("historical_pattern_similarity", "85.0%"),
+                "historical_pattern_similarity": xgb_res.get("historical_pattern_similarity", "82.0%"),
                 "direction_probabilities": xgb_res.get("direction_probabilities", {})
             }}
         )

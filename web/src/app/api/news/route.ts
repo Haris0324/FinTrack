@@ -29,19 +29,24 @@ export async function GET(request: Request) {
 
     const collection = mongoose.connection.db.collection('news');
     
-    // Strict 48-Hour (2 Days) Filter at API level
-    const fortyEightHoursAgo = new Date(Date.now() - 48 * 3600 * 1000);
+    // 24-Hour (1 Day) Filter with 3-Hour Pending Verification Window
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 3600 * 1000);
+    const threeHoursAgo = new Date(Date.now() - 3 * 3600 * 1000);
     
     const query = {
       $or: [
-        { published_at: { $gte: fortyEightHoursAgo } },
-        { scraped_at: { $gte: fortyEightHoursAgo } },
-        { createdAt: { $gte: fortyEightHoursAgo } }
+        // All articles within the active 24-hour (1 day) cycle
+        { published_at: { $gte: twentyFourHoursAgo } },
+        { scraped_at: { $gte: twentyFourHoursAgo } },
+        { createdAt: { $gte: twentyFourHoursAgo } },
+        // Plus any article released within the last 3 hours (so pending 3h predictions remain in the new day until verified)
+        { published_at: { $gte: threeHoursAgo } },
+        { scraped_at: { $gte: threeHoursAgo } }
       ]
     };
 
-    const count48h = await collection.countDocuments(query);
-    const effectiveQuery = count48h > 0 ? query : {};
+    const countActive = await collection.countDocuments(query);
+    const effectiveQuery = countActive > 0 ? query : {};
 
     const cursor = collection
       .find(effectiveQuery)

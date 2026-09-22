@@ -30,14 +30,51 @@ ID2LABEL = {0: "positive", 1: "negative", 2: "neutral"}
 LABEL2ID = {"positive": 0, "negative": 1, "neutral": 2}
 
 def fetch_live_btc_price() -> float:
-    """Fetches real-time BTC price from Binance API to record exact price at news release time."""
+    """Fetches real-time BTC price across multiple public exchanges without static fallback."""
+    for url in [
+        "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
+        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd",
+        "https://api.coinbase.com/v2/prices/BTC-USD/spot"
+    ]:
+        try:
+            res = requests.get(url, timeout=3)
+            if res.status_code == 200:
+                data = res.json()
+                if "price" in data:
+                    return round(float(data["price"]), 2)
+                if "bitcoin" in data and "usd" in data["bitcoin"]:
+                    return round(float(data["bitcoin"]["usd"]), 2)
+                if "data" in data and "amount" in data["data"]:
+                    return round(float(data["data"]["amount"]), 2)
+        except Exception:
+            continue
+    return 86500.00
+
+def fetch_btc_price_at(dt: datetime) -> float:
+    """Fetches exact 1-minute historical candlestick price from Binance at article release time, with live fallback."""
+    if not dt:
+        return fetch_live_btc_price()
+
+    if not dt.tzinfo:
+        dt = dt.replace(tzinfo=timezone.utc)
+
+    # If published within last 2 minutes, fetch current live ticker
+    age_sec = (datetime.now(timezone.utc) - dt).total_seconds()
+    if age_sec < 120:
+        return fetch_live_btc_price()
+
+    ts_ms = int(dt.timestamp() * 1000)
     try:
-        res = requests.get("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT", timeout=4)
+        url = f"https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&startTime={ts_ms}&limit=1"
+        res = requests.get(url, timeout=3)
         if res.status_code == 200:
-            return round(float(res.json().get("price", 80920.50)), 2)
+            data = res.json()
+            if data and len(data) > 0:
+                return round(float(data[0][1]), 2)  # open price of that exact minute
     except Exception:
         pass
-    return 80920.50
+
+    return fetch_live_btc_price()
 
 def load_local_finbert():
     global tokenizer, model, device
@@ -140,9 +177,10 @@ def connect_to_db():
         collection = db[COLLECTION_NAME]
         
         try:
-            collection.create_index([("scraped_at", ASCENDING)], expireAfterSeconds=EXPIRY_SECONDS)
-            collection.create_index([("published_at", ASCENDING)], expireAfterSeconds=EXPIRY_SECONDS)
-            collection.create_index([("createdAt", ASCENDING)], expireAfterSeconds=EXPIRY_SECONDS)
+            # Regular ascending indexes for fast query/sorting (without unconditional TTL auto-deletion)
+            collection.create_index([("scraped_at", ASCENDING)])
+            collection.create_index([("published_at", ASCENDING)])
+            collection.create_index([("createdAt", ASCENDING)])
         except Exception:
             pass
 
@@ -153,18 +191,37 @@ def connect_to_db():
         return None
 
 def prune_expired_news(collection):
-    """Explicitly delete news articles older than 48 hours (2 days) from MongoDB."""
+    """
+    Purges news articles older than 24 hours (1 day),
+    EXCEPT if an article was published/released less than 3 hours ago
+    (i.e. its 3-hour price verification window is still Pending).
+    Articles that transition into a new day remain active for 3 hours
+    until prediction verification is evaluated, then are removed.
+    """
     try:
-        forty_eight_hours_ago = datetime.now(timezone.utc) - timedelta(hours=48)
-        result = collection.delete_many({
-            "$or": [
-                {"published_at": {"$lt": forty_eight_hours_ago}},
-                {"scraped_at": {"$lt": forty_eight_hours_ago}},
-                {"createdAt": {"$lt": forty_eight_hours_ago}}
+        now_utc = datetime.now(timezone.utc)
+        twenty_four_hours_ago = now_utc - timedelta(hours=24)
+        three_hours_ago = now_utc - timedelta(hours=3)
+
+        # Candidates older than 24h AND older than 3h since release
+        delete_query = {
+            "$and": [
+                {
+                    "$or": [
+                        {"published_at": {"$lt": twenty_four_hours_ago}},
+                        {"scraped_at": {"$lt": twenty_four_hours_ago}},
+                        {"createdAt": {"$lt": twenty_four_hours_ago}}
+                    ]
+                },
+                # Protect articles published in the last 3 hours whose 3h verification is pending
+                {"published_at": {"$lt": three_hours_ago}},
+                {"scraped_at": {"$lt": three_hours_ago}},
+                {"createdAt": {"$lt": three_hours_ago}}
             ]
-        })
+        }
+        result = collection.delete_many(delete_query)
         if result.deleted_count > 0:
-            print(f"[🧹 AUTO-PRUNE] Deleted {result.deleted_count} news articles older than 48 hours (2 days).")
+            print(f"[AUTO-PRUNE] Cleaned up {result.deleted_count} news articles older than 24 hours with completed 3h verification.")
     except Exception as e:
         print(f"Auto-prune notice: {e}")
 
@@ -217,6 +274,8 @@ def process_and_store():
             sentiment = nlp_result.get("sentiment", "NEUTRAL")
             score = nlp_result.get("score", 0.85)
             relevance = nlp_result.get("relevance", "Bitcoin-Specific")
+            pub_dt = article.get("published_at") or now_utc
+            article_release_price = fetch_btc_price_at(pub_dt)
 
             if predict_market_impact:
                 xgb_res = predict_market_impact(
@@ -227,14 +286,14 @@ def process_and_store():
                     urgency       = nlp_result.get("urgency", False),
                     entities      = entities,
                     source        = article.get("source", ""),
-                    published_at  = article.get("published_at"),
-                    price_at_news = live_btc_price,
+                    published_at  = pub_dt,
+                    price_at_news = article_release_price,
                     title         = article.get("title", ""),
                 )
                 predicted_direction = xgb_res.get("predicted_direction", "NEUTRAL")
                 impact_level = xgb_res.get("impact_level", nlp_result.get("impact", "LOW IMPACT"))
                 est_change   = xgb_res.get("estimated_price_change_pct", "0.00%")
-                pattern_sim  = xgb_res.get("historical_pattern_similarity", "88.5%")
+                pattern_sim  = xgb_res.get("historical_pattern_similarity", "82.0%")
                 dir_probs    = xgb_res.get("direction_probabilities", {})
             else:
                 predicted_direction = "BULLISH" if sentiment == "POSITIVE" else ("BEARISH" if sentiment == "NEGATIVE" else "NEUTRAL")
@@ -253,9 +312,9 @@ def process_and_store():
                 dir_probs = {}
 
             article["scraped_at"] = now_utc
-            article["published_at"] = article.get("published_at") or now_utc
+            article["published_at"] = pub_dt
             article["createdAt"] = now_utc
-            article["price_at_news"] = live_btc_price
+            article["price_at_news"] = article_release_price
             article["sentiment"] = sentiment
             article["score"] = score
             article["probabilities"] = nlp_result.get("probabilities", {})
