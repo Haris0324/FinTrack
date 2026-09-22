@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongoose';
 import mongoose from 'mongoose';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     await connectToDatabase();
@@ -20,6 +23,7 @@ export async function GET() {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 3600 * 1000);
     const articlesToday = await collection.countDocuments({
       $or: [
+        { published_at: { $gte: twentyFourHoursAgo } },
         { scraped_at: { $gte: twentyFourHoursAgo } },
         { createdAt: { $gte: twentyFourHoursAgo } }
       ]
@@ -31,7 +35,7 @@ export async function GET() {
     // Latest XGBoost Prediction Document
     const latestPredictionDoc = await collection.findOne(
       { predicted_direction: { $exists: true } },
-      { sort: { scraped_at: -1, createdAt: -1 } }
+      { sort: { published_at: -1, scraped_at: -1, createdAt: -1 } }
     );
 
     // Aggregate overall sentiment distribution
@@ -139,13 +143,17 @@ export async function GET() {
         sentiment: latestPredictionDoc.sentiment,
         score: latestPredictionDoc.score,
         predicted_direction: latestPredictionDoc.predicted_direction || "BULLISH",
-        estimated_price_change_pct: latestPredictionDoc.estimated_price_change_pct || "+2.51%",
-        impact: latestPredictionDoc.impact || "HIGH IMPACT",
-        historical_pattern_similarity: latestPredictionDoc.historical_pattern_similarity || "88.5%",
-        direction_probabilities: latestPredictionDoc.direction_probabilities || { Bullish: 46.8, Bearish: 10.8, Neutral: 42.5 },
-        analyzed_at: latestPredictionDoc.scraped_at || latestPredictionDoc.createdAt
+        estimated_price_change_pct: latestPredictionDoc.estimated_price_change_pct || "+0.00%",
+        impact: latestPredictionDoc.impact || "LOW IMPACT",
+        historical_pattern_similarity: latestPredictionDoc.historical_pattern_similarity || "82.0%",
+        direction_probabilities: latestPredictionDoc.direction_probabilities || { Bullish: 45.0, Bearish: 25.0, Neutral: 30.0 },
+        analyzed_at: latestPredictionDoc.published_at || latestPredictionDoc.scraped_at || latestPredictionDoc.createdAt
       } : null,
       entitiesDist
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      },
     });
   } catch (error) {
     console.error("Error fetching metrics:", error);

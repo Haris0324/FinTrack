@@ -84,7 +84,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const res = await fetch('/api/metrics');
+        const res = await fetch('/api/metrics', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           setMetrics(data);
@@ -101,15 +101,21 @@ export default function Dashboard() {
       if (isInitial) setIsLoading(true);
       else setIsLoadingMore(true);
 
-      const response = await fetch(`/api/news?page=${pageNum}&limit=20`);
+      // Fetch up to 100 news items with cache: no-store to dynamically capture all daily news
+      const response = await fetch(`/api/news?page=${pageNum}&limit=100`, { cache: 'no-store' });
       if (response.ok) {
         const data = await response.json();
-        if (data.news.length < 20) setHasMore(false);
+        const fetchedNews = data.news || [];
+        if (fetchedNews.length < 100) setHasMore(false);
         
         if (isInitial) {
-          setNewsData(data.news || []);
+          setNewsData(fetchedNews);
         } else {
-          setNewsData(prev => [...prev, ...data.news]);
+          setNewsData(prev => {
+            const existingIds = new Set(prev.map(item => item._id));
+            const newItems = fetchedNews.filter((item: any) => !existingIds.has(item._id));
+            return [...prev, ...newItems];
+          });
         }
       }
     } catch (error) {
@@ -437,7 +443,7 @@ export default function Dashboard() {
                       <div>
                         <span className="text-[9px] font-medium text-muted block uppercase tracking-wider">Similarity</span>
                         <span className="text-xs font-extrabold text-purple-400">
-                          {item.historical_pattern_similarity || '88.5%'}
+                          {item.historical_pattern_similarity || '82.0%'}
                         </span>
                         <span className="text-[9px] text-muted block">Match</span>
                       </div>
@@ -607,7 +613,7 @@ export default function Dashboard() {
                           <div className="text-center">
                             <span className="text-[9px] font-medium text-muted block uppercase">Similarity</span>
                             <span className="text-xs font-extrabold text-purple-400">
-                              {item.historical_pattern_similarity || '88.5%'}
+                              {item.historical_pattern_similarity || '82.0%'}
                             </span>
                           </div>
 

@@ -2,12 +2,24 @@ import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongoose';
 import mongoose from 'mongoose';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
-    const skip = (page - 1) * limit;
+    const limitParam = url.searchParams.get('limit');
+    const all = url.searchParams.get('all') === 'true';
+
+    // Default limit to 100 so all news coming on that day are captured dynamically
+    let limit = 100;
+    if (all) {
+      limit = 0;
+    } else if (limitParam) {
+      limit = Math.max(1, parseInt(limitParam));
+    }
+    const skip = all ? 0 : Math.max(0, (page - 1) * limit);
 
     await connectToDatabase();
     
@@ -28,12 +40,19 @@ export async function GET(request: Request) {
       ]
     };
 
-    const news = await collection
-      .find(query)
+    const count48h = await collection.countDocuments(query);
+    const effectiveQuery = count48h > 0 ? query : {};
+
+    const cursor = collection
+      .find(effectiveQuery)
       .sort({ published_at: -1, scraped_at: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray();
+      .skip(skip);
+
+    if (limit > 0) {
+      cursor.limit(limit);
+    }
+
+    const news = await cursor.toArray();
 
     // Map `_id` from ObjectId to string so it serializes properly to JSON
     const serializedNews = news.map(item => ({
@@ -41,7 +60,14 @@ export async function GET(request: Request) {
       _id: item._id.toString()
     }));
 
-    return NextResponse.json({ news: serializedNews });
+    return NextResponse.json(
+      { news: serializedNews },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        },
+      }
+    );
   } catch (error) {
     console.error("Error fetching news:", error);
     return NextResponse.json({ error: 'Failed to fetch news' }, { status: 500 });
