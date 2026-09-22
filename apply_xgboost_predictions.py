@@ -25,8 +25,19 @@ def apply_xgboost_predictions():
         score = a.get("score", 0.50)
         relevance = a.get("relevance", "Bitcoin-Specific")
         
-        # Run trained 78% accuracy XGBoost prediction engine
-        xgb_res = predict_market_impact(sentiment=sentiment, score=score, relevance=relevance)
+        # Run trained news-driven XGBoost prediction engine
+        xgb_res = predict_market_impact(
+            sentiment     = sentiment,
+            score         = score,
+            relevance     = relevance,
+            probabilities = a.get("probabilities", {}),
+            urgency       = a.get("urgency", False),
+            entities      = a.get("entities", []),
+            source        = a.get("source", ""),
+            published_at  = a.get("published_at"),
+            price_at_news = a.get("price_at_news", 80000.0),
+            title         = a.get("title", ""),
+        )
         
         col.update_one(
             {"_id": a["_id"]},
@@ -39,7 +50,7 @@ def apply_xgboost_predictions():
             }}
         )
         updated_count += 1
-        print(f"  [UPDATED] [{xgb_res.get('predicted_direction')} | {xgb_res.get('estimated_price_change_pct')}] {a.get('title', '')[:50]}...")
+        print(f"  [UPDATED] [{xgb_res.get('predicted_direction')} | {xgb_res.get('estimated_price_change_pct')} | {xgb_res.get('source')}] {a.get('title', '')[:50]}...")
 
     print(f"\n[SUCCESS] Successfully updated all {updated_count} MongoDB Atlas articles with trained XGBoost model predictions!")
 
