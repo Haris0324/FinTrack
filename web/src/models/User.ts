@@ -51,7 +51,11 @@ const UserSchema = new mongoose.Schema({
   },
   twoFactorExpires: {
     type: Date,
-  }
+  },
+  isBanned: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);
