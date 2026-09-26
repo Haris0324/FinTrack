@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import AuthLayout from "@/components/layout/AuthLayout";
-import { Eye, EyeOff, Mail, Lock, TrendingUp, Globe, ShieldAlert, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, TrendingUp, Globe, ShieldAlert, Loader2, AlertCircle } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -22,6 +22,7 @@ function SignInContent() {
   const [twoFactorCode, setTwoFactorCode] = useState("");
   const [resending, setResending] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [errors, setErrors] = useState<{ email?: string; password?: string; twoFactorCode?: string }>({});
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("fintrack_remembered_email");
@@ -33,6 +34,34 @@ function SignInContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const newErrors: { email?: string; password?: string; twoFactorCode?: string } = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email.trim()) {
+      newErrors.email = "Email address is required.";
+    } else if (!emailRegex.test(email.trim())) {
+      newErrors.email = "Please enter a valid email address (e.g. name@domain.com).";
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required.";
+    }
+
+    if (requires2FA) {
+      if (!twoFactorCode.trim()) {
+        newErrors.twoFactorCode = "2-Factor Authentication code is required.";
+      } else if (twoFactorCode.trim().length !== 6) {
+        newErrors.twoFactorCode = "Please enter a valid 6-digit verification code.";
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
     setLoading(true);
 
     if (rememberMe) {
@@ -156,34 +185,48 @@ function SignInContent() {
           </div>
         )}
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-2">
+        <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+          <div className="space-y-1.5">
             <label className="text-xs font-medium text-foreground">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                }}
                 placeholder="Enter your email"
-                className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
+                className={`w-full bg-background border ${
+                  errors.email ? 'border-rose-500/70 focus:border-rose-500 ring-1 ring-rose-500/20' : 'border-card-border focus:border-primary'
+                } rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none transition-colors`}
                 disabled={requires2FA}
               />
             </div>
+            {errors.email && (
+              <p className="text-xs text-rose-400 flex items-center gap-1.5 mt-1 font-medium animate-in fade-in duration-200">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                <span>{errors.email}</span>
+              </p>
+            )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label className="text-xs font-medium text-foreground">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                }}
                 placeholder="Enter your password"
-                className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-colors"
+                className={`w-full bg-background border ${
+                  errors.password ? 'border-rose-500/70 focus:border-rose-500 ring-1 ring-rose-500/20' : 'border-card-border focus:border-primary'
+                } rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none transition-colors`}
                 disabled={requires2FA}
               />
               <button
@@ -196,13 +239,19 @@ function SignInContent() {
                 {showPassword ? <EyeOff className="w-4 h-4 pointer-events-none" /> : <Eye className="w-4 h-4 pointer-events-none" />}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-xs text-rose-400 flex items-center gap-1.5 mt-1 font-medium animate-in fade-in duration-200">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                <span>{errors.password}</span>
+              </p>
+            )}
           </div>
 
           {requires2FA && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className="space-y-2 pt-2"
+              className="space-y-1.5 pt-2"
             >
               <label className="text-xs font-medium text-foreground">2-Factor Authentication Code</label>
               <div className="relative">
@@ -210,14 +259,24 @@ function SignInContent() {
                 <input
                   type="text"
                   value={twoFactorCode}
-                  onChange={(e) => setTwoFactorCode(e.target.value.replace(/[^0-9]/g, ''))}
-                  required
+                  onChange={(e) => {
+                    setTwoFactorCode(e.target.value.replace(/[^0-9]/g, ''));
+                    if (errors.twoFactorCode) setErrors((prev) => ({ ...prev, twoFactorCode: undefined }));
+                  }}
                   placeholder="Enter 6-digit code from email"
                   autoComplete="one-time-code"
-                  className="w-full bg-background border border-primary/50 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
+                  className={`w-full bg-background border ${
+                    errors.twoFactorCode ? 'border-rose-500/70 focus:border-rose-500 ring-1 ring-rose-500/20' : 'border-primary/50 focus:border-primary'
+                  } rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none transition-colors`}
                   maxLength={6}
                 />
               </div>
+              {errors.twoFactorCode && (
+                <p className="text-xs text-rose-400 flex items-center gap-1.5 mt-1 font-medium animate-in fade-in duration-200">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                  <span>{errors.twoFactorCode}</span>
+                </p>
+              )}
             </motion.div>
           )}
 

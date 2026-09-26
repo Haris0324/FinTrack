@@ -10,6 +10,19 @@ import bcrypt from "bcrypt";
 import { UAParser } from "ua-parser-js";
 import { headers } from "next/headers";
 
+function sanitizeImageUrl(img?: string | null): string {
+  if (!img) return "";
+  // Keep standard remote image URLs (Google OAuth, Cloudinary, etc.) under 500 chars
+  if ((img.startsWith("http://") || img.startsWith("https://")) && img.length < 500) {
+    return img;
+  }
+  // If base64 or oversized payload, point to avatar API to keep JWT cookie lightweight (< 400 bytes)
+  if (img.startsWith("data:image/") || img.length >= 500) {
+    return "/api/profile/avatar";
+  }
+  return img.length < 500 ? img : "";
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -141,7 +154,7 @@ export const authOptions: NextAuthOptions = {
         if (dbUser) {
           token.id = dbUser._id.toString();
           token.role = dbUser.role;
-          token.image = dbUser.profilePicture;
+          token.image = sanitizeImageUrl(dbUser.profilePicture);
 
           // If it's a fresh sign in (user object is present), create a session log
           if (!(user as any).sessionId) {
@@ -174,7 +187,7 @@ export const authOptions: NextAuthOptions = {
         await connectToDatabase();
         const dbUser = await User.findById(token.id);
         if (dbUser) {
-          token.image = dbUser.profilePicture;
+          token.image = sanitizeImageUrl(dbUser.profilePicture);
           token.name = dbUser.name;
           token.role = dbUser.role;
         }

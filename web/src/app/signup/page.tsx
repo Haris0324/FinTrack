@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import AuthLayout from "@/components/layout/AuthLayout";
-import { Eye, EyeOff, Mail, User, Lock, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Mail, User, Lock, ShieldCheck, AlertCircle } from "lucide-react";
 import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
@@ -23,25 +23,63 @@ export default function SignUp() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [errors, setErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    terms?: string;
+  }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const newErrors: {
+      name?: string;
+      email?: string;
+      password?: string;
+      confirmPassword?: string;
+      terms?: string;
+    } = {};
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!name.trim()) {
+      newErrors.name = "Full name is required.";
+    } else if (name.trim().length < 2) {
+      newErrors.name = "Full name must be at least 2 characters.";
+    }
+
+    if (!email.trim()) {
+      newErrors.email = "Email address is required.";
+    } else if (!emailRegex.test(email.trim())) {
+      newErrors.email = "Please enter a valid email address (e.g. name@domain.com).";
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required.";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters.";
+    } else if (!isPasswordStrong) {
+      newErrors.password = "Password must meet all strength criteria below.";
+    }
+
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password.";
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match.";
+    }
+
     if (!termsAccepted) {
-      toast.error("You must agree to the Terms of Service and Privacy Policy");
+      newErrors.terms = "You must agree to the Terms of Service and Privacy Policy.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    if (!isPasswordStrong) {
-      toast.error("Please choose a stronger password.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
+    setErrors({});
     setLoading(true);
 
     try {
@@ -105,49 +143,72 @@ export default function SignUp() {
         <h2 className="text-3xl font-bold text-foreground mb-2">Create your <span className="text-gradient">Fintrack</span> account</h2>
         <p className="text-sm text-muted mb-8">Start tracking Bitcoin sentiment today</p>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-2">
+        <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+          <div className="space-y-1.5">
             <label className="text-xs font-medium text-foreground">Full Name</label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
+                }}
                 placeholder="Enter your full name"
-                className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
+                className={`w-full bg-background border ${
+                  errors.name ? 'border-rose-500/70 focus:border-rose-500 ring-1 ring-rose-500/20' : 'border-card-border focus:border-primary'
+                } rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none transition-colors`}
               />
             </div>
+            {errors.name && (
+              <p className="text-xs text-rose-400 flex items-center gap-1.5 mt-1 font-medium animate-in fade-in duration-200">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                <span>{errors.name}</span>
+              </p>
+            )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label className="text-xs font-medium text-foreground">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                }}
                 placeholder="Enter your email"
-                className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-primary transition-colors"
+                className={`w-full bg-background border ${
+                  errors.email ? 'border-rose-500/70 focus:border-rose-500 ring-1 ring-rose-500/20' : 'border-card-border focus:border-primary'
+                } rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none transition-colors`}
               />
             </div>
+            {errors.email && (
+              <p className="text-xs text-rose-400 flex items-center gap-1.5 mt-1 font-medium animate-in fade-in duration-200">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                <span>{errors.email}</span>
+              </p>
+            )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label className="text-xs font-medium text-foreground">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                }}
                 placeholder="Create a password"
-                className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-colors"
+                className={`w-full bg-background border ${
+                  errors.password ? 'border-rose-500/70 focus:border-rose-500 ring-1 ring-rose-500/20' : 'border-card-border focus:border-primary'
+                } rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none transition-colors`}
               />
               <button
                 type="button"
@@ -158,24 +219,33 @@ export default function SignUp() {
                 {showPassword ? <EyeOff className="w-4 h-4 pointer-events-none" /> : <Eye className="w-4 h-4 pointer-events-none" />}
               </button>
             </div>
+            {errors.password && (
+              <p className="text-xs text-rose-400 flex items-center gap-1.5 mt-1 font-medium animate-in fade-in duration-200">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                <span>{errors.password}</span>
+              </p>
+            )}
             <PasswordStrengthIndicator 
               password={password} 
               onValidationChange={setIsPasswordStrong} 
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label className="text-xs font-medium text-foreground">Confirm Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={6}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                }}
                 placeholder="Confirm your password"
-                className="w-full bg-background border border-card-border rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:border-primary transition-colors"
+                className={`w-full bg-background border ${
+                  errors.confirmPassword ? 'border-rose-500/70 focus:border-rose-500 ring-1 ring-rose-500/20' : 'border-card-border focus:border-primary'
+                } rounded-lg py-2.5 pl-10 pr-10 text-sm focus:outline-none transition-colors`}
               />
               <button
                 type="button"
@@ -186,19 +256,38 @@ export default function SignUp() {
                 {showConfirmPassword ? <EyeOff className="w-4 h-4 pointer-events-none" /> : <Eye className="w-4 h-4 pointer-events-none" />}
               </button>
             </div>
+            {errors.confirmPassword && (
+              <p className="text-xs text-rose-400 flex items-center gap-1.5 mt-1 font-medium animate-in fade-in duration-200">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                <span>{errors.confirmPassword}</span>
+              </p>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 pt-2">
-            <input
-              type="checkbox"
-              id="terms"
-              checked={termsAccepted}
-              onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="w-4 h-4 rounded border-card-border bg-background accent-primary"
-            />
-            <label htmlFor="terms" className="text-xs text-muted">
-              I agree to Fintrack's <Link href="#" className="text-primary hover:underline">Terms of Service</Link> and <Link href="#" className="text-primary hover:underline">Privacy Policy</Link>
-            </label>
+          <div className="pt-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={termsAccepted}
+                onChange={(e) => {
+                  setTermsAccepted(e.target.checked);
+                  if (errors.terms) setErrors((prev) => ({ ...prev, terms: undefined }));
+                }}
+                className={`w-4 h-4 rounded border-card-border bg-background accent-primary ${
+                  errors.terms ? 'ring-1 ring-rose-500' : ''
+                }`}
+              />
+              <label htmlFor="terms" className="text-xs text-muted">
+                I agree to Fintrack's <Link href="#" className="text-primary hover:underline">Terms of Service</Link> and <Link href="#" className="text-primary hover:underline">Privacy Policy</Link>
+              </label>
+            </div>
+            {errors.terms && (
+              <p className="text-xs text-rose-400 flex items-center gap-1.5 mt-1.5 font-medium animate-in fade-in duration-200">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                <span>{errors.terms}</span>
+              </p>
+            )}
           </div>
 
           <button
