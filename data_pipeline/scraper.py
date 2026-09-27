@@ -5,8 +5,10 @@ import time
 from datetime import datetime, timezone, timedelta
 import re
 import nltk
+import os
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from pymongo import MongoClient
 
 # Download NLTK data on first run if missing
 for resource in ['tokenizers/punkt', 'tokenizers/punkt_tab', 'corpora/stopwords']:
@@ -27,6 +29,35 @@ RSS_FEEDS = [
     "https://news.google.com/rss/search?q=bitcoin+reuters",
     "https://news.google.com/rss/search?q=bitcoin+bloomberg"
 ]
+
+def get_admin_scraping_settings():
+    """Load admin-managed feeds and filters; use existing behavior on first setup."""
+    defaults = {"feeds": [{"url": url, "name": url} for url in RSS_FEEDS], "keywords": []}
+    mongo_uri = os.getenv("MONGODB_URI")
+    if not mongo_uri:
+        return defaults
+    client = None
+    try:
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=2500)
+        config = client["fintrack"]["adminconfig"].find_one({"_id": "configuration"}, {"sources": 1, "watchKeywords": 1})
+        if not config:
+            return defaults
+        feeds = [
+            {"url": item["url"], "name": item.get("name", item["url"])} for item in config["sources"]
+            if isinstance(item, dict) and item.get("enabled") is True
+            and isinstance(item.get("url"), str)
+            and item["url"].startswith(("https://", "http://"))
+        ] if isinstance(config.get("sources"), list) else defaults["feeds"]
+        keywords = config.get("watchKeywords", [])
+        if not isinstance(keywords, list):
+            keywords = []
+        return {"feeds": feeds, "keywords": [word.lower() for word in keywords if isinstance(word, str) and word.strip()]}
+    except Exception as exc:
+        print(f"Could not load admin source settings; using defaults: {exc}")
+        return defaults
+    finally:
+        if client:
+            client.close()
 
 def parse_published_date(published_str: str, now_utc: datetime) -> datetime:
     """Parses RSS published date string into UTC datetime object."""
@@ -51,12 +82,19 @@ def fetch_rss_news():
     articles = []
     now_utc = datetime.now(timezone.utc)
     forty_eight_hours_ago = now_utc - timedelta(hours=48)
+    settings = get_admin_scraping_settings()
+    watched_keywords = settings["keywords"]
 
-    for feed_url in RSS_FEEDS:
+    for source in settings["feeds"]:
+        feed_url = source["url"]
         try:
             print(f"Fetching from {feed_url}...")
             feed = feedparser.parse(feed_url)
             for entry in feed.entries[:10]:
+                title = entry.get("title", "")
+                summary = entry.get("summary", "")
+                if watched_keywords and not any(word in f"{title} {summary}".lower() for word in watched_keywords):
+                    continue
                 published_raw = entry.get("published_parsed") or entry.get("published") or entry.get("updated")
                 published_at = parse_published_date(published_raw, now_utc)
 
@@ -65,12 +103,12 @@ def fetch_rss_news():
                     continue
 
                 articles.append({
-                    "title": entry.get("title", ""),
+                    "title": title,
                     "link": entry.get("link", ""),
                     "published": entry.get("published", ""),
                     "published_at": published_at,
-                    "summary": entry.get("summary", ""),
-                    "source": feed.feed.get("title", feed_url),
+                    "summary": summary,
+                    "source": source["name"] or feed.feed.get("title", feed_url),
                     "scraped_at": now_utc
                 })
         except Exception as e:

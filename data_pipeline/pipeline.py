@@ -1,6 +1,9 @@
 import os
 import time
 import requests
+import smtplib
+import ssl
+from email.message import EmailMessage
 from datetime import datetime, timezone, timedelta
 from pymongo import MongoClient, ASCENDING
 from dotenv import load_dotenv
@@ -190,6 +193,26 @@ def connect_to_db():
         print(f"Failed to connect to MongoDB: {e}")
         return None
 
+def send_high_impact_digest(recipient, articles):
+    email_user = os.getenv("EMAIL_USER")
+    email_password = os.getenv("EMAIL_PASS")
+    if not email_user or not email_password:
+        raise RuntimeError("SMTP credentials are not configured on the data pipeline")
+
+    message = EmailMessage()
+    message["Subject"] = f"FinTrack: {len(articles)} high-impact article(s)"
+    message["From"] = email_user
+    message["To"] = recipient
+    message.set_content("High-impact news processed in the latest FinTrack pipeline cycle:\n\n" + "\n\n".join(
+        f"{article.get('title', 'Untitled')}\n{article.get('url', '')}\nPredicted move: {article.get('estimated_price_change_pct', 'Unavailable')}"
+        for article in articles[:10]
+    ))
+    context = ssl.create_default_context()
+    with smtplib.SMTP(os.getenv("EMAIL_HOST", "smtp.gmail.com"), int(os.getenv("EMAIL_PORT", "587")), timeout=15) as smtp:
+        smtp.starttls(context=context)
+        smtp.login(email_user, email_password)
+        smtp.send_message(message)
+
 def prune_expired_news(collection):
     """
     Purges news articles older than 24 hours (1 day),
@@ -230,6 +253,46 @@ def process_and_store():
     if collection is None:
         return
 
+    runtime = collection.database["pipelinestats"]
+    started_clock = time.monotonic()
+    runtime.update_one(
+        {"_id": "admin_runtime"},
+        {"$set": {"status": "running", "startedAt": datetime.now(timezone.utc)}},
+        upsert=True,
+    )
+    notification_error_type = None
+    try:
+        inserted = _process_and_store(collection)
+        if isinstance(inserted, dict):
+            notification_error_type = inserted.get("notificationErrorType")
+            inserted = inserted.get("inserted", 0)
+    except Exception as error:
+        runtime.update_one(
+            {"_id": "admin_runtime"},
+            {"$set": {
+                "status": "error",
+                "completedAt": datetime.now(timezone.utc),
+                "durationMs": int((time.monotonic() - started_clock) * 1000),
+                "lastErrorType": type(error).__name__,
+            }, "$inc": {"errorCount": 1}},
+        )
+        print(f"Pipeline cycle failed: {type(error).__name__}")
+        raise
+    runtime.update_one(
+        {"_id": "admin_runtime"},
+        {"$set": {
+            "status": "healthy",
+            "completedAt": datetime.now(timezone.utc),
+            "durationMs": int((time.monotonic() - started_clock) * 1000),
+            "articlesInserted": inserted,
+            "lastErrorType": None,
+            "notificationErrorType": notification_error_type,
+        }},
+        upsert=True,
+    )
+
+
+def _process_and_store(collection):
     # Auto-prune articles older than 48 hours (2 days)
     prune_expired_news(collection)
 
@@ -244,12 +307,21 @@ def process_and_store():
 
     if not unprocessed_articles:
         print("Pipeline Cycle Complete. No new articles to process.")
-        return
+        return 0
 
     now_utc = datetime.now(timezone.utc)
     live_btc_price = fetch_live_btc_price()
     new_inserts = 0
     total_entities_extracted = 0
+    admin_config = {}
+    try:
+        admin_config = collection.database["adminconfig"].find_one({"_id": "configuration"}) or {}
+        impact_threshold_pct = float(admin_config.get("highImpactThresholdPct", 2.0))
+        if impact_threshold_pct < 0.25 or impact_threshold_pct > 15:
+            impact_threshold_pct = 2.0
+    except Exception as config_error:
+        print(f"Admin model settings unavailable; using 2% impact threshold: {config_error}")
+        impact_threshold_pct = 2.0
 
     print(f"FE-2 Batch Inference: Processing {len(unprocessed_articles)} articles in batches of {DEFAULT_BATCH_SIZE}...")
 
@@ -261,6 +333,7 @@ def process_and_store():
     except Exception:
         predict_market_impact = None
 
+    high_impact_articles = []
     for i in range(0, len(unprocessed_articles), DEFAULT_BATCH_SIZE):
         batch_articles = unprocessed_articles[i:i + DEFAULT_BATCH_SIZE]
         batch_texts = [a.get("content_cleaned") or a.get("title") or "" for a in batch_articles]
@@ -311,6 +384,19 @@ def process_and_store():
                 pattern_sim = f"{_sim_val}%"
                 dir_probs = {}
 
+            # Apply the admin-configured predicted-move threshold to new article impact labels.
+            try:
+                predicted_move_pct = abs(float(str(est_change).replace("%", "").replace("+", "")))
+                impact_level = "HIGH IMPACT" if predicted_move_pct >= impact_threshold_pct else "LOW IMPACT"
+            except (TypeError, ValueError):
+                pass
+            if impact_level == "HIGH IMPACT" and admin_config.get("emailAlertsEnabled") is True:
+                high_impact_articles.append({
+                    "title": article.get("title", "Untitled"),
+                    "url": article.get("link", ""),
+                    "estimated_price_change_pct": est_change,
+                })
+
             article["scraped_at"] = now_utc
             article["published_at"] = pub_dt
             article["createdAt"] = now_utc
@@ -354,7 +440,17 @@ def process_and_store():
         except Exception as stats_err:
             print(f"Stats update notice: {stats_err}")
 
+    notification_error_type = None
+    alert_email = admin_config.get("alertEmail")
+    if high_impact_articles and isinstance(alert_email, str) and alert_email:
+        try:
+            send_high_impact_digest(alert_email, high_impact_articles)
+        except Exception as notification_error:
+            notification_error_type = type(notification_error).__name__
+            print(f"High-impact notification failed: {notification_error_type}")
+
     print(f"Pipeline Cycle Complete. Inserts: {new_inserts} | Total Entities Extracted: {total_entities_extracted}")
+    return {"inserted": new_inserts, "notificationErrorType": notification_error_type}
 
 if __name__ == "__main__":
     print("Starting FinTrack Data Pipeline with FinBERT & XGBoost Integration...")

@@ -197,6 +197,12 @@ def train_and_evaluate():
     with open(os.path.join(MODEL_DIR, "model_metadata.json"), "w") as f:
         json.dump(metadata, f, indent=2)
 
+    # Keep the measured metadata bundled with the Next.js admin dashboard.
+    dashboard_data_dir = os.path.join(BASE_DIR, "..", "web", "src", "data")
+    os.makedirs(dashboard_data_dir, exist_ok=True)
+    with open(os.path.join(dashboard_data_dir, "model_metadata.json"), "w") as f:
+        json.dump(metadata, f, indent=2)
+
     print(f"\n{'='*70}")
     print(f"✓ Models saved to '{MODEL_DIR}'")
     print(f"  Direction Model : xgboost_direction_model.json  (acc={acc_dir*100:.1f}%)")

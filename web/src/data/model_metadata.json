@@ -1,0 +1,16 @@
+{
+  "version": "news_v2",
+  "feature_type": "news_derived_finbert",
+  "direction_accuracy": 0.5934,
+  "impact_accuracy": 0.7165,
+  "n_features": 26,
+  "n_train_samples": 64835,
+  "direction_threshold": 0.5,
+  "high_impact_threshold": 2.0,
+  "target_classes": {
+    "0": "BEARISH",
+    "1": "NEUTRAL",
+    "2": "BULLISH"
+  },
+  "status": "trained_on_news_features"
+}

@@ -96,7 +96,7 @@ function SignInContent() {
         }
       } else {
         toast.success("Signed in successfully!");
-        window.location.href = "/dashboard";
+        window.location.href = "/auth/redirect";
       }
     } catch (err) {
       toast.error("An unexpected error occurred.");
@@ -313,10 +313,10 @@ function SignInContent() {
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4">
-          <button type="button" onClick={() => signIn("google", { callbackUrl: "/dashboard" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border rounded-lg hover:bg-card-border transition-colors text-sm font-medium">
+          <button type="button" onClick={() => signIn("google", { callbackUrl: "/auth/redirect" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border rounded-lg hover:bg-card-border transition-colors text-sm font-medium">
             Google
           </button>
-          <button type="button" onClick={() => signIn("github", { callbackUrl: "/dashboard" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border rounded-lg hover:bg-card-border transition-colors text-sm font-medium">
+          <button type="button" onClick={() => signIn("github", { callbackUrl: "/auth/redirect" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border rounded-lg hover:bg-card-border transition-colors text-sm font-medium">
             GitHub
           </button>
         </div>

@@ -1,349 +1,249 @@
 "use client";
 
-import { Activity, Server, Brain, BellRing, Database, Shield, Users, FileBarChart, Play, Settings, RefreshCw, AlertTriangle, Info, Plus } from "lucide-react";
-import { AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { Activity, AlertTriangle, BellRing, Brain, Check, Clock3, FileText, Loader2, Plus, RefreshCw, Rss, ShieldCheck, Users } from "lucide-react";
 
-const resourcesData = [
-  { time: '00:00', cpu: 30, memory: 40 },
-  { time: '04:00', cpu: 25, memory: 38 },
-  { time: '08:00', cpu: 45, memory: 55 },
-  { time: '12:00', cpu: 75, memory: 65 },
-  { time: '16:00', cpu: 60, memory: 60 },
-  { time: '20:00', cpu: 50, memory: 50 },
-  { time: '24:00', cpu: 35, memory: 45 },
-];
+type Source = { name: string; url: string; enabled: boolean; articles24h: number };
+type Overview = {
+  metrics: { totalArticles: number; articles24h: number; highImpact: number; users: number; lastScrapedAt: string | null; isIngestionRecent: boolean; sourceCount: number; activeSourceCount: number };
+  sources: Source[];
+  keywords: string[];
+  settings: { highImpactThresholdPct: number; emailAlertsEnabled: boolean; alertEmail: string };
+  pipeline: null | { status: string; completedAt: string | null; durationMs: number | null; articlesInserted: number | null; errorCount: number; lastErrorType: string | null; notificationErrorType: string | null };
+  logs: { _id: string; action: string; status: string; type: string; createdAt: string; ip?: string }[];
+  model: null | { version: string; directionAccuracy: number | null; impactAccuracy: number | null; trainingSamples: number | null; featureCount: number | null; directionThreshold: number | null; highImpactThreshold: number | null; status: string };
+};
 
-const apiData = [
-  { time: '00:00', requests: 1200 },
-  { time: '04:00', requests: 800 },
-  { time: '08:00', requests: 2500 },
-  { time: '12:00', requests: 3800 },
-  { time: '16:00', requests: 3100 },
-  { time: '20:00', requests: 2200 },
-  { time: '24:00', requests: 1500 },
-];
-
-const sources = [
-  { status: 'Active', name: 'Bloomberg', url: 'bloomberg.com/crypto', articles: 136, uptime: '99.9%' },
-  { status: 'Active', name: 'CoinDesk', url: 'coindesk.com/feed', articles: 254, uptime: '99.9%' },
-  { status: 'Active', name: 'Reuters', url: 'reuters.com/markets/crypto', articles: 142, uptime: '99.2%' },
-  { status: 'Active', name: 'Financial Times', url: 'ft.com/cryptocurrency', articles: 98, uptime: '99.5%' },
-  { status: 'Warning', name: 'The Block', url: 'theblock.co/rss', articles: 145, uptime: '95.4%' },
-  { status: 'Active', name: 'CryptoSlate', url: 'cryptoslate.com/feed', articles: 204, uptime: '99.2%' },
-  { status: 'Error', name: 'Bitcoin Magazine', url: 'bitcoinmagazine.com/rss', articles: 0, uptime: '87.1%' },
-];
+const card = "rounded-xl border border-card-border bg-card";
+const pct = (value: number | null | undefined) => value == null ? "Unavailable" : `${(value * 100).toFixed(1)}%`;
+const errorText = (error: unknown, fallback: string) => error instanceof Error ? error.message : fallback;
 
 export default function AdminPanel() {
+  const [data, setData] = useState<Overview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [savingUrl, setSavingUrl] = useState("");
+  const [sourceName, setSourceName] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [keywordsInput, setKeywordsInput] = useState("");
+  const [savingKeywords, setSavingKeywords] = useState(false);
+  const [impactThreshold, setImpactThreshold] = useState("2");
+  const [savingThreshold, setSavingThreshold] = useState(false);
+  const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(false);
+  const [alertEmail, setAlertEmail] = useState("");
+
+  const refresh = useCallback(async () => {
+    try {
+      const response = await fetch("/api/admin/overview", { cache: "no-store" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not load admin dashboard");
+      setError("");
+      setData(result);
+      setKeywordsInput((result.keywords || []).join(", "));
+      setImpactThreshold(String(result.settings?.highImpactThresholdPct ?? 2));
+      setEmailAlertsEnabled(Boolean(result.settings?.emailAlertsEnabled));
+      setAlertEmail(result.settings?.alertEmail || "");
+    } catch (err: unknown) {
+      setError(errorText(err, "Could not load admin dashboard"));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void refresh(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [refresh]);
+
+  const toggleSource = async (source: Source) => {
+    setSavingUrl(source.url);
+    try {
+      const response = await fetch("/api/admin/sources", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: source.url, enabled: !source.enabled }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not update source");
+      await refresh();
+    } catch (err: unknown) {
+      setError(errorText(err, "Could not update source"));
+    } finally { setSavingUrl(""); }
+  };
+
+  const addSource = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setAdding(true);
+    try {
+      const response = await fetch("/api/admin/sources", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: sourceName, url: sourceUrl }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not add source");
+      setSourceName(""); setSourceUrl("");
+      await refresh();
+    } catch (err: unknown) {
+      setError(errorText(err, "Could not add source"));
+    } finally { setAdding(false); }
+  };
+
+  const saveKeywords = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSavingKeywords(true);
+    try {
+      const response = await fetch("/api/admin/keywords", {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keywords: keywordsInput.split(",").map(word => word.trim()).filter(Boolean) }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not save keywords");
+      await refresh();
+    } catch (err: unknown) {
+      setError(errorText(err, "Could not save keywords"));
+    } finally { setSavingKeywords(false); }
+  };
+
+  const saveThreshold = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSavingThreshold(true);
+    try {
+      const response = await fetch("/api/admin/settings", {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          highImpactThresholdPct: Number(impactThreshold),
+          emailAlertsEnabled,
+          alertEmail,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not save admin settings");
+      await refresh();
+    } catch (err: unknown) {
+      setError(errorText(err, "Could not save admin settings"));
+    } finally { setSavingThreshold(false); }
+  };
+
+  if (loading) return <div className="flex min-h-[50vh] items-center justify-center text-muted"><Loader2 className="mr-2 h-5 w-5 animate-spin" />Loading admin dashboard…</div>;
+
+  const metricCards = data ? [
+    { label: "Articles ingested · 24h", value: data.metrics.articles24h.toLocaleString(), icon: Rss, color: "text-primary" },
+    { label: "High impact articles", value: data.metrics.highImpact.toLocaleString(), icon: BellRing, color: "text-red-400" },
+    { label: "XGBoost direction accuracy", value: pct(data.model?.directionAccuracy), icon: Brain, color: "text-fuchsia-400" },
+    { label: "Registered users", value: data.metrics.users.toLocaleString(), icon: Users, color: "text-emerald-400" },
+  ] : [];
+
   return (
     <div className="flex flex-col gap-6">
-      
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground mb-1">Administrative Panel</h2>
-          <p className="text-sm text-muted">System configuration, monitoring, and management</p>
+          <h1 className="text-2xl font-bold text-foreground">Administrative Panel</h1>
+          <p className="mt-1 text-sm text-muted">Live ingestion, model health, and system activity</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-card-border text-xs font-medium">
-            <span className="w-2 h-2 rounded-full bg-success animate-pulse"></span>
-            Live System
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary/20 text-primary border border-primary/50 text-sm font-medium rounded-lg hover:bg-primary hover:text-white transition-colors">
-            <Settings className="w-4 h-4" />
-            System Operations
-          </button>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-2 rounded-full border border-card-border bg-card px-3 py-2 text-xs text-muted">
+            <span className={`h-2 w-2 rounded-full ${data?.metrics.isIngestionRecent ? "bg-emerald-400" : "bg-amber-400"}`} />
+            {data?.metrics.lastScrapedAt ? `Last article ${new Date(data.metrics.lastScrapedAt).toLocaleString()}` : "No ingestion timestamp"}
+          </span>
+          <button onClick={() => { setLoading(true); void refresh(); }} className="flex items-center gap-2 rounded-lg border border-card-border bg-card px-3 py-2 text-sm text-foreground hover:bg-card-border"><RefreshCw className="h-4 w-4" />Refresh</button>
+          <Link href="/dashboard/settings" className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:opacity-90">Account settings</Link>
         </div>
       </div>
 
-      {/* Top Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <div className="p-4 rounded-xl bg-card border border-card-border">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Server className="w-4 h-4 text-primary" />
-              <p className="text-xs font-medium text-muted">System Scraping</p>
-            </div>
-            <span className="text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-sm">Active</span>
-          </div>
-          <p className="text-xs text-muted">1,247 articles today</p>
-        </div>
-        <div className="p-4 rounded-xl bg-card border border-card-border">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-fuchsia-500" />
-              <p className="text-xs font-medium text-muted">NLP Processing</p>
-            </div>
-            <span className="text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-sm">Active</span>
-          </div>
-          <p className="text-xs text-muted">1,047 analyzed</p>
-        </div>
-        <div className="p-4 rounded-xl bg-card border border-card-border">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Brain className="w-4 h-4 text-orange-500" />
-              <p className="text-xs font-medium text-muted">ML Prediction</p>
-            </div>
-            <span className="text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-sm">Active</span>
-          </div>
-          <p className="text-xs text-muted">87.5% accuracy</p>
-        </div>
-        <div className="p-4 rounded-xl bg-card border border-card-border">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <BellRing className="w-4 h-4 text-danger" />
-              <p className="text-xs font-medium text-muted">Alert System</p>
-            </div>
-            <span className="text-[10px] font-bold text-success bg-success/10 px-2 py-0.5 rounded-sm">Active</span>
-          </div>
-          <p className="text-xs text-muted">12 active alerts</p>
-        </div>
+      {error && <div role="alert" className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300"><AlertTriangle className="h-4 w-4 shrink-0" />{error}</div>}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {metricCards.map(({ label, value, icon: Icon, color }) => <div key={label} className={`${card} p-5`}>
+          <div className="mb-4 flex items-center justify-between"><span className="text-sm text-muted">{label}</span><Icon className={`h-5 w-5 ${color}`} /></div>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          {label.startsWith("XGBoost") && data?.model && <p className="mt-1 text-xs text-muted">Impact model: {pct(data.model.impactAccuracy)}</p>}
+        </div>)}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[300px]">
-        {/* System Resources */}
-        <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col">
-          <h3 className="text-sm font-medium text-foreground mb-4">System Resources (24h)</h3>
-          <div className="flex-1 w-full h-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={resourcesData}>
-                <defs>
-                  <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F97316" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#F97316" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorMemory" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#A855F7" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#A855F7" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />
-                <XAxis dataKey="time" stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} />
-                <YAxis stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }}
-                  itemStyle={{ color: '#e2e8f0' }}
-                />
-                <Area type="monotone" dataKey="cpu" name="CPU Usage" stroke="#F97316" fillOpacity={1} fill="url(#colorCpu)" isAnimationActive={true} animationDuration={2500} animationEasing="ease-out" />
-                <Area type="monotone" dataKey="memory" name="Memory Usage" stroke="#A855F7" fillOpacity={1} fill="url(#colorMemory)" isAnimationActive={true} animationDuration={2500} animationEasing="ease-out" />
-              </AreaChart>
-            </ResponsiveContainer>
-            <div className="absolute top-0 right-0 flex gap-4">
-              <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500"></span><span className="text-[10px] text-muted">CPU Usage</span></div>
-              <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500"></span><span className="text-[10px] text-muted">Memory Usage</span></div>
-            </div>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_1fr]">
+        <section className={`${card} overflow-hidden`}>
+          <div className="flex items-center justify-between border-b border-card-border p-5">
+            <div><h2 className="font-semibold text-foreground">News sources</h2><p className="mt-1 text-xs text-muted">Changes apply to the scraper’s next run</p></div>
+            <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-400">{data?.metrics.activeSourceCount}/{data?.metrics.sourceCount} active</span>
           </div>
-        </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[580px] text-left text-sm">
+              <thead className="text-xs text-muted"><tr className="border-b border-card-border"><th className="px-5 py-3 font-medium">Status</th><th className="px-5 py-3 font-medium">Source</th><th className="px-5 py-3 font-medium">Articles · 24h</th><th className="px-5 py-3 text-right font-medium">Controls</th></tr></thead>
+              <tbody className="divide-y divide-card-border">
+                {(data?.sources || []).map(source => <tr key={source.url}>
+                  <td className="px-5 py-3"><span className={`inline-flex items-center gap-2 text-xs ${source.enabled ? "text-emerald-400" : "text-muted"}`}><span className={`h-1.5 w-1.5 rounded-full ${source.enabled ? "bg-emerald-400" : "bg-slate-500"}`} />{source.enabled ? "Active" : "Paused"}</span></td>
+                  <td className="max-w-[300px] px-5 py-3"><p className="font-medium text-foreground">{source.name}</p><p className="truncate text-xs text-muted">{source.url}</p></td>
+                  <td className="px-5 py-3 text-foreground">{source.articles24h}</td>
+                  <td className="px-5 py-3 text-right"><button disabled={savingUrl === source.url} onClick={() => void toggleSource(source)} className="rounded-md border border-card-border px-3 py-1.5 text-xs text-foreground hover:bg-card-border disabled:opacity-50">{savingUrl === source.url ? "Saving…" : source.enabled ? "Pause" : "Enable"}</button></td>
+                </tr>)}
+              </tbody>
+            </table>
+          </div>
+          <form onSubmit={addSource} className="grid grid-cols-1 gap-2 border-t border-card-border p-4 sm:grid-cols-[1fr_2fr_auto]">
+            <input required value={sourceName} onChange={event => setSourceName(event.target.value)} placeholder="Source name" className="rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary" />
+            <input required type="url" value={sourceUrl} onChange={event => setSourceUrl(event.target.value)} placeholder="https://example.com/feed.xml" className="rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary" />
+            <button disabled={adding} className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"><Plus className="h-4 w-4" />Add source</button>
+          </form>
+          <form onSubmit={saveKeywords} className="grid grid-cols-1 gap-3 border-t border-card-border p-4 sm:grid-cols-[1fr_auto] sm:items-end">
+            <label className="block text-xs text-muted">Monitored keywords <span className="ml-1">(comma separated; empty means no keyword filter)</span>
+              <input value={keywordsInput} onChange={event => setKeywordsInput(event.target.value)} placeholder="bitcoin, BTC, Ethereum" className="mt-2 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary" />
+            </label>
+            <button disabled={savingKeywords} className="rounded-lg border border-card-border px-4 py-2 text-sm text-foreground hover:bg-card-border disabled:opacity-50">{savingKeywords ? "Saving…" : "Save keywords"}</button>
+          </form>
+        </section>
 
-        {/* API Requests */}
-        <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col">
-          <h3 className="text-sm font-medium text-foreground mb-4">API Request Volume (24h)</h3>
-          <div className="flex-1 w-full h-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={apiData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />
-                <XAxis dataKey="time" stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} />
-                <YAxis stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }}
-                  itemStyle={{ color: '#e2e8f0' }}
-                />
-                <Line type="monotone" dataKey="requests" name="Requests" stroke="#10B981" strokeWidth={2} dot={false} isAnimationActive={true} animationDuration={2500} animationEasing="ease-out" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex justify-between mt-4 pt-4 border-t border-card-border">
-            <div>
-              <p className="text-[10px] text-muted">Avg / Hour</p>
-              <p className="text-sm font-bold text-foreground">1,642</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-muted">Peak</p>
-              <p className="text-sm font-bold text-foreground">3,800</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-muted">Success Rate</p>
-              <p className="text-sm font-bold text-success">99.2%</p>
-            </div>
-          </div>
-        </div>
+        <section className={`${card} p-5`}>
+          <div className="mb-5 flex items-center gap-2"><Brain className="h-5 w-5 text-fuchsia-400" /><h2 className="font-semibold text-foreground">Prediction model</h2></div>
+          {data?.model ? <div className="space-y-4">
+            <div className="flex justify-between gap-4 text-sm"><span className="text-muted">Model version</span><span className="font-medium text-foreground">{data.model.version}</span></div>
+            <div className="flex justify-between gap-4 text-sm"><span className="text-muted">Direction accuracy</span><span className="font-semibold text-emerald-400">{pct(data.model.directionAccuracy)}</span></div>
+            <div className="flex justify-between gap-4 text-sm"><span className="text-muted">Impact accuracy</span><span className="font-semibold text-emerald-400">{pct(data.model.impactAccuracy)}</span></div>
+            <div className="flex justify-between gap-4 text-sm"><span className="text-muted">Training samples</span><span className="text-foreground">{data.model.trainingSamples?.toLocaleString() ?? "Unavailable"}</span></div>
+            <div className="flex justify-between gap-4 text-sm"><span className="text-muted">Features</span><span className="text-foreground">{data.model.featureCount ?? "Unavailable"}</span></div>
+            <form onSubmit={saveThreshold} className="space-y-3 border-t border-card-border pt-4">
+              <div className="flex items-end gap-3">
+                <label className="flex-1 text-xs text-muted">High impact threshold (% predicted move)
+                  <input type="number" min="0.25" max="15" step="0.25" required value={impactThreshold} onChange={event => setImpactThreshold(event.target.value)} className="mt-2 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary" />
+                </label>
+                <button disabled={savingThreshold} className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white disabled:opacity-50">{savingThreshold ? "Saving…" : "Save settings"}</button>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-foreground"><input type="checkbox" checked={emailAlertsEnabled} onChange={event => setEmailAlertsEnabled(event.target.checked)} className="accent-orange-500" />Email me a digest when high impact articles are processed</label>
+              <input type="email" value={alertEmail} onChange={event => setAlertEmail(event.target.value)} placeholder="Alert recipient email" className="w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary" />
+              <p className="text-xs leading-5 text-muted">Email delivery also needs SMTP credentials configured privately for the Render pipeline service.</p>
+            </form>
+            <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs leading-5 text-muted"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />The threshold updates impact labels for newly processed news. Model retraining is run separately and is not started by this dashboard.</div>
+          </div> : <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-muted">Model metadata is not available in this deployment. Add the model metadata file to the Vercel build output to show measured accuracy here.</div>}
+          <div className="mt-5 flex items-center gap-2 border-t border-card-border pt-4 text-xs text-muted"><ShieldCheck className="h-4 w-4 text-emerald-400" />Status: {data?.model?.status || "Metadata unavailable"}</div>
+        </section>
       </div>
 
-      {/* News Sources Table */}
-      <div className="rounded-xl bg-card border border-card-border overflow-hidden">
-        <div className="p-4 border-b border-card-border flex items-center justify-between">
-          <h3 className="text-sm font-medium text-foreground">News Sources</h3>
-          <button className="flex items-center gap-2 px-3 py-1.5 bg-primary/20 text-primary border border-primary/50 text-xs font-medium rounded-lg hover:bg-primary hover:text-white transition-colors">
-            <Plus className="w-3.5 h-3.5" />
-            Add Source
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-card-border">
-                <th className="px-6 py-4 text-xs font-medium text-muted">Status</th>
-                <th className="px-6 py-4 text-xs font-medium text-muted">Source Name</th>
-                <th className="px-6 py-4 text-xs font-medium text-muted">URL</th>
-                <th className="px-6 py-4 text-xs font-medium text-muted text-center">Articles (24h)</th>
-                <th className="px-6 py-4 text-xs font-medium text-muted text-center">Uptime</th>
-                <th className="px-6 py-4 text-xs font-medium text-muted text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-card-border">
-              {sources.map((source, i) => (
-                <tr key={i} className="hover:bg-card-border/30 transition-colors">
-                  <td className="px-6 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        source.status === 'Active' ? 'bg-success' : source.status === 'Warning' ? 'bg-orange-500' : 'bg-danger'
-                      }`}></span>
-                      <span className="text-xs text-foreground">{source.status}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-3 text-xs font-medium text-foreground">{source.name}</td>
-                  <td className="px-6 py-3 text-xs text-muted">{source.url}</td>
-                  <td className="px-6 py-3 text-xs text-foreground text-center">{source.articles}</td>
-                  <td className="px-6 py-3 text-xs font-medium text-center text-success">{source.uptime}</td>
-                  <td className="px-6 py-3 text-right">
-                    <button className="p-1.5 text-muted hover:text-primary transition-colors"><Settings className="w-3.5 h-3.5" /></button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <section className={`${card} p-5`}>
+          <div className="mb-4 flex items-center gap-2"><Activity className="h-5 w-5 text-primary" /><h2 className="font-semibold text-foreground">Ingestion status</h2></div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-lg bg-background p-4"><p className="text-xs text-muted">Articles stored</p><p className="mt-2 text-xl font-bold text-foreground">{data?.metrics.totalArticles.toLocaleString()}</p></div>
+            <div className="rounded-lg bg-background p-4"><p className="text-xs text-muted">Articles · last 24h</p><p className="mt-2 text-xl font-bold text-foreground">{data?.metrics.articles24h.toLocaleString()}</p></div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-4 rounded-lg border border-card-border p-4 text-sm">
+            <div><p className="text-xs text-muted">Last pipeline cycle</p><p className="mt-1 text-foreground">{data?.pipeline?.completedAt ? new Date(data.pipeline.completedAt).toLocaleString() : "Waiting for next Render cycle"}</p></div>
+            <div><p className="text-xs text-muted">Pipeline state</p><p className={`mt-1 font-medium ${data?.pipeline?.status === "healthy" ? "text-emerald-400" : data?.pipeline?.status === "error" ? "text-red-400" : "text-amber-400"}`}>{data?.pipeline?.status || "No telemetry yet"}</p></div>
+            <div><p className="text-xs text-muted">Last cycle duration</p><p className="mt-1 text-foreground">{data?.pipeline?.durationMs == null ? "Unavailable" : `${(data.pipeline.durationMs / 1000).toFixed(1)} sec`}</p></div>
+            <div><p className="text-xs text-muted">Last cycle inserted</p><p className="mt-1 text-foreground">{data?.pipeline?.articlesInserted ?? "Unavailable"}</p></div>
+            <div><p className="text-xs text-muted">Recorded cycle errors</p><p className="mt-1 text-foreground">{data?.pipeline?.errorCount ?? 0}</p></div>
+            {data?.pipeline?.lastErrorType && <div><p className="text-xs text-muted">Latest error type</p><p className="mt-1 text-red-400">{data.pipeline.lastErrorType}</p></div>}
+            {data?.pipeline?.notificationErrorType && <div><p className="text-xs text-muted">Latest notification error</p><p className="mt-1 text-red-400">{data.pipeline.notificationErrorType}</p></div>}
+          </div>
+          <p className="mt-4 text-xs leading-5 text-muted">Pipeline telemetry appears after the updated worker runs. Vercel CPU, memory, and API request history are not collected by the current deployment.</p>
+        </section>
+        <section className={`${card} p-5`}>
+          <div className="mb-4 flex items-center gap-2"><FileText className="h-5 w-5 text-orange-400" /><h2 className="font-semibold text-foreground">Recent account activity</h2></div>
+          <div className="space-y-3">
+            {(data?.logs || []).length ? data?.logs.map(log => <div key={log._id} className="flex items-start gap-3 border-b border-card-border pb-3 last:border-0 last:pb-0"><span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${log.status === "Success" ? "bg-emerald-400" : "bg-amber-400"}`} /><div className="min-w-0 flex-1"><p className="text-sm text-foreground">{log.action}</p><p className="mt-1 flex items-center gap-1 text-xs text-muted"><Clock3 className="h-3 w-3" />{new Date(log.createdAt).toLocaleString()}</p></div><span className="text-xs text-muted">{log.status}</span></div>) : <p className="py-6 text-center text-sm text-muted">No activity has been recorded yet.</p>}
+          </div>
+        </section>
       </div>
-
-      {/* Bottom Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* ML Configuration */}
-        <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-6">
-              <Brain className="w-5 h-5 text-fuchsia-500" />
-              <h3 className="text-sm font-medium text-foreground">ML Model Configuration</h3>
-            </div>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted">Model Version</span>
-                <span className="text-foreground font-medium">2.4.1 (FinBERT Transformer)</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted">Last Retrained</span>
-                <span className="text-foreground font-medium">March 12, 2024</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted">Training Samples</span>
-                <span className="text-foreground font-medium">104,567</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted">Current Accuracy</span>
-                <span className="text-success font-bold">88.3%</span>
-              </div>
-            </div>
-          </div>
-          <button className="mt-8 w-full py-3 bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(168,85,247,0.4)]">
-            <RefreshCw className="w-4 h-4" />
-            Retrain Model
-          </button>
-        </div>
-
-        {/* Recent Logs */}
-        <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <FileBarChart className="w-5 h-5 text-primary" />
-              <h3 className="text-sm font-medium text-foreground">Recent Logs</h3>
-            </div>
-            <span className="text-[10px] text-primary hover:underline cursor-pointer">View All</span>
-          </div>
-          <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar max-h-[250px]">
-            
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-500">WARNING</span>
-                  <span className="text-xs font-medium text-foreground">The Block</span>
-                </div>
-                <p className="text-xs text-muted">Rate limit approaching (95/100 req/min)</p>
-              </div>
-              <span className="text-[10px] text-muted ml-auto">2 min ago</span>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <Shield className="w-4 h-4 text-danger shrink-0 mt-0.5" />
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-danger/20 text-danger">ERROR</span>
-                  <span className="text-xs font-medium text-foreground">Bitcoin Magazine</span>
-                </div>
-                <p className="text-xs text-muted">Connection timeout - retrying in 5 minutes</p>
-              </div>
-              <span className="text-[10px] text-muted ml-auto">15 min ago</span>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-500">INFO</span>
-                  <span className="text-xs font-medium text-foreground">System</span>
-                </div>
-                <p className="text-xs text-muted">Model retrained with 10,000 new samples</p>
-              </div>
-              <span className="text-[10px] text-muted ml-auto">1 hour ago</span>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-500">WARNING</span>
-                  <span className="text-xs font-medium text-foreground">Database</span>
-                </div>
-                <p className="text-xs text-muted">Storage usage at 78% capacity</p>
-              </div>
-              <span className="text-[10px] text-muted ml-auto">4 hours ago</span>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      {/* Footer Mini Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-        <div className="p-3 rounded-lg border border-card-border bg-card hover:bg-card-border/50 cursor-pointer transition-colors flex items-center gap-3">
-          <Database className="w-4 h-4 text-primary" />
-          <div>
-            <p className="text-[10px] font-bold text-foreground">Backup Database</p>
-            <p className="text-[9px] text-muted">Create snapshot</p>
-          </div>
-        </div>
-        <div className="p-3 rounded-lg border border-card-border bg-card hover:bg-card-border/50 cursor-pointer transition-colors flex items-center gap-3">
-          <Shield className="w-4 h-4 text-success" />
-          <div>
-            <p className="text-[10px] font-bold text-foreground">Security Audit</p>
-            <p className="text-[9px] text-muted">Run diagnostics</p>
-          </div>
-        </div>
-        <div className="p-3 rounded-lg border border-card-border bg-card hover:bg-card-border/50 cursor-pointer transition-colors flex items-center gap-3">
-          <Users className="w-4 h-4 text-fuchsia-500" />
-          <div>
-            <p className="text-[10px] font-bold text-foreground">User Management</p>
-            <p className="text-[9px] text-muted">Manage access</p>
-          </div>
-        </div>
-        <div className="p-3 rounded-lg border border-card-border bg-card hover:bg-card-border/50 cursor-pointer transition-colors flex items-center gap-3">
-          <FileBarChart className="w-4 h-4 text-orange-500" />
-          <div>
-            <p className="text-[10px] font-bold text-foreground">Performance Report</p>
-            <p className="text-[9px] text-muted">Generate PDF</p>
-          </div>
-        </div>
-      </div>
-
+      <div className="flex items-center gap-2 text-xs text-muted"><Check className="h-4 w-4 text-emerald-400" />{data?.metrics.users ?? 0} user accounts · {data?.metrics.sourceCount ?? 0} configured news sources</div>
     </div>
   );
 }
