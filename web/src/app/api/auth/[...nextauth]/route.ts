@@ -45,8 +45,11 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
         await connectToDatabase();
-        const user = await User.findOne({ email: credentials.email });
+        const user = await User.findOne({ email: credentials.email.trim().toLowerCase() });
         if (!user) {
+          return null;
+        }
+        if (user.isActive === false) {
           return null;
         }
         if (!user.password && user.providers?.length) {
@@ -70,7 +73,7 @@ export const authOptions: NextAuthOptions = {
                type: 'warning',
                ip
              });
-          } catch(e) {}
+          } catch {}
           return null;
         }
 
@@ -107,16 +110,23 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider === "google" || account?.provider === "github") {
         await connectToDatabase();
-        const existingUser = await User.findOne({ email: user.email });
+        if (!user.email) return false;
+        const normalizedEmail = user.email.trim().toLowerCase();
+        const existingUser = await User.findOne({ email: normalizedEmail });
+
+        if (existingUser?.isActive === false) {
+          return false;
+        }
         
-        const name = user.name || (profile as any)?.login || user.email?.split('@')[0] || "User";
+        const providerLogin = profile && "login" in profile && typeof profile.login === "string" ? profile.login : undefined;
+        const name = user.name || providerLogin || user.email.split('@')[0] || "User";
         const profilePicture = user.image || "";
 
         if (!existingUser) {
           // Auto-create user for OAuth
           await User.create({
             name,
-            email: user.email,
+            email: normalizedEmail,
             role: "user",
             profilePicture,
             providers: [account.provider],
@@ -146,10 +156,10 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         await connectToDatabase();
-        const dbUser = await User.findOne({ email: token.email });
+        const dbUser = await User.findOne({ email: token.email?.trim().toLowerCase() });
         
         if (dbUser) {
           token.id = dbUser._id.toString();
@@ -157,7 +167,7 @@ export const authOptions: NextAuthOptions = {
           token.image = sanitizeImageUrl(dbUser.profilePicture);
 
           // If it's a fresh sign in (user object is present), create a session log
-          if (!(user as any).sessionId) {
+          if (!user.sessionId) {
             try {
               const headerList = await headers();
               const ip = headerList.get('x-forwarded-for') || 'Unknown IP';
@@ -174,11 +184,11 @@ export const authOptions: NextAuthOptions = {
                 ip
               });
               token.sessionId = sessionLog._id.toString();
-            } catch (e) {
-              console.error("Failed to create session log in JWT callback", e);
+            } catch (error) {
+              console.error("Failed to create session log in JWT callback", error);
             }
           } else {
-            token.sessionId = (user as any).sessionId;
+            token.sessionId = user.sessionId;
           }
         }
       }
@@ -196,32 +206,37 @@ export const authOptions: NextAuthOptions = {
       // Verify session exists in DB
       if (token.sessionId) {
         await connectToDatabase();
-        const activeSession = await SessionLog.findById(token.sessionId);
-        if (!activeSession) {
+        const activeSession = await SessionLog.findById(token.sessionId).select("userId").lean();
+        const activeUser = activeSession ? await User.findById(activeSession.userId).select("isActive").lean() : null;
+        if (!activeUser || activeUser.isActive === false) {
           return { ...token, error: "SessionRevoked" };
         }
+      } else if (token.id) {
+        await connectToDatabase();
+        const activeUser = await User.findById(token.id).select("isActive").lean();
+        if (!activeUser || activeUser.isActive === false) return { ...token, error: "SessionRevoked" };
       }
 
       return token;
     },
     async session({ session, token }) {
       if (token.error === "SessionRevoked") {
-        return { ...session, error: "SessionRevoked" };
+        return { expires: session.expires, error: "SessionRevoked", user: null } as unknown as typeof session;
       }
-      if (session.user) {
-        (session.user as any).id = token.id;
-        (session.user as any).role = token.role;
-        (session.user as any).sessionId = token.sessionId;
-        session.user.image = token.image as string;
+      if (session.user && token.id) {
+        session.user.id = token.id;
+        session.user.role = token.role === "admin" ? "admin" : "user";
+        session.user.sessionId = token.sessionId;
+        session.user.image = typeof token.image === "string" ? token.image : null;
       }
       return session;
     }
   },
   events: {
-    async signIn({ user, account }) {
+    async signIn({ user }) {
       try {
         await connectToDatabase();
-        const dbUser = await User.findOne({ email: user.email });
+        const dbUser = user.email ? await User.findOne({ email: user.email.trim().toLowerCase() }) : null;
         if (!dbUser) return;
 
         const headerList = await headers();

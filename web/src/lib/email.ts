@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Verify connection configuration
-transporter.verify(function (error, success) {
+transporter.verify(function (error) {
   if (error) {
     console.error("SMTP Connection Error:", error);
   } else {
@@ -53,6 +53,28 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
         <p>We received a request to reset your password. Click the button below to choose a new password.</p>
         <a href="${resetUrl}" style="display: inline-block; background-color: #F97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">Reset Password</a>
         <p style="margin-top: 30px; font-size: 12px; color: #666;">If you did not request this email, you can safely ignore it.</p>
+      </div>
+    `,
+  });
+};
+
+export const sendAdminInviteEmail = async (email: string, token: string) => {
+  const configuredBaseUrl = process.env.NEXTAUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
+  if (!configuredBaseUrl) throw new Error("Application URL is not configured");
+
+  const inviteUrl = new URL("/accept-invite", configuredBaseUrl);
+  inviteUrl.searchParams.set("token", token);
+
+  await transporter.sendMail({
+    from: `"FinTrack" <${emailUser}>`,
+    to: email,
+    subject: "You have been invited to FinTrack",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+        <h2 style="color: #F97316;">Set up your FinTrack account</h2>
+        <p>An administrator invited you to create a FinTrack account. Use the link below to choose your password. This link expires in 24 hours and can only be used once.</p>
+        <a href="${inviteUrl.toString()}" style="display: inline-block; background-color: #F97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">Accept invitation</a>
+        <p style="margin-top: 30px; font-size: 12px; color: #666;">If you were not expecting this invitation, you can ignore this email.</p>
       </div>
     `,
   });

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Activity, AlertTriangle, BellRing, Brain, Check, Clock3, FileText, Loader2, Plus, RefreshCw, Rss, ShieldCheck, Users } from "lucide-react";
+import AdminUsersPanel from "./users-panel";
 
 type Source = { name: string; url: string; enabled: boolean; articles24h: number };
 type Overview = {
@@ -146,8 +147,8 @@ export default function AdminPanel() {
             <span className={`h-2 w-2 rounded-full ${data?.metrics.isIngestionRecent ? "bg-emerald-400" : "bg-amber-400"}`} />
             {data?.metrics.lastScrapedAt ? `Last article ${new Date(data.metrics.lastScrapedAt).toLocaleString()}` : "No ingestion timestamp"}
           </span>
-          <button onClick={() => { setLoading(true); void refresh(); }} className="flex items-center gap-2 rounded-lg border border-card-border bg-card px-3 py-2 text-sm text-foreground hover:bg-card-border"><RefreshCw className="h-4 w-4" />Refresh</button>
-          <Link href="/dashboard/settings" className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:opacity-90">Account settings</Link>
+          <button type="button" disabled={loading} onClick={() => { setLoading(true); void refresh(); }} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-card-border bg-card px-3 py-2 text-sm text-foreground transition hover:bg-card-border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />Refresh</button>
+          <Link href="/dashboard/settings" className="inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Account settings</Link>
         </div>
       </div>
 
@@ -160,6 +161,8 @@ export default function AdminPanel() {
           {label.startsWith("XGBoost") && data?.model && <p className="mt-1 text-xs text-muted">Impact model: {pct(data.model.impactAccuracy)}</p>}
         </div>)}
       </div>
+
+      <AdminUsersPanel />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_1fr]">
         <section className={`${card} overflow-hidden`}>
