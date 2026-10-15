@@ -4,6 +4,7 @@ import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Clock, Calendar, TrendingUp, Search, Activity, ChevronRight } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 const timelineData = [
   { day: '-7d', price: 38500 },
@@ -85,6 +86,7 @@ const similarEvents = [
 ];
 
 export default function HistoricalPatterns() {
+  const { isDark } = useTheme();
   const [activeIndex, setActiveIndex] = useState(0);
   const currentEvent = historicalEvents[activeIndex];
 
@@ -102,22 +104,22 @@ export default function HistoricalPatterns() {
 
         {/* Top Stats Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-[#0b1120] border border-card-border/50">
+          <div className="p-4 rounded-xl bg-card border border-card-border">
             <Clock className="w-4 h-4 text-orange-500 mb-1.5" />
             <h3 className="text-xl font-bold text-foreground">847</h3>
             <p className="text-[10px] text-muted">Historical Events</p>
           </div>
-          <div className="p-4 rounded-xl bg-[#0b1120] border border-card-border/50">
+          <div className="p-4 rounded-xl bg-card border border-card-border">
             <Calendar className="w-4 h-4 text-blue-500 mb-1.5" />
             <h3 className="text-xl font-bold text-foreground">5 Years</h3>
             <p className="text-[10px] text-muted">Data Coverage</p>
           </div>
-          <div className="p-4 rounded-xl bg-[#0b1120] border border-card-border/50">
+          <div className="p-4 rounded-xl bg-card border border-card-border">
             <TrendingUp className="w-4 h-4 text-success mb-1.5" />
             <h3 className="text-xl font-bold text-foreground">83%</h3>
             <p className="text-[10px] text-muted">Pattern Match Rate</p>
           </div>
-          <div className="p-4 rounded-xl bg-[#0b1120] border border-card-border/50">
+          <div className="p-4 rounded-xl bg-card border border-card-border">
             <Search className="w-4 h-4 text-purple-500 mb-1.5" />
             <h3 className="text-xl font-bold text-foreground">3</h3>
             <p className="text-[10px] text-muted">Similar Events Today</p>
@@ -137,8 +139,8 @@ export default function HistoricalPatterns() {
                   onClick={() => setActiveIndex(i)}
                   className={`p-3 rounded-xl border transition-all cursor-pointer ${
                     activeIndex === i 
-                      ? "bg-[#2a1d0f] border-orange-500/50 shadow-lg shadow-orange-500/10" 
-                      : "bg-[#0b1120] border-card-border/50 hover:bg-card-border/30"
+                      ? "bg-primary/10 border-primary/50 shadow-lg shadow-primary/10" 
+                      : "bg-card border-card-border hover:bg-card-border/30"
                   }`}
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -150,14 +152,14 @@ export default function HistoricalPatterns() {
                     }`}>
                       {event.category}
                     </span>
-                    <span className="text-[9px] text-muted-foreground">{event.date}</span>
+                    <span className="text-[9px] text-muted">{event.date}</span>
                   </div>
                   <h4 className="text-xs font-bold text-foreground mb-2 leading-tight">{event.title}</h4>
                   <div className="flex justify-between items-center">
                     <span className={`text-xs font-bold ${event.impact.startsWith('+') ? 'text-success' : 'text-danger'}`}>
                       {event.impact}
                     </span>
-                    <span className="text-[9px] text-muted-foreground">{event.timeframe}</span>
+                    <span className="text-[9px] text-muted">{event.timeframe}</span>
                   </div>
                 </div>
               ))}
@@ -166,7 +168,7 @@ export default function HistoricalPatterns() {
 
           {/* Right Column: Detailed View & Chart */}
           <div className="lg:col-span-2 space-y-5">
-            <div className="p-6 rounded-xl bg-[#0b1120] border border-card-border/50">
+            <div className="p-6 rounded-xl bg-card border border-card-border">
               <div className="flex items-center gap-2 mb-2">
                 <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
                   currentEvent.category === 'Regulatory' ? 'bg-success/10 text-success' :
@@ -196,22 +198,22 @@ export default function HistoricalPatterns() {
                 </div>
               </div>
 
-              <div className="bg-[#0f172a] p-4 rounded-xl border border-card-border/30">
+              <div className="bg-background p-4 rounded-xl border border-card-border">
                 <h4 className="text-sm font-bold text-foreground mb-8">Price Movement Timeline</h4>
                 <div className="h-[220px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={timelineData} margin={{ left: 0, right: 10, top: 45, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={true} horizontal={true} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#E2E8F0"} vertical={true} horizontal={true} />
                       <XAxis 
                         dataKey="day" 
-                        stroke="#475569" 
+                        stroke={isDark ? "#475569" : "#64748B"} 
                         fontSize={9} 
                         axisLine={false} 
                         tickLine={false} 
                         dy={5}
                       />
                       <YAxis 
-                        stroke="#475569" 
+                        stroke={isDark ? "#475569" : "#64748B"} 
                         fontSize={9} 
                         axisLine={false} 
                         tickLine={false} 
@@ -224,29 +226,29 @@ export default function HistoricalPatterns() {
                           if (active && payload && payload.length) {
                             const lbl = String(label);
                             return (
-                              <div className="bg-[#1e293b] border border-card-border p-3 rounded-lg shadow-2xl min-w-[120px]">
-                                <p className="text-xs font-bold text-white mb-1.5">{lbl.startsWith('-') || lbl.startsWith('+') ? `Day ${lbl.replace('d', '')}` : (lbl === 'Event Day' ? 'Day 0' : lbl)}</p>
-                                <p className="text-[11px] text-success font-medium">price : {payload[0].value}</p>
+                              <div className="bg-card border border-card-border p-3 rounded-lg shadow-xl min-w-[120px]">
+                                <p className="text-xs font-bold text-foreground mb-1.5">{lbl.startsWith('-') || lbl.startsWith('+') ? `Day ${lbl.replace('d', '')}` : (lbl === 'Event Day' ? 'Day 0' : lbl)}</p>
+                                <p className="text-[11px] text-success font-medium">price : ${payload[0].value?.toLocaleString()}</p>
                               </div>
                             );
                           }
                           return null;
                         }}
-                        cursor={{ stroke: '#475569', strokeWidth: 1 }}
+                        cursor={{ stroke: isDark ? '#475569' : '#64748B', strokeWidth: 1 }}
                       />
                       <ReferenceLine 
                         x="Event Day" 
-                        stroke="#f97316" 
+                        stroke={isDark ? "#f97316" : "#ea580c"} 
                         strokeDasharray="3 3" 
-                        label={{ position: 'top', value: 'Event', fill: '#94a3b8', fontSize: 11, dy: -8 }} 
+                        label={{ position: 'top', value: 'Event', fill: isDark ? '#94a3b8' : '#64748b', fontSize: 11, dy: -8 }} 
                       />
                       <Line 
                         type="monotone" 
                         dataKey="price" 
-                        stroke="#22c55e" 
+                        stroke={isDark ? "#22c55e" : "#16A34A"} 
                         strokeWidth={2} 
-                        dot={{ r: 4, fill: '#22c55e', strokeWidth: 2, stroke: '#0f172a' }} 
-                        activeDot={{ r: 6, fill: '#ffffff', stroke: '#22c55e', strokeWidth: 2 }}
+                        dot={{ r: 4, fill: isDark ? '#22c55e' : '#16A34A', strokeWidth: 2, stroke: isDark ? '#0f172a' : '#ffffff' }} 
+                        activeDot={{ r: 6, fill: '#ffffff', stroke: isDark ? '#22c55e' : '#16A34A', strokeWidth: 2 }}
                         isAnimationActive={false} 
                       />
                     </LineChart>
@@ -259,7 +261,7 @@ export default function HistoricalPatterns() {
         </div>
 
         {/* Similar Current Events Section */}
-        <div className="p-5 rounded-xl bg-[#0b1120] border border-card-border/50">
+        <div className="p-5 rounded-xl bg-card border border-card-border">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <Search className="w-4 h-4 text-orange-500" />
@@ -270,7 +272,7 @@ export default function HistoricalPatterns() {
           
           <div className="space-y-2.5">
             {similarEvents.map((event, i) => (
-              <div key={i} className="group p-4 bg-[#0f172a] border border-card-border/30 rounded-xl hover:bg-card-border/20 transition-all cursor-pointer flex items-center justify-between">
+              <div key={i} className="group p-4 bg-background border border-card-border/60 rounded-xl hover:bg-card-border/20 transition-all cursor-pointer flex items-center justify-between">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] text-muted font-medium">{event.date}</span>
@@ -297,15 +299,15 @@ export default function HistoricalPatterns() {
 
         {/* Feature Cards at Bottom */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-4">
-          <div className="p-5 rounded-xl border border-purple-500/30 bg-[#0f172a] shadow-[0_0_15px_-5px_rgba(168,85,247,0.15)]">
+          <div className="p-5 rounded-xl border border-purple-500/30 bg-card shadow-[0_0_15px_-5px_rgba(168,85,247,0.15)]">
             <h4 className="text-sm font-bold text-foreground mb-1.5">Semantic Matching</h4>
             <p className="text-[11px] text-muted leading-relaxed">Uses NLP embeddings to find similar events based on content and context</p>
           </div>
-          <div className="p-5 rounded-xl border border-blue-500/30 bg-[#0f172a] shadow-[0_0_15px_-5px_rgba(59,130,246,0.15)]">
+          <div className="p-5 rounded-xl border border-blue-500/30 bg-card shadow-[0_0_15px_-5px_rgba(59,130,246,0.15)]">
             <h4 className="text-sm font-bold text-foreground mb-1.5">Price Correlation</h4>
             <p className="text-[11px] text-muted leading-relaxed">Analyzes historical price movements to identify patterns and trends</p>
           </div>
-          <div className="p-5 rounded-xl border border-orange-500/30 bg-[#0f172a] shadow-[0_0_15px_-5px_rgba(249,115,22,0.15)]">
+          <div className="p-5 rounded-xl border border-orange-500/30 bg-card shadow-[0_0_15px_-5px_rgba(249,115,22,0.15)]">
             <h4 className="text-sm font-bold text-foreground mb-1.5">Weighted Recency</h4>
             <p className="text-[11px] text-muted leading-relaxed">Recent events given higher weight as market conditions evolve</p>
           </div>

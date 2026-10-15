@@ -301,14 +301,14 @@ export default function SignUp() {
 
         <div className="mt-8 relative flex items-center justify-center">
           <div className="absolute w-full border-t border-card-border"></div>
-          <span className="relative bg-card px-4 text-xs text-muted">Or sign up with</span>
+          <span className="relative bg-background px-4 text-xs text-muted">Or sign up with</span>
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4">
-          <button type="button" onClick={() => signIn("google", { callbackUrl: "/dashboard" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border rounded-lg hover:bg-card-border transition-colors text-sm font-medium">
+          <button type="button" onClick={() => signIn("google", { callbackUrl: "/dashboard" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border bg-card rounded-lg hover:bg-card-border text-foreground transition-colors text-sm font-medium">
             Google
           </button>
-          <button type="button" onClick={() => signIn("github", { callbackUrl: "/dashboard" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border rounded-lg hover:bg-card-border transition-colors text-sm font-medium">
+          <button type="button" onClick={() => signIn("github", { callbackUrl: "/dashboard" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border bg-card rounded-lg hover:bg-card-border text-foreground transition-colors text-sm font-medium">
             GitHub
           </button>
         </div>

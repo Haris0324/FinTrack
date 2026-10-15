@@ -1,12 +1,14 @@
 "use client";
 
-import { Bell, User as UserIcon } from "lucide-react";
+import { Bell, User as UserIcon, Sun, Moon } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 export default function HeaderActions() {
   const { data: session } = useSession();
+  const { theme, toggleTheme } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -45,19 +47,33 @@ export default function HeaderActions() {
   };
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3 md:gap-4">
       <button 
         onClick={scrollToNews}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-card-border text-xs font-medium hover:bg-card-border transition-colors"
+        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-card-border text-xs font-medium hover:bg-card-border transition-colors text-foreground"
       >
         <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
         Live Updates
+      </button>
+
+      {/* Theme Toggle Button */}
+      <button
+        onClick={toggleTheme}
+        aria-label="Toggle theme"
+        title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        className="p-2 rounded-full hover:bg-card border border-transparent hover:border-card-border transition-colors relative focus:outline-none"
+      >
+        {theme === "dark" ? (
+          <Sun className="w-5 h-5 text-amber-400 hover:rotate-45 transition-transform duration-300" />
+        ) : (
+          <Moon className="w-5 h-5 text-indigo-600 hover:-rotate-12 transition-transform duration-300" />
+        )}
       </button>
       
       <div className="relative">
         <button 
           onClick={handleOpenNotifications}
-          className="p-2 rounded-full hover:bg-card transition-colors relative focus:outline-none"
+          className="p-2 rounded-full hover:bg-card border border-transparent hover:border-card-border transition-colors relative focus:outline-none"
         >
           <Bell className="w-5 h-5 text-muted hover:text-foreground transition-colors" />
           {hasUnread && (
@@ -95,7 +111,7 @@ export default function HeaderActions() {
         )}
       </div>
 
-      <Link href="/dashboard/settings" className="w-9 h-9 rounded-full bg-card border border-card-border flex items-center justify-center hover:bg-card-border transition-colors overflow-hidden shrink-0">
+      <Link href="/dashboard/settings" title="Account Settings" className="w-9 h-9 rounded-full bg-card border border-card-border flex items-center justify-center hover:bg-card-border transition-colors overflow-hidden shrink-0">
         {session?.user?.image ? (
           <img 
             src={session.user.image}

@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { User, Lock, Bell, Activity, Camera, LogOut, ShieldAlert, Monitor, Smartphone, AlertTriangle, Loader2 } from "lucide-react";
+import { User, Lock, Bell, Activity, Camera, LogOut, ShieldAlert, Monitor, Smartphone, AlertTriangle, Loader2, Palette, Sun, Moon, Check } from "lucide-react";
 import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator";
 import { signOut, useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 export default function SettingsPage() {
   const { data: session, update: updateSession } = useSession();
+  const { theme, setTheme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(true);
 
@@ -347,6 +349,152 @@ export default function SettingsPage() {
     }
   };
 
+  const renderThemeSettings = () => (
+    <div className="p-6 rounded-xl bg-card border border-card-border shadow-sm animate-in fade-in duration-300">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-card-border">
+        <div>
+          <h3 className="text-lg font-bold text-foreground mb-1 flex items-center gap-2">
+            <Palette className="w-5 h-5 text-primary" />
+            Appearance & Theme
+          </h3>
+          <p className="text-sm text-muted">Customize how Fintrack looks on your device. Choose between Light and Dark mode.</p>
+        </div>
+
+        {/* Quick Theme Toggle Button */}
+        <button
+          onClick={() => {
+            toggleTheme();
+            toast.success(`Switched to ${theme === "dark" ? "Light" : "Dark"} Mode`);
+          }}
+          className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-background border border-card-border hover:border-primary text-foreground text-xs font-semibold shadow-sm transition-all shrink-0 hover:bg-card-border/20"
+        >
+          {theme === "dark" ? (
+            <>
+              <Sun className="w-4 h-4 text-amber-500" />
+              <span>Switch to Light Mode</span>
+            </>
+          ) : (
+            <>
+              <Moon className="w-4 h-4 text-indigo-600" />
+              <span>Switch to Dark Mode</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        {/* Light Theme Card */}
+        <div 
+          onClick={() => {
+            if (theme !== "light") {
+              setTheme("light");
+              toast.success("Switched to Light Mode");
+            }
+          }}
+          className={`p-5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-4 ${
+            theme === "light" 
+              ? "bg-primary/5 border-primary ring-2 ring-primary/30 shadow-md" 
+              : "bg-background border-card-border hover:border-card-border/80 hover:bg-card-border/10"
+          }`}
+        >
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                <Sun className="w-5 h-5 text-amber-500" />
+              </div>
+              {theme === "light" ? (
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-primary text-white shadow-sm">
+                  <Check className="w-3.5 h-3.5" /> Active
+                </span>
+              ) : (
+                <span className="text-xs font-medium text-muted">Click to select</span>
+              )}
+            </div>
+            <h4 className="text-base font-bold text-foreground mb-1">Light Mode</h4>
+            <p className="text-xs text-muted leading-relaxed">
+              Clean white workspace with high-contrast slate text and optimized line graphs for bright daylight environments.
+            </p>
+          </div>
+
+          {/* Mini Preview Graphic */}
+          <div className="p-3 rounded-lg bg-[#FFFFFF] border border-[#E2E8F0] shadow-sm space-y-2 pointer-events-none">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-[#0F172A]">BTC / USD</span>
+              <span className="text-[10px] font-bold text-[#16A34A]">+2.45%</span>
+            </div>
+            <div className="h-1.5 w-full bg-[#E2E8F0] rounded-full overflow-hidden">
+              <div className="h-full bg-[#EA580C] w-3/4 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Dark Theme Card */}
+        <div 
+          onClick={() => {
+            if (theme !== "dark") {
+              setTheme("dark");
+              toast.success("Switched to Dark Mode");
+            }
+          }}
+          className={`p-5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-4 ${
+            theme === "dark" 
+              ? "bg-primary/5 border-primary ring-2 ring-primary/30 shadow-md" 
+              : "bg-background border-card-border hover:border-card-border/80 hover:bg-card-border/10"
+          }`}
+        >
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                <Moon className="w-5 h-5 text-indigo-400" />
+              </div>
+              {theme === "dark" ? (
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-primary text-white shadow-sm">
+                  <Check className="w-3.5 h-3.5" /> Active
+                </span>
+              ) : (
+                <span className="text-xs font-medium text-muted">Click to select</span>
+              )}
+            </div>
+            <h4 className="text-base font-bold text-foreground mb-1">Dark Mode</h4>
+            <p className="text-xs text-muted leading-relaxed">
+              Deep navy workspace designed for reduced eye strain during extended trading sessions and low-light environments.
+            </p>
+          </div>
+
+          {/* Mini Preview Graphic */}
+          <div className="p-3 rounded-lg bg-[#111827] border border-[#1F2937] shadow-sm space-y-2 pointer-events-none">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-[#F9FAFB]">BTC / USD</span>
+              <span className="text-[10px] font-bold text-[#10B981]">+2.45%</span>
+            </div>
+            <div className="h-1.5 w-full bg-[#1F2937] rounded-full overflow-hidden">
+              <div className="h-full bg-[#F97316] w-3/4 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 rounded-lg bg-background border border-card-border flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-2.5 h-2.5 rounded-full bg-success animate-pulse"></div>
+          <div>
+            <p className="text-xs font-semibold text-foreground">Current Active Mode: <span className="text-primary capitalize">{theme} Mode</span></p>
+            <p className="text-[11px] text-muted">Your preference is instantly applied and saved across all pages and sessions.</p>
+          </div>
+        </div>
+        <button
+          onClick={() => {
+            toggleTheme();
+            toast.success(`Switched to ${theme === "dark" ? "Light" : "Dark"} Mode`);
+          }}
+          className="text-xs font-bold text-primary hover:underline"
+        >
+          Toggle to {theme === "dark" ? "Light" : "Dark"}
+        </button>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeTab) {
       case "profile":
@@ -419,6 +567,8 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
+
+            {renderThemeSettings()}
 
             <div className="p-6 rounded-xl border border-danger/30 bg-danger/5">
               <h3 className="text-lg font-bold text-danger mb-1">Danger Zone</h3>
@@ -590,6 +740,8 @@ export default function SettingsPage() {
             </div>
           </div>
         );
+      case "appearance":
+        return renderThemeSettings();
       default:
         return null;
     }
@@ -633,6 +785,16 @@ export default function SettingsPage() {
             >
               <User className="w-4 h-4" />
               Profile Information
+            </button>
+            <button
+              onClick={() => setActiveTab("appearance")}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${activeTab === "appearance"
+                  ? "bg-primary text-white"
+                  : "text-muted hover:bg-background hover:text-foreground"
+                }`}
+            >
+              <Palette className="w-4 h-4" />
+              Appearance & Theme
             </button>
             <button
               onClick={() => setActiveTab("security")}

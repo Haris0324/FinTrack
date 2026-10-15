@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Database, Activity, Brain, Zap, Target, PieChart as PieChartIcon, Loader2 } from "lucide-react";
 import { PieChart, Pie, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 const topicSentimentData = [
   { subject: 'Regulation', A: 85, fullMark: 100 },
@@ -15,6 +15,7 @@ const topicSentimentData = [
 ];
 
 export default function SentimentAnalysis() {
+  const { isDark } = useTheme();
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
@@ -152,8 +153,8 @@ export default function SentimentAnalysis() {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }}
-                      itemStyle={{ color: '#e2e8f0' }}
+                      contentStyle={{ backgroundColor: isDark ? '#1e293b' : '#ffffff', borderColor: isDark ? '#334155' : '#e2e8f0', borderRadius: '0.5rem', color: isDark ? '#f8fafc' : '#0f172a', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                      itemStyle={{ color: isDark ? '#e2e8f0' : '#1e293b' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -182,12 +183,12 @@ export default function SentimentAnalysis() {
             <div className="flex-1 w-full h-full">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={topicSentimentData}>
-                  <PolarGrid stroke="#334155" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#9CA3AF', fontSize: 10 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#64748B', fontSize: 10 }} axisLine={false} />
-                  <Radar name="Sentiment" dataKey="A" stroke="#F97316" fill="#F97316" fillOpacity={0.3} isAnimationActive={true} />
+                  <PolarGrid stroke={isDark ? "#334155" : "#cbd5e1"} />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: isDark ? '#9CA3AF' : '#475569', fontSize: 10 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: isDark ? '#64748B' : '#94a3b8', fontSize: 10 }} axisLine={false} />
+                  <Radar name="Sentiment" dataKey="A" stroke={isDark ? "#F97316" : "#EA580C"} fill={isDark ? "#F97316" : "#EA580C"} fillOpacity={isDark ? 0.3 : 0.25} isAnimationActive={true} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', borderRadius: '0.5rem', color: '#f8fafc' }}
+                    contentStyle={{ backgroundColor: isDark ? '#1e293b' : '#ffffff', borderColor: isDark ? '#334155' : '#e2e8f0', borderRadius: '0.5rem', color: isDark ? '#f8fafc' : '#0f172a' }}
                   />
                 </RadarChart>
               </ResponsiveContainer>
@@ -214,20 +215,20 @@ export default function SentimentAnalysis() {
                   margin={{ top: 20, right: 10, left: 0, bottom: 20 }}
                   barCategoryGap="30%"
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1F2937" />
-                  <XAxis dataKey="name" stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} />
-                  <YAxis stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} width={40} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#1F2937" : "#E2E8F0"} />
+                  <XAxis dataKey="name" stroke={isDark ? "#9CA3AF" : "#64748B"} fontSize={11} axisLine={false} tickLine={false} />
+                  <YAxis stroke={isDark ? "#9CA3AF" : "#64748B"} fontSize={11} axisLine={false} tickLine={false} domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} width={40} />
                   <Tooltip
-                    cursor={{ fill: '#1E293B' }}
+                    cursor={{ fill: isDark ? '#1E293B' : '#F1F5F9' }}
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-[#1e293b] border border-card-border p-4 rounded-xl shadow-xl min-w-[150px]">
-                            <p className="text-sm font-bold text-white mb-2">{label}</p>
+                          <div className="bg-card border border-card-border p-4 rounded-xl shadow-xl min-w-[150px]">
+                            <p className="text-sm font-bold text-foreground mb-2">{label}</p>
                             <div className="space-y-1">
-                              <p className="text-xs text-success flex justify-between">positive<span>{payload[0]?.payload?.pos || 0}</span></p>
-                              <p className="text-xs text-danger flex justify-between">negative<span>{payload[0]?.payload?.neg || 0}</span></p>
-                              <p className="text-xs text-muted flex justify-between">neutral<span>{payload[0]?.payload?.neu || 0}</span></p>
+                              <p className="text-xs text-success flex justify-between font-medium">positive<span>{payload[0]?.payload?.pos || 0}</span></p>
+                              <p className="text-xs text-danger flex justify-between font-medium">negative<span>{payload[0]?.payload?.neg || 0}</span></p>
+                              <p className="text-xs text-muted flex justify-between font-medium">neutral<span>{payload[0]?.payload?.neu || 0}</span></p>
                             </div>
                           </div>
                         );
@@ -237,21 +238,21 @@ export default function SentimentAnalysis() {
                   />
                   <Bar
                     dataKey="pos"
-                    fill="#22c55e"
+                    fill={isDark ? "#22c55e" : "#16A34A"}
                     stackId="a"
                     isAnimationActive={false}
                     barSize={40}
                   />
                   <Bar
                     dataKey="neg"
-                    fill="#ef4444"
+                    fill={isDark ? "#ef4444" : "#DC2626"}
                     stackId="a"
                     isAnimationActive={false}
                     barSize={40}
                   />
                   <Bar
                     dataKey="neu"
-                    fill="#64748b"
+                    fill={isDark ? "#64748b" : "#94A3B8"}
                     stackId="a"
                     isAnimationActive={false}
                     barSize={40}

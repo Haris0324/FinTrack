@@ -5,6 +5,7 @@ import { TrendingUp, Activity, BarChart3, ArrowUpRight, Search, Filter, Bell, Lo
 import { useState, useEffect, useRef, useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 const defaultSentimentData = [
   { day: 'Mon', pos: 25, neg: 10, neu: 15 },
@@ -17,6 +18,7 @@ const defaultSentimentData = [
 ];
 
 export default function Dashboard() {
+  const { isDark } = useTheme();
   const [newsData, setNewsData] = useState<any[]>([]);
   const [metrics, setMetrics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -282,9 +284,9 @@ export default function Dashboard() {
   const CustomPriceTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#1e293b] border border-card-border p-3 rounded-lg shadow-xl min-w-[120px]">
-          <p className="text-sm font-bold text-white mb-2">{label}</p>
-          <p className="text-sm text-[#F97316]">price : ${payload[0]?.value?.toLocaleString()}</p>
+        <div className="bg-card border border-card-border p-3 rounded-lg shadow-xl min-w-[120px]">
+          <p className="text-sm font-bold text-foreground mb-2">{label}</p>
+          <p className="text-sm text-primary font-semibold">price : ${payload[0]?.value?.toLocaleString()}</p>
         </div>
       );
     }
@@ -294,11 +296,11 @@ export default function Dashboard() {
   const CustomSentimentTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#1e293b] border border-card-border p-4 rounded-xl shadow-xl min-w-[140px]">
-          <p className="text-sm font-bold text-white mb-3">{label}</p>
-          <p className="text-sm text-success mb-1.5">positive : {payload[0]?.payload?.pos || 0}</p>
-          <p className="text-sm text-danger mb-1.5">negative : {payload[0]?.payload?.neg || 0}</p>
-          <p className="text-sm text-muted">neutral : {payload[0]?.payload?.neu || 0}</p>
+        <div className="bg-card border border-card-border p-4 rounded-xl shadow-xl min-w-[140px]">
+          <p className="text-sm font-bold text-foreground mb-3">{label}</p>
+          <p className="text-sm text-success font-medium mb-1.5">positive : {payload[0]?.payload?.pos || 0}</p>
+          <p className="text-sm text-danger font-medium mb-1.5">negative : {payload[0]?.payload?.neg || 0}</p>
+          <p className="text-sm text-muted font-medium">neutral : {payload[0]?.payload?.neu || 0}</p>
         </div>
       );
     }
@@ -657,15 +659,15 @@ export default function Dashboard() {
                 <AreaChart data={chartData.length > 0 ? chartData : [{ time: 'Loading', price: 0 }]}>
                   <defs>
                     <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#F97316" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#F97316" stopOpacity={0}/>
+                      <stop offset="5%" stopColor={isDark ? "#F97316" : "#EA580C"} stopOpacity={isDark ? 0.35 : 0.25}/>
+                      <stop offset="95%" stopColor={isDark ? "#F97316" : "#EA580C"} stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={true} />
-                  <XAxis dataKey="time" stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} />
-                  <YAxis stroke="#9CA3AF" fontSize={10} axisLine={false} tickLine={false} domain={['dataMin - 100', 'dataMax + 100']} />
-                  <Tooltip content={<CustomPriceTooltip />} cursor={{ stroke: '#9CA3AF', strokeWidth: 1, strokeDasharray: '0' }} />
-                  <Area type="monotone" dataKey="price" stroke="#F97316" strokeWidth={2} fillOpacity={1} fill="url(#colorPrice)" isAnimationActive={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1F2937" : "#E2E8F0"} vertical={true} />
+                  <XAxis dataKey="time" stroke={isDark ? "#9CA3AF" : "#64748B"} fontSize={10} axisLine={false} tickLine={false} />
+                  <YAxis stroke={isDark ? "#9CA3AF" : "#64748B"} fontSize={10} axisLine={false} tickLine={false} domain={['dataMin - 100', 'dataMax + 100']} />
+                  <Tooltip content={<CustomPriceTooltip />} cursor={{ stroke: isDark ? "#9CA3AF" : "#64748B", strokeWidth: 1, strokeDasharray: '0' }} />
+                  <Area type="monotone" dataKey="price" stroke={isDark ? "#F97316" : "#EA580C"} strokeWidth={2} fillOpacity={1} fill="url(#colorPrice)" isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -683,13 +685,13 @@ export default function Dashboard() {
             <div className="flex-1 w-full h-full -ml-4">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={sentimentGraphData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1F2937" vertical={true} />
-                  <XAxis dataKey="day" stroke="#9CA3AF" fontSize={10} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#9CA3AF" fontSize={10} tickLine={false} axisLine={false} />
-                  <Tooltip content={<CustomSentimentTooltip />} cursor={{ stroke: '#9CA3AF', strokeWidth: 1 }} />
-                  <Line type="monotone" dataKey="pos" stroke="#22c55e" strokeWidth={2} dot={{ r: 3, fill: '#22c55e' }} isAnimationActive={false} />
-                  <Line type="monotone" dataKey="neg" stroke="#ef4444" strokeWidth={2} dot={{ r: 3, fill: '#ef4444' }} isAnimationActive={false} />
-                  <Line type="monotone" dataKey="neu" stroke="#64748b" strokeWidth={2} dot={{ r: 3, fill: '#64748b' }} isAnimationActive={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1F2937" : "#E2E8F0"} vertical={true} />
+                  <XAxis dataKey="day" stroke={isDark ? "#9CA3AF" : "#64748B"} fontSize={10} tickLine={false} axisLine={false} />
+                  <YAxis stroke={isDark ? "#9CA3AF" : "#64748B"} fontSize={10} tickLine={false} axisLine={false} />
+                  <Tooltip content={<CustomSentimentTooltip />} cursor={{ stroke: isDark ? "#9CA3AF" : "#64748B", strokeWidth: 1 }} />
+                  <Line type="monotone" dataKey="pos" stroke={isDark ? "#22c55e" : "#16A34A"} strokeWidth={2} dot={{ r: 3, fill: isDark ? "#22c55e" : "#16A34A" }} isAnimationActive={false} />
+                  <Line type="monotone" dataKey="neg" stroke={isDark ? "#ef4444" : "#DC2626"} strokeWidth={2} dot={{ r: 3, fill: isDark ? "#ef4444" : "#DC2626" }} isAnimationActive={false} />
+                  <Line type="monotone" dataKey="neu" stroke={isDark ? "#94a3b8" : "#64748B"} strokeWidth={2} dot={{ r: 3, fill: isDark ? "#94a3b8" : "#64748B" }} isAnimationActive={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

@@ -29,7 +29,7 @@ export default function Hero() {
         </Link>
         <Link
           href="/dashboard"
-          className="w-full sm:w-auto px-8 py-3.5 rounded-lg bg-card border border-card-border hover:border-muted text-white font-medium flex items-center justify-center transition-colors"
+          className="w-full sm:w-auto px-8 py-3.5 rounded-lg bg-card border border-card-border hover:border-muted text-foreground font-medium flex items-center justify-center transition-colors"
         >
           View Live Predictions
         </Link>

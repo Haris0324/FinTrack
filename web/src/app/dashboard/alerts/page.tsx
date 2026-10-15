@@ -4,6 +4,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { BellRing, Target, Activity, Clock, Settings2, Bell, AlertTriangle, ShieldAlert, TrendingUp, ChevronRight, X } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState, useMemo } from "react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 const predictionData = {
   "24h": [
@@ -69,6 +70,7 @@ const activeAlertsData = [
 ];
 
 export default function PredictionsAlerts() {
+  const { isDark } = useTheme();
   const [showConfig, setShowConfig] = useState(false);
   const [timeframe, setTimeframe] = useState<"24h" | "48h" | "7d">("24h");
   const [confidence, setConfidence] = useState(70);
@@ -101,7 +103,7 @@ export default function PredictionsAlerts() {
 
         {/* Top Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-[#0b1120] border border-card-border/50 group hover:border-success/30 transition-colors">
+          <div className="p-4 rounded-xl bg-card border border-card-border group hover:border-success/30 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 text-success" />
@@ -113,7 +115,7 @@ export default function PredictionsAlerts() {
               <p className="text-[9px] text-muted mt-1">Target: $45,200</p>
             </div>
           </div>
-          <div className="p-4 rounded-xl bg-[#0b1120] border border-card-border/50 group hover:border-orange-500/30 transition-colors">
+          <div className="p-4 rounded-xl bg-card border border-card-border group hover:border-orange-500/30 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center">
                 <Target className="w-4 h-4 text-orange-500" />
@@ -125,7 +127,7 @@ export default function PredictionsAlerts() {
               <p className="text-[9px] text-muted mt-1">High accuracy</p>
             </div>
           </div>
-          <div className="p-4 rounded-xl bg-[#0b1120] border border-card-border/50 group hover:border-danger/30 transition-colors">
+          <div className="p-4 rounded-xl bg-card border border-card-border group hover:border-danger/30 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <div className="w-8 h-8 rounded-lg bg-danger/10 flex items-center justify-center">
                 <Bell className="w-4 h-4 text-danger" />
@@ -137,7 +139,7 @@ export default function PredictionsAlerts() {
               <p className="text-[9px] text-danger mt-1">2 high impact</p>
             </div>
           </div>
-          <div className="p-4 rounded-xl bg-[#0b1120] border border-card-border/50 group hover:border-blue-500/30 transition-colors">
+          <div className="p-4 rounded-xl bg-card border border-card-border group hover:border-blue-500/30 transition-colors">
             <div className="flex items-start justify-between mb-3">
               <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
                 <Clock className="w-4 h-4 text-blue-500" />
@@ -155,10 +157,10 @@ export default function PredictionsAlerts() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           
           {/* Prediction Chart */}
-          <div className="lg:col-span-2 p-5 rounded-xl bg-[#0b1120] border border-card-border/50">
+          <div className="lg:col-span-2 p-5 rounded-xl bg-card border border-card-border">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-sm font-bold text-foreground">Price Movement Prediction</h3>
-              <div className="flex p-1 bg-background/50 rounded-lg border border-card-border/50">
+              <div className="flex p-1 bg-background rounded-lg border border-card-border">
                 {(["24h", "48h", "7d"] as const).map((tf) => (
                   <button
                     key={tf}
@@ -179,21 +181,21 @@ export default function PredictionsAlerts() {
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorPred" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.15}/>
-                      <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                      <stop offset="5%" stopColor={isDark ? "#10B981" : "#059669"} stopOpacity={isDark ? 0.15 : 0.25}/>
+                      <stop offset="95%" stopColor={isDark ? "#10B981" : "#059669"} stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#1F2937" opacity={0.5} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={true} stroke={isDark ? "#1F2937" : "#E2E8F0"} opacity={0.6} />
                   <XAxis 
                     dataKey="time" 
-                    stroke="#475569" 
+                    stroke={isDark ? "#475569" : "#64748B"} 
                     fontSize={10} 
                     axisLine={false} 
                     tickLine={false} 
                     dy={10}
                   />
                   <YAxis 
-                    stroke="#475569" 
+                    stroke={isDark ? "#475569" : "#64748B"} 
                     fontSize={10} 
                     axisLine={false} 
                     tickLine={false} 
@@ -204,9 +206,9 @@ export default function PredictionsAlerts() {
                     content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
                         return (
-                          <div className="bg-[#1e293b] border border-card-border p-3 rounded-lg shadow-2xl">
-                            <p className="text-[11px] font-bold text-white mb-1">{label}</p>
-                            <p className="text-[11px] text-success">predicted : {payload[0].value}</p>
+                          <div className="bg-card border border-card-border p-3 rounded-lg shadow-xl min-w-[120px]">
+                            <p className="text-[11px] font-bold text-foreground mb-1">{label}</p>
+                            <p className="text-[11px] text-success font-medium">predicted : ${payload[0].value?.toLocaleString()}</p>
                           </div>
                         );
                       }
@@ -216,14 +218,14 @@ export default function PredictionsAlerts() {
                   <Area 
                     type="monotone" 
                     dataKey="price" 
-                    stroke="#10B981" 
+                    stroke={isDark ? "#10B981" : "#059669"} 
                     strokeWidth={2} 
                     strokeDasharray="4 4" 
                     fillOpacity={1} 
                     fill="url(#colorPred)" 
                     isAnimationActive={false}
-                    dot={{ r: 3, fill: '#10B981', strokeWidth: 0 }}
-                    activeDot={{ r: 5, fill: '#fff', stroke: '#10B981', strokeWidth: 2 }}
+                    dot={{ r: 3, fill: isDark ? '#10B981' : '#059669', strokeWidth: 0 }}
+                    activeDot={{ r: 5, fill: '#fff', stroke: isDark ? '#10B981' : '#059669', strokeWidth: 2 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -253,7 +255,7 @@ export default function PredictionsAlerts() {
           </div>
 
           {/* Impact by Category */}
-          <div className="lg:col-span-1 p-5 rounded-xl bg-[#0b1120] border border-card-border/50 flex flex-col justify-between">
+          <div className="lg:col-span-1 p-5 rounded-xl bg-card border border-card-border flex flex-col justify-between">
             <div>
               <h3 className="text-sm font-bold text-foreground mb-6">Impact by Category</h3>
               <div className="space-y-5">
@@ -291,7 +293,7 @@ export default function PredictionsAlerts() {
           </div>
 
           {/* Active Alerts List */}
-          <div className="lg:col-span-3 p-5 rounded-xl bg-[#0b1120] border border-card-border/50">
+          <div className="lg:col-span-3 p-5 rounded-xl bg-card border border-card-border">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <BellRing className="w-4 h-4 text-orange-500" />
@@ -304,7 +306,7 @@ export default function PredictionsAlerts() {
             
             <div className="space-y-3">
               {alerts.map((alert) => (
-                <div key={alert.id} className="group p-4 bg-[#0f172a] border border-card-border/30 rounded-xl hover:bg-card-border/50 transition-all">
+                <div key={alert.id} className="group p-4 bg-background border border-card-border/60 rounded-xl hover:bg-card-border/30 transition-all">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
@@ -330,7 +332,7 @@ export default function PredictionsAlerts() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button className="flex-1 md:flex-none px-4 py-1.5 bg-card-border/50 hover:bg-card-border text-foreground text-[11px] font-bold rounded-lg transition-colors">
+                      <button className="flex-1 md:flex-none px-4 py-1.5 bg-card border border-card-border hover:bg-card-border text-foreground text-[11px] font-bold rounded-lg transition-colors">
                         View Details
                       </button>
                       <button 
@@ -351,9 +353,9 @@ export default function PredictionsAlerts() {
 
           {/* Alert Settings */}
           {showConfig && (
-            <div className="lg:col-span-3 p-6 rounded-xl bg-[#0b1120] border border-card-border flex flex-col gap-8 animate-in slide-in-from-top-4 duration-300">
+            <div className="lg:col-span-3 p-6 rounded-xl bg-card border border-card-border flex flex-col gap-8 animate-in slide-in-from-top-4 duration-300">
               <div className="flex items-center justify-between border-b border-card-border/30 pb-4">
-                <h3 className="text-base font-bold text-white">Alert Settings</h3>
+                <h3 className="text-base font-bold text-foreground">Alert Settings</h3>
                 <button onClick={() => setShowConfig(false)} className="p-1 hover:bg-card-border/50 rounded-lg transition-colors">
                   <X className="w-4 h-4 text-muted" />
                 </button>

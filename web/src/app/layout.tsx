@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import NextAuthProvider from "@/components/providers/SessionProvider";
-
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Toaster } from "react-hot-toast";
 
 const inter = Inter({
@@ -30,28 +30,51 @@ export default function RootLayout({
       className={`${inter.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('fintrack_theme');
+                  var root = document.documentElement;
+                  if (saved === 'light') {
+                    root.classList.remove('dark');
+                    root.classList.add('light');
+                  } else {
+                    root.classList.remove('light');
+                    root.classList.add('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans" suppressHydrationWarning>
-        <NextAuthProvider>
-          <Toaster 
-            position="top-center" 
-            toastOptions={{
-              className: '!bg-card !text-foreground !border !border-card-border !text-sm !font-medium',
-              success: {
-                iconTheme: {
-                  primary: '#10B981',
-                  secondary: '#fff',
+        <ThemeProvider>
+          <NextAuthProvider>
+            <Toaster 
+              position="top-center" 
+              toastOptions={{
+                className: '!bg-card !text-foreground !border !border-card-border !text-sm !font-medium shadow-lg',
+                success: {
+                  iconTheme: {
+                    primary: '#10B981',
+                    secondary: '#fff',
+                  },
                 },
-              },
-              error: {
-                iconTheme: {
-                  primary: '#EF4444',
-                  secondary: '#fff',
+                error: {
+                  iconTheme: {
+                    primary: '#EF4444',
+                    secondary: '#fff',
+                  },
                 },
-              },
-            }}
-          />
-          {children}
-        </NextAuthProvider>
+              }}
+            />
+            {children}
+          </NextAuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
