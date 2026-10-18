@@ -42,7 +42,7 @@ export async function GET() {
     const config = await configCollection.findOne({ _id: "configuration" });
     const sources = Array.isArray(config?.sources) ? config.sources : DEFAULT_SOURCES;
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const [totalArticles, articles24h, highImpact, latestArticle, sourceCounts, users, logs, pipeline] = await Promise.all([
+    const [totalArticles, articles24h, highImpact, latestArticle, sourceCounts, users, logs, pipeline, hourlyRaw] = await Promise.all([
       news.countDocuments(),
       news.countDocuments({ $or: [{ scraped_at: { $gte: since } }, { createdAt: { $gte: since } }] }),
       news.countDocuments({ impact: "HIGH IMPACT" }),
@@ -52,14 +52,42 @@ export async function GET() {
         { $group: { _id: "$source", count: { $sum: 1 } } },
       ]).toArray(),
       db.collection("users").countDocuments(),
-      ActivityLog.find().sort({ createdAt: -1 }).limit(8).select("action status type createdAt ip").lean(),
+      ActivityLog.find().sort({ createdAt: -1 }).limit(12).select("action status type createdAt ip").lean(),
       db.collection<PipelineRuntime & { _id: string }>("pipelinestats").findOne({ _id: "admin_runtime" }),
-    ]) as [number, number, number, { scraped_at?: Date; createdAt?: Date } | null, { _id?: unknown; count: number }[], number, { _id: mongoose.Types.ObjectId; action: string; status: string; type: string; createdAt: Date; ip?: string }[], PipelineRuntime | null];
+      news.aggregate([
+        { $match: { $or: [{ scraped_at: { $gte: since } }, { createdAt: { $gte: since } }] } },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: "%H:00", date: { $ifNull: ["$scraped_at", "$createdAt"] }, timezone: "UTC" }
+            },
+            count: { $sum: 1 },
+            highImpact: { $sum: { $cond: [{ $eq: ["$impact", "HIGH IMPACT"] }, 1, 0] } }
+          }
+        },
+        { $sort: { _id: 1 } }
+      ]).toArray(),
+    ]) as [number, number, number, { scraped_at?: Date; createdAt?: Date } | null, { _id?: unknown; count: number }[], number, { _id: mongoose.Types.ObjectId; action: string; status: string; type: string; createdAt: Date; ip?: string }[], PipelineRuntime | null, { _id: string; count: number; highImpact: number }[]];
+    
     const enrichedSources = sources.map(source => ({
       ...source,
       articles24h: sourceCounts.filter(row => String(row._id || "").toLowerCase().includes(source.name.toLowerCase())).reduce((sum, row) => sum + row.count, 0),
     }));
     const lastScrapedAt = latestArticle?.scraped_at ?? latestArticle?.createdAt ?? null;
+
+    // Generate full 24-hour hourly curve for chart
+    const currentHour = new Date().getUTCHours();
+    const hourlyMap = new Map(hourlyRaw.map(h => [h._id, h]));
+    const hourlyIngestion = Array.from({ length: 24 }).map((_, i) => {
+      const h = (currentHour - 23 + i + 24) % 24;
+      const key = `${String(h).padStart(2, '0')}:00`;
+      const match = hourlyMap.get(key);
+      return {
+        time: key,
+        articles: match ? match.count : 0,
+        highImpact: match ? match.highImpact : 0,
+      };
+    });
 
     let model: ModelMetadata | null = null;
     try {
@@ -75,6 +103,13 @@ export async function GET() {
         isIngestionRecent: Boolean(lastScrapedAt && Date.now() - lastScrapedAt.getTime() < 30 * 60 * 1000),
         sourceCount: sources.length,
         activeSourceCount: sources.filter(source => source.enabled).length,
+      },
+      hourlyIngestion,
+      systemHealth: {
+        databaseStatus: mongoose.connection.readyState === 1 ? "Healthy (Connected)" : "Degraded",
+        serverUptime: Math.floor(process.uptime()),
+        nodeVersion: process.version,
+        environment: process.env.NODE_ENV || "production",
       },
       pipeline: pipeline ? {
         status: pipeline.status || "unknown",
