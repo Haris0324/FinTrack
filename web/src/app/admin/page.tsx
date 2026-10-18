@@ -635,12 +635,12 @@ export default function AdminPanel() {
                     <TrendingUp className="h-4 w-4 text-orange-500" />
                     TradingView Real-Time Technical Engine (BTC/USDT)
                   </h3>
-                  <p className="text-xs text-muted">Advanced candlestick chart with integrated RSI, MACD, and Bollinger Bands indicators</p>
+                  <p className="text-xs text-muted">Advanced candlestick chart with integrated Bollinger Bands and RSI momentum indicators</p>
                 </div>
               </div>
 
               {/* The TradingView Chart Component */}
-              <TradingViewChart symbol="BINANCE:BTCUSDT" interval="15" height={560} />
+              <TradingViewChart symbol="BINANCE:BTCUSDT" interval="15" height={720} />
             </div>
 
             {/* Side Column: TradingView Technical Analysis Gauge & FinTrack Confluence */}

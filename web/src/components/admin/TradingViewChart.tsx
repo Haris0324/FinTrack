@@ -12,7 +12,7 @@ interface TradingViewChartProps {
 function TradingViewChartComponent({
   symbol = "BINANCE:BTCUSDT",
   interval = "15",
-  height = 560,
+  height = 720,
 }: TradingViewChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { isDark } = useTheme();
@@ -33,7 +33,8 @@ function TradingViewChartComponent({
     script.type = "text/javascript";
     script.async = true;
     script.innerHTML = JSON.stringify({
-      autosize: true,
+      width: "100%",
+      height: height,
       symbol: symbol,
       interval: interval,
       timezone: "Etc/UTC",
@@ -45,11 +46,11 @@ function TradingViewChartComponent({
       calendar: false,
       hide_side_toolbar: false,
       hide_top_toolbar: false,
+      hide_legend: false,
       save_image: true,
       studies: [
-        "STD;RSI",
-        "STD;MACD",
-        "STD;Bollinger_Bands"
+        "STD;Bollinger_Bands",
+        "STD;RSI"
       ],
       support_host: "https://www.tradingview.com"
     });
@@ -67,7 +68,7 @@ function TradingViewChartComponent({
     <div 
       className="tradingview-widget-container w-full rounded-xl overflow-hidden border border-card-border bg-card shadow-sm"
       ref={containerRef}
-      style={{ height: `${height}px` }}
+      style={{ minHeight: `${height}px`, height: `${height}px` }}
     >
       <div className="tradingview-widget-container__widget h-full w-full flex items-center justify-center text-xs text-muted">
         Loading TradingView Bitcoin Chart...
