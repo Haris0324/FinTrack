@@ -786,16 +786,16 @@ export default function Dashboard() {
           {/* Upgraded Advanced Sentiment Distribution (7 Days) */}
           <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col h-[380px] min-h-[380px] shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-primary shrink-0" />
+              <div className="flex items-start gap-2.5">
+                <BarChart3 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-1">
                   <h3 className="text-sm font-bold text-foreground">Sentiment Distribution (7 Days)</h3>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 mt-1">
                   <p className="text-[11px] text-muted">Daily breakdown of positive, negative, and neutral headlines</p>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 whitespace-nowrap shrink-0">
-                    +64% Bullish Bias
-                  </span>
+                  <div className="mt-0.5">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 whitespace-nowrap inline-flex items-center">
+                      +64% Bullish Bias
+                    </span>
+                  </div>
                 </div>
               </div>
 

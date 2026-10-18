@@ -89,9 +89,9 @@ function UserTradingViewHubComponent({
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-sm font-bold text-foreground">Interactive Market Technical Analysis (BTC/USDT)</h3>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 whitespace-nowrap shrink-0 leading-normal">
                 TradingView Pro
               </span>
             </div>
