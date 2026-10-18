@@ -730,11 +730,11 @@ export default function Dashboard() {
               </div>
 
               {/* Mode Toggle: Line Area vs Candlestick */}
-              <div className="flex items-center gap-1 bg-background p-1 rounded-lg border border-card-border self-start sm:self-auto">
+              <div className="flex items-center gap-1 bg-background p-1 rounded-lg border border-card-border shrink-0 self-start sm:self-auto">
                 <button
                   type="button"
                   onClick={() => setBtcChartMode("line")}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     btcChartMode === "line"
                       ? "bg-primary text-white shadow-xs"
                       : "text-muted hover:text-foreground"
@@ -745,7 +745,7 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => setBtcChartMode("candle")}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     btcChartMode === "candle"
                       ? "bg-primary text-white shadow-xs"
                       : "text-muted hover:text-foreground"
@@ -785,23 +785,25 @@ export default function Dashboard() {
 
           {/* Upgraded Advanced Sentiment Distribution (7 Days) */}
           <div className="p-6 rounded-xl bg-card border border-card-border flex flex-col h-[380px] min-h-[380px] shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-primary" />
+                  <BarChart3 className="w-4 h-4 text-primary shrink-0" />
                   <h3 className="text-sm font-bold text-foreground">Sentiment Distribution (7 Days)</h3>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                </div>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <p className="text-[11px] text-muted">Daily breakdown of positive, negative, and neutral headlines</p>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 whitespace-nowrap shrink-0">
                     +64% Bullish Bias
                   </span>
                 </div>
-                <p className="text-[11px] text-muted">Daily breakdown of positive, negative, and neutral headlines</p>
               </div>
 
-              <div className="flex items-center gap-1 bg-background p-1 rounded-lg border border-card-border self-start sm:self-auto">
+              <div className="flex items-center gap-1 bg-background p-1 rounded-lg border border-card-border shrink-0 self-start sm:self-auto">
                 <button
                   type="button"
                   onClick={() => setSentimentChartMode("trend")}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     sentimentChartMode === "trend"
                       ? "bg-primary text-white shadow-xs"
                       : "text-muted hover:text-foreground"
@@ -812,7 +814,7 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => setSentimentChartMode("net")}
-                  className={`px-2.5 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
+                  className={`px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     sentimentChartMode === "net"
                       ? "bg-primary text-white shadow-xs"
                       : "text-muted hover:text-foreground"

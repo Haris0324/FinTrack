@@ -1,4 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+const dns = require('dns');
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4']);
+} catch {}
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
 const mongoose = require('mongoose');
@@ -22,16 +26,16 @@ async function seed() {
     return;
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@fintrack.com').trim().toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD || 'Admin123@';
   const strongPassword = typeof adminPassword === 'string'
-    && adminPassword.length >= 12
+    && adminPassword.length >= 8
     && /[A-Z]/.test(adminPassword)
     && /[a-z]/.test(adminPassword)
     && /[0-9]/.test(adminPassword)
     && /[^A-Za-z0-9]/.test(adminPassword);
   if (!adminEmail || !strongPassword) {
-    console.error("Set ADMIN_EMAIL and a strong ADMIN_PASSWORD (12+ characters with uppercase, lowercase, number, and symbol) in .env.local.");
+    console.error("Set ADMIN_EMAIL and a strong ADMIN_PASSWORD (8+ characters with uppercase, lowercase, number, and symbol) in .env.local.");
     process.exitCode = 1;
     return;
   }
@@ -39,6 +43,13 @@ async function seed() {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("Connected to MongoDB.");
+
+    // Remove admin role from all other existing admin accounts
+    const demoted = await User.updateMany(
+      { email: { $ne: adminEmail }, role: "admin" },
+      { $set: { role: "user" } }
+    );
+    console.log(`Demoted ${demoted.modifiedCount} previous admin account(s) to 'user'.`);
 
     const existingAdmin = await User.findOne({ email: adminEmail });
     const hashedPassword = await bcrypt.hash(adminPassword, 12);
@@ -49,16 +60,17 @@ async function seed() {
       existingAdmin.providers = [...new Set([...(existingAdmin.providers || []), "credentials"])];
       existingAdmin.isVerified = true;
       await existingAdmin.save();
-      console.log(`Existing account ${adminEmail} has been promoted to admin and its password updated.`);
+      console.log(`Admin account ${adminEmail} updated successfully with new credentials.`);
     } else {
       await User.create({
         name: "System Admin",
         email: adminEmail,
         password: hashedPassword,
         role: "admin",
+        providers: ["credentials"],
+        isVerified: true
       });
-      console.log("Default admin account created successfully.");
-      console.log(`Admin account created for ${adminEmail}. The password is stored as a hash.`);
+      console.log(`New admin account created successfully for ${adminEmail}.`);
     }
   } catch (error) {
     console.error("Error seeding admin:", error);

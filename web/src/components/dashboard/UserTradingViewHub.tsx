@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, memo } from "react";
-import { TrendingUp, Zap, BarChart2, ShieldCheck, Sparkles, Clock, Compass, Activity } from "lucide-react";
+import { TrendingUp, Activity } from "lucide-react";
 import { useTheme } from "@/components/providers/ThemeProvider";
 
 interface UserTradingViewHubProps {
@@ -19,10 +19,11 @@ const intervals = [
   { label: "1D", value: "D" },
 ];
 
+const CHART_HEIGHT = 680;
+
 function UserTradingViewHubComponent({
   btcPrice,
   btcChange = "+0.00%",
-  activePredictionsCount = 3,
 }: UserTradingViewHubProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { isDark } = useTheme();
@@ -35,7 +36,7 @@ function UserTradingViewHubComponent({
 
     const widgetContainer = document.createElement("div");
     widgetContainer.className = "tradingview-widget-container__widget";
-    widgetContainer.style.height = "520px";
+    widgetContainer.style.height = `${CHART_HEIGHT}px`;
     widgetContainer.style.width = "100%";
     containerRef.current.appendChild(widgetContainer);
 
@@ -45,7 +46,7 @@ function UserTradingViewHubComponent({
     script.async = true;
     script.innerHTML = JSON.stringify({
       width: "100%",
-      height: 520,
+      height: CHART_HEIGHT,
       symbol: "BINANCE:BTCUSDT",
       interval: selectedInterval,
       timezone: "Etc/UTC",
@@ -53,11 +54,13 @@ function UserTradingViewHubComponent({
       style: "1",
       locale: "en",
       enable_publishing: false,
-      allow_symbol_change: false,
+      allow_symbol_change: true,
       calendar: false,
       hide_side_toolbar: false,
       hide_top_toolbar: false,
+      hide_legend: false,
       save_image: true,
+      withdateranges: true,
       studies: [
         "STD;Bollinger_Bands",
         "STD;RSI"
@@ -75,10 +78,10 @@ function UserTradingViewHubComponent({
   }, [isDark, selectedInterval]);
 
   return (
-    <div className="rounded-xl bg-card border border-card-border overflow-hidden shadow-lg flex flex-col gap-0">
+    <div className="rounded-xl bg-card border border-card-border overflow-hidden shadow-lg flex flex-col">
       
       {/* Top Header Bar */}
-      <div className="p-4 sm:p-5 border-b border-card-border flex flex-col md:flex-row md:items-center justify-between gap-4 bg-background/30">
+      <div className="p-4 sm:p-5 border-b border-card-border flex flex-col md:flex-row md:items-center justify-between gap-4 bg-background/40">
         
         {/* Left: Title & Symbol details */}
         <div className="flex items-center gap-3">
@@ -87,16 +90,16 @@ function UserTradingViewHubComponent({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-foreground">Interactive Market Pro Analysis (BTC/USDT)</h3>
+              <h3 className="text-sm font-bold text-foreground">Interactive Market Technical Analysis (BTC/USDT)</h3>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                TradingView Feed
+                TradingView Pro
               </span>
             </div>
             <p className="text-xs text-muted">Real-time candlesticks with Bollinger Bands and RSI technical momentum</p>
           </div>
         </div>
 
-        {/* Right: Quick Timeframe Selector Pills & Live Price Badge */}
+        {/* Right: Live Price Badge & Quick Timeframe Selector */}
         <div className="flex flex-wrap items-center gap-2.5">
           {btcPrice && (
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-background border border-card-border text-xs font-bold shadow-xs">
@@ -111,7 +114,7 @@ function UserTradingViewHubComponent({
               <button
                 key={int.value}
                 onClick={() => setSelectedInterval(int.value)}
-                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                   selectedInterval === int.value
                     ? "bg-primary text-white shadow-xs"
                     : "text-muted hover:text-foreground hover:bg-card-border/50"
@@ -124,59 +127,16 @@ function UserTradingViewHubComponent({
         </div>
       </div>
 
-      {/* TradingView Chart Container (520px height for clear, unmixed analysis) */}
+      {/* TradingView Chart Container with Full 680px Height and Zero Overlap */}
       <div 
-        className="w-full bg-background" 
+        className="tradingview-widget-container w-full bg-background" 
         ref={containerRef} 
-        style={{ minHeight: "520px", height: "520px" }}
+        style={{ minHeight: `${CHART_HEIGHT}px`, height: `${CHART_HEIGHT}px` }}
       >
-        <div className="h-full w-full flex items-center justify-center text-xs text-muted">
-          Loading TradingView Pro Chart...
+        <div className="tradingview-widget-container__widget h-full w-full flex items-center justify-center text-xs text-muted">
+          <Activity className="w-4 h-4 animate-spin text-primary mr-2" />
+          Loading TradingView Pro Technical Chart...
         </div>
-      </div>
-
-      {/* Bottom 3-Pillar Technical & FinTrack AI Horizon */}
-      <div className="p-4 sm:p-5 border-t border-card-border bg-background/20 grid grid-cols-1 md:grid-cols-3 gap-4">
-        
-        {/* Pillar 1: Technical Momentum */}
-        <div className="p-3.5 rounded-lg bg-card border border-card-border/80 flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400 shrink-0 mt-0.5">
-            <Compass className="w-4 h-4" />
-          </div>
-          <div>
-            <h4 className="text-xs font-bold text-foreground mb-0.5">Technical Momentum</h4>
-            <p className="text-[11px] text-muted leading-relaxed">
-              Bollinger Bands track volatility expansion while RSI 14 reveals overbought/oversold momentum reversals on the selected timeframe.
-            </p>
-          </div>
-        </div>
-
-        {/* Pillar 2: FinBERT Sentiment Alignment */}
-        <div className="p-3.5 rounded-lg bg-card border border-card-border/80 flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 shrink-0 mt-0.5">
-            <Activity className="w-4 h-4" />
-          </div>
-          <div>
-            <h4 className="text-xs font-bold text-foreground mb-0.5">FinBERT NLP Alignment</h4>
-            <p className="text-[11px] text-muted leading-relaxed">
-              Scrapes 100+ daily crypto headlines to detect real-time sentiment shifts before they reflect in candlestick price moves.
-            </p>
-          </div>
-        </div>
-
-        {/* Pillar 3: XGBoost 3-Hour Horizon */}
-        <div className="p-3.5 rounded-lg bg-card border border-card-border/80 flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-orange-500/10 text-orange-400 shrink-0 mt-0.5">
-            <Sparkles className="w-4 h-4" />
-          </div>
-          <div>
-            <h4 className="text-xs font-bold text-foreground mb-0.5">XGBoost 3h Horizon</h4>
-            <p className="text-[11px] text-muted leading-relaxed">
-              Currently tracking <strong className="text-foreground">{activePredictionsCount} active 3-hour predictions</strong> evaluated against live Binance 1m price data.
-            </p>
-          </div>
-        </div>
-
       </div>
 
     </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Clock, Calendar, TrendingUp, Search, Activity, ChevronRight, Loader2, ExternalLink } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { useTheme } from "@/components/providers/ThemeProvider";
 
 interface TimelinePoint {
@@ -54,6 +54,7 @@ export default function HistoricalPatterns() {
   const [data, setData] = useState<HistoryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [timelineMode, setTimelineMode] = useState<'price' | 'pct'>('price');
 
   useEffect(() => {
     const fetchHistoryData = async () => {
@@ -79,9 +80,24 @@ export default function HistoricalPatterns() {
   const currentEvent: HistoricalEventItem | undefined = events[activeIndex] || events[0];
 
   const timelineData = currentEvent?.timeline || [];
+  const eventPoint = timelineData.find(d => d.day === "Event Day" || d.day === "0d") || timelineData[Math.floor(timelineData.length / 2)];
+  const baselinePrice = eventPoint?.price || (timelineData[0]?.price ?? 1);
+
+  const enhancedTimelineData = timelineData.map(p => {
+    const pctChange = baselinePrice > 0 ? ((p.price - baselinePrice) / baselinePrice) * 100 : 0;
+    return {
+      ...p,
+      pctChange: parseFloat(pctChange.toFixed(2)),
+    };
+  });
+
   const prices = timelineData.map(p => p.price);
   const minPrice = prices.length ? Math.floor(Math.min(...prices) * 0.96) : 30000;
   const maxPrice = prices.length ? Math.ceil(Math.max(...prices) * 1.04) : 70000;
+
+  const pctValues = enhancedTimelineData.map(p => p.pctChange);
+  const minPct = pctValues.length ? Math.floor(Math.min(...pctValues) - 2) : -10;
+  const maxPct = pctValues.length ? Math.ceil(Math.max(...pctValues) + 2) : 10;
 
   const similarEventsList = data?.similarEvents || [];
 
@@ -209,42 +225,108 @@ export default function HistoricalPatterns() {
                   </div>
                 </div>
 
-                {/* Real-time Dynamic Timeline Chart */}
-                <div className="bg-background p-4 rounded-xl border border-card-border">
-                  <div className="flex items-center justify-between mb-6">
-                    <h4 className="text-sm font-bold text-foreground">Price Movement Timeline</h4>
-                    <span className="text-[10px] text-muted font-medium">Historical BTC/USD Candles</span>
+                {/* Upgraded Advanced Price Movement Timeline Chart */}
+                <div className="bg-background p-5 rounded-xl border border-card-border flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-primary" />
+                        <h4 className="text-sm font-bold text-foreground">Price Movement Trajectory Timeline</h4>
+                      </div>
+                      <p className="text-[11px] text-muted mt-0.5">Verified BTC/USD candles 7 days pre- and post-event announcement</p>
+                    </div>
+
+                    {/* View Mode Toggle: Price vs % Deviation */}
+                    <div className="flex items-center gap-1 bg-card p-1 rounded-lg border border-card-border shrink-0 self-start sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => setTimelineMode('price')}
+                        className={`px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                          timelineMode === 'price'
+                            ? "bg-primary text-white shadow-xs"
+                            : "text-muted hover:text-foreground"
+                        }`}
+                      >
+                        Price ($)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTimelineMode('pct')}
+                        className={`px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                          timelineMode === 'pct'
+                            ? "bg-primary text-white shadow-xs"
+                            : "text-muted hover:text-foreground"
+                        }`}
+                      >
+                        % Change
+                      </button>
+                    </div>
                   </div>
-                  <div className="h-[220px] w-full">
+
+                  <div className="h-[250px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={timelineData} margin={{ left: 10, right: 15, top: 25, bottom: 0 }}>
+                      <AreaChart data={enhancedTimelineData} margin={{ left: 10, right: 15, top: 25, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="timelineImpactGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop 
+                              offset="5%" 
+                              stopColor={currentEvent.impact.startsWith('-') ? (isDark ? "#ef4444" : "#dc2626") : (isDark ? "#10b981" : "#059669")} 
+                              stopOpacity={isDark ? 0.35 : 0.25}
+                            />
+                            <stop 
+                              offset="95%" 
+                              stopColor={currentEvent.impact.startsWith('-') ? (isDark ? "#ef4444" : "#dc2626") : (isDark ? "#10b981" : "#059669")} 
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#1e293b" : "#E2E8F0"} vertical={true} horizontal={true} />
                         <XAxis 
                           dataKey="day" 
                           stroke={isDark ? "#475569" : "#64748B"} 
-                          fontSize={9} 
+                          fontSize={10} 
                           axisLine={false} 
                           tickLine={false} 
                           dy={5}
                         />
                         <YAxis 
                           stroke={isDark ? "#475569" : "#64748B"} 
-                          fontSize={9} 
+                          fontSize={10} 
                           axisLine={false} 
                           tickLine={false} 
-                          domain={[minPrice, maxPrice]}
-                          tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
-                          width={45}
+                          domain={timelineMode === 'price' ? [minPrice, maxPrice] : [minPct, maxPct]}
+                          tickFormatter={(val) => timelineMode === 'price' ? `$${(val / 1000).toFixed(0)}k` : `${val > 0 ? '+' : ''}${val}%`}
+                          width={48}
                         />
                         <Tooltip 
                           content={({ active, payload, label }) => {
                             if (active && payload && payload.length) {
                               const lbl = String(label);
-                              const priceVal = payload[0].value as number;
+                              const point = payload[0].payload;
+                              const priceVal = point?.price as number;
+                              const pctVal = point?.pctChange as number;
+                              const diffFromBase = priceVal - baselinePrice;
+
                               return (
-                                <div className="bg-card border border-card-border p-3 rounded-lg shadow-xl min-w-[130px]">
-                                  <p className="text-xs font-bold text-foreground mb-1.5">{lbl.startsWith('-') || lbl.startsWith('+') ? `Day ${lbl.replace('d', '')}` : (lbl === 'Event Day' ? 'Event Day (T+0)' : lbl)}</p>
-                                  <p className="text-xs text-primary font-bold">BTC : ${priceVal ? priceVal.toLocaleString() : 'N/A'}</p>
+                                <div className="bg-card border border-card-border p-3.5 rounded-xl shadow-2xl min-w-[170px] space-y-1">
+                                  <div className="flex items-center justify-between gap-2 border-b border-card-border/60 pb-1.5 mb-1.5">
+                                    <span className="text-xs font-bold text-foreground">
+                                      {lbl === 'Event Day' ? 'Event Day (T+0)' : lbl.startsWith('-') ? `Pre-Event (${lbl})` : `Post-Event (${lbl})`}
+                                    </span>
+                                    {lbl === 'Event Day' && (
+                                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                                        Announcement
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs font-bold text-foreground flex justify-between">
+                                    <span className="text-muted font-normal">Price:</span>
+                                    <span>${priceVal ? priceVal.toLocaleString() : 'N/A'}</span>
+                                  </p>
+                                  <p className={`text-xs font-extrabold flex justify-between ${pctVal >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                    <span className="text-muted font-normal">Delta vs T=0:</span>
+                                    <span>{diffFromBase >= 0 ? '+' : ''}${diffFromBase.toLocaleString()} ({pctVal >= 0 ? '+' : ''}{pctVal}%)</span>
+                                  </p>
                                 </div>
                               );
                             }
@@ -252,25 +334,59 @@ export default function HistoricalPatterns() {
                           }}
                           cursor={{ stroke: isDark ? '#475569' : '#64748B', strokeWidth: 1 }}
                         />
+
+                        {/* Baseline Reference Line at Event Day Price */}
+                        <ReferenceLine 
+                          y={timelineMode === 'price' ? baselinePrice : 0} 
+                          stroke={isDark ? "#64748b" : "#94a3b8"} 
+                          strokeDasharray="4 4" 
+                          label={{ 
+                            position: 'right', 
+                            value: timelineMode === 'price' ? `T=0 Baseline ($${baselinePrice.toLocaleString()})` : '0% Baseline', 
+                            fill: isDark ? '#94a3b8' : '#64748b', 
+                            fontSize: 10 
+                          }} 
+                        />
+
+                        {/* Event Day Vertical Reference Line */}
                         <ReferenceLine 
                           x="Event Day" 
                           stroke={isDark ? "#f97316" : "#ea580c"} 
                           strokeDasharray="3 3" 
-                          label={{ position: 'top', value: 'Event', fill: isDark ? '#94a3b8' : '#64748b', fontSize: 11, dy: -8 }} 
+                          label={{ position: 'top', value: 'Event Day', fill: isDark ? '#f97316' : '#ea580c', fontSize: 10, dy: -8, fontWeight: 'bold' }} 
                         />
-                        <Line 
+
+                        <Area 
                           type="monotone" 
-                          dataKey="price" 
-                          stroke={currentEvent.impact.startsWith('-') ? (isDark ? "#ef4444" : "#dc2626") : (isDark ? "#22c55e" : "#16A34A")} 
+                          dataKey={timelineMode === 'price' ? "price" : "pctChange"} 
+                          stroke={currentEvent.impact.startsWith('-') ? (isDark ? "#ef4444" : "#dc2626") : (isDark ? "#10b981" : "#059669")} 
                           strokeWidth={2.5} 
-                          dot={{ r: 4, fill: currentEvent.impact.startsWith('-') ? (isDark ? "#ef4444" : "#dc2626") : (isDark ? "#22c55e" : "#16A34A"), strokeWidth: 2, stroke: isDark ? '#0f172a' : '#ffffff' }} 
-                          activeDot={{ r: 6, fill: '#ffffff', stroke: isDark ? "#F97316" : "#EA580C", strokeWidth: 2 }}
+                          fill="url(#timelineImpactGrad)"
+                          dot={{ r: 3.5, fill: currentEvent.impact.startsWith('-') ? (isDark ? "#ef4444" : "#dc2626") : (isDark ? "#10b981" : "#059669"), strokeWidth: 1.5, stroke: isDark ? '#0f172a' : '#ffffff' }} 
+                          activeDot={{ r: 6, fill: '#ffffff', stroke: isDark ? "#F97316" : "#EA580C", strokeWidth: 2.5 }}
                           isAnimationActive={true} 
                         />
-                      </LineChart>
+                      </AreaChart>
                     </ResponsiveContainer>
                   </div>
-                  <p className="text-[10px] text-center text-muted mt-5">Verified Bitcoin price levels 7 days before and after event release</p>
+
+                  {/* Summary Metric Ribbon Below Graph */}
+                  <div className="grid grid-cols-3 gap-2 pt-3 border-t border-card-border/60 text-center text-xs">
+                    <div>
+                      <span className="text-[10px] text-muted block">Event Baseline</span>
+                      <strong className="text-foreground">${baselinePrice.toLocaleString()}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted block">Observed Net Impact</span>
+                      <strong className={currentEvent.impact.startsWith('-') ? 'text-rose-500' : 'text-emerald-500'}>
+                        {currentEvent.impact}
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-muted block">Reaction Window</span>
+                      <strong className="text-foreground">{currentEvent.timeframe}</strong>
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (
