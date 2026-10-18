@@ -316,9 +316,9 @@ export default function HistoricalPatterns() {
                       </span>
                       <span className="text-[10px] text-muted">• {event.source}</span>
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                        event.direction === 'BULLISH' ? 'bg-success/10 text-success' :
-                        event.direction === 'BEARISH' ? 'bg-danger/10 text-danger' :
-                        'bg-blue-500/10 text-blue-400'
+                        event.direction === 'BULLISH' ? (isDark ? 'bg-success/10 text-success' : 'bg-emerald-50 text-emerald-700 border border-emerald-200') :
+                        event.direction === 'BEARISH' ? (isDark ? 'bg-danger/10 text-danger' : 'bg-rose-50 text-rose-700 border border-rose-200') :
+                        (isDark ? 'bg-slate-700/60 text-slate-200 border border-slate-600/50' : 'bg-slate-100 text-slate-800 border border-slate-300')
                       }`}>
                         {event.direction}
                       </span>

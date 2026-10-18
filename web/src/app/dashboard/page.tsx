@@ -27,6 +27,12 @@ export default function Dashboard() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [filter, setFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  // Reset pagination when filter or search changes
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [filter, searchQuery]);
   
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -395,7 +401,7 @@ export default function Dashboard() {
               {activeXGBoostPredictions.length > 3 && (
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="text-xs font-semibold px-3 py-1 rounded-md bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                  className="text-xs font-semibold px-3 py-1 rounded-md bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer"
                 >
                   View All Predictions ({activeXGBoostPredictions.length})
                 </button>
@@ -418,7 +424,7 @@ export default function Dashboard() {
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${
                           item.sentiment === 'POSITIVE' ? 'bg-success/10 text-success' :
                           item.sentiment === 'NEGATIVE' ? 'bg-danger/10 text-danger' :
-                          'bg-blue-500/10 text-blue-400'
+                          (isDark ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30' : 'bg-blue-50 text-blue-700 border border-blue-200')
                         }`}>
                           {item.sentiment || 'NEUTRAL'}
                         </span>
@@ -433,9 +439,9 @@ export default function Dashboard() {
                       <div>
                         <span className="text-[9px] font-medium text-muted block uppercase tracking-wider">Direction</span>
                         <span className={`text-xs font-extrabold ${
-                          item.predicted_direction === 'BULLISH' ? 'text-emerald-400' :
-                          item.predicted_direction === 'BEARISH' ? 'text-rose-400' :
-                          'text-slate-300'
+                          item.predicted_direction === 'BULLISH' ? (isDark ? 'text-emerald-400' : 'text-emerald-600') :
+                          item.predicted_direction === 'BEARISH' ? (isDark ? 'text-rose-400' : 'text-rose-600') :
+                          (isDark ? 'text-slate-300' : 'text-slate-700')
                         }`}>
                           {item.predicted_direction || 'NEUTRAL'}
                         </span>
@@ -494,7 +500,7 @@ export default function Dashboard() {
               >
                 <button 
                   onClick={() => setSelectedPrediction(null)}
-                  className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-card-border/50 text-muted hover:text-foreground transition-colors"
+                  className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-card-border/50 text-muted hover:text-foreground transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -548,7 +554,7 @@ export default function Dashboard() {
                 <div className="flex justify-end">
                   <button 
                     onClick={() => setSelectedPrediction(null)}
-                    className="px-4 py-2 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
+                    className="px-4 py-2 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors cursor-pointer"
                   >
                     Close Breakdown
                   </button>
@@ -575,7 +581,7 @@ export default function Dashboard() {
                   </div>
                   <button 
                     onClick={() => setIsModalOpen(false)}
-                    className="p-1 rounded-lg hover:bg-card-border/50 text-muted hover:text-foreground transition-colors"
+                    className="p-1 rounded-lg hover:bg-card-border/50 text-muted hover:text-foreground transition-colors cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -592,7 +598,7 @@ export default function Dashboard() {
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${
                               item.sentiment === 'POSITIVE' ? 'bg-success/10 text-success' :
                               item.sentiment === 'NEGATIVE' ? 'bg-danger/10 text-danger' :
-                              'bg-blue-500/10 text-blue-400'
+                              (isDark ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30' : 'bg-blue-50 text-blue-700 border border-blue-200')
                             }`}>
                               {item.sentiment || 'NEUTRAL'}
                             </span>
@@ -606,9 +612,9 @@ export default function Dashboard() {
                           <div className="text-center">
                             <span className="text-[9px] font-medium text-muted block uppercase">Direction</span>
                             <span className={`text-xs font-extrabold ${
-                              item.predicted_direction === 'BULLISH' ? 'text-emerald-400' :
-                              item.predicted_direction === 'BEARISH' ? 'text-rose-400' :
-                              'text-slate-300'
+                              item.predicted_direction === 'BULLISH' ? (isDark ? 'text-emerald-400' : 'text-emerald-600') :
+                              item.predicted_direction === 'BEARISH' ? (isDark ? 'text-rose-400' : 'text-rose-600') :
+                              (isDark ? 'text-slate-300' : 'text-slate-700')
                             }`}>
                               {item.predicted_direction || 'NEUTRAL'} ({item.estimated_price_change_pct || '+0.00%'})
                             </span>
@@ -701,11 +707,14 @@ export default function Dashboard() {
         {/* Live News Feed */}
         <div id="live-news" ref={newsSectionRef} className="rounded-xl bg-card border border-card-border overflow-hidden flex flex-col scroll-mt-24">
           <div className="p-4 border-b border-card-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium text-foreground">Live News Feed</h3>
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-sm font-semibold text-foreground">Live News Feed</h3>
               <span className="flex items-center gap-1 text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span>
                 Live
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-primary/10 text-primary border border-primary/20">
+                {filteredNews.length} {filteredNews.length === 1 ? 'Article' : 'Articles'}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -713,7 +722,7 @@ export default function Dashboard() {
                 <button 
                   key={i} 
                   onClick={() => setFilter(f)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border ${filter === f ? 'bg-primary border-primary text-white' : 'bg-background border-card-border text-muted hover:text-foreground transition-colors'}`}>
+                  className={`px-3 py-1 rounded-full text-xs font-medium border cursor-pointer ${filter === f ? 'bg-primary border-primary text-white' : 'bg-background border-card-border text-muted hover:text-foreground transition-colors'}`}>
                   {f}
                 </button>
               ))}
@@ -738,7 +747,7 @@ export default function Dashboard() {
             ) : filteredNews.length === 0 ? (
               <div className="p-8 text-center text-muted">No news articles found matching your criteria.</div>
             ) : (
-              filteredNews.map((news) => {
+              filteredNews.slice(0, visibleCount).map((news) => {
                 const rawScore = news.score !== undefined && news.score !== null ? parseFloat(news.score) : 0.85;
                 const scorePct = (rawScore > 1.0 ? rawScore : rawScore * 100).toFixed(1);
                 
@@ -750,7 +759,7 @@ export default function Dashboard() {
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${
                           news.sentiment === 'POSITIVE' ? 'bg-success/10 text-success border border-success/20' : 
                           news.sentiment === 'NEGATIVE' ? 'bg-danger/10 text-danger border border-danger/20' : 
-                          'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                          (isDark ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30' : 'bg-blue-50 text-blue-700 border border-blue-200')
                         }`}>
                           {news.sentiment || 'NEUTRAL'}
                         </span>
@@ -765,9 +774,9 @@ export default function Dashboard() {
                         {/* XGBoost Predicted Market Direction Badge */}
                         {news.predicted_direction && (
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm ${
-                            news.predicted_direction === 'BULLISH' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                            news.predicted_direction === 'BEARISH' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
-                            'bg-slate-500/20 text-slate-300 border border-slate-500/30'
+                            news.predicted_direction === 'BULLISH' ? (isDark ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-50 text-emerald-700 border border-emerald-200') :
+                            news.predicted_direction === 'BEARISH' ? (isDark ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-rose-50 text-rose-700 border border-rose-200') :
+                            (isDark ? 'bg-slate-700/60 text-slate-200 border border-slate-600/50' : 'bg-slate-100 text-slate-800 border border-slate-300')
                           }`}>
                             {news.predicted_direction} {news.estimated_price_change_pct ? `(${news.estimated_price_change_pct})` : ''}
                           </span>
@@ -804,7 +813,7 @@ export default function Dashboard() {
                         </span>
                         <span className="text-[10px] text-muted block">FinBERT Confidence</span>
                       </div>
-                      <a href={news.link} target="_blank" rel="noopener noreferrer" className="text-xs text-muted hover:text-primary transition-colors flex items-center gap-1 mt-1">
+                      <a href={news.link} target="_blank" rel="noopener noreferrer" className="text-xs text-muted hover:text-primary transition-colors flex items-center gap-1 mt-1 cursor-pointer">
                         Read More <ArrowUpRight className="w-3 h-3" />
                       </a>
                     </div>
@@ -814,17 +823,26 @@ export default function Dashboard() {
             )}
           </div>
           
-          {hasMore && filteredNews.length > 0 && filter === 'All' && searchQuery === '' && (
+          {visibleCount < filteredNews.length ? (
+            <div className="p-4 border-t border-card-border flex justify-center">
+              <button 
+                onClick={() => setVisibleCount(prev => Math.min(prev + 10, filteredNews.length))}
+                className="px-5 py-2 rounded-lg bg-card border border-card-border hover:bg-card-border/60 text-xs font-semibold text-foreground transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:border-primary/40"
+              >
+                Load More News ({filteredNews.length - visibleCount} remaining)
+              </button>
+            </div>
+          ) : (hasMore && filteredNews.length > 0 && filter === 'All' && searchQuery === '' && (
             <div className="p-4 border-t border-card-border flex justify-center">
               <button 
                 onClick={handleLoadMore}
                 disabled={isLoadingMore}
-                className="text-xs font-medium text-muted hover:text-foreground transition-colors disabled:opacity-50"
+                className="text-xs font-medium text-muted hover:text-foreground transition-colors disabled:opacity-50 cursor-pointer"
               >
-                {isLoadingMore ? "Loading..." : "Load More Articles"}
+                {isLoadingMore ? "Loading..." : "Load Older Articles from Database"}
               </button>
             </div>
-          )}
+          ))}
         </div>
       </motion.div>
     </DashboardLayout>

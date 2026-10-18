@@ -23,7 +23,7 @@ export default function Navbar() {
           onClick={toggleTheme}
           aria-label="Toggle theme"
           title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          className="p-2 rounded-full hover:bg-card border border-card-border/60 text-muted hover:text-foreground transition-colors"
+          className="p-2 rounded-full hover:bg-card border border-card-border/60 text-muted hover:text-foreground transition-colors cursor-pointer"
         >
           {theme === "dark" ? (
             <Sun className="w-4 h-4 text-amber-400" />
@@ -34,7 +34,7 @@ export default function Navbar() {
 
         <Link 
           href="/signin" 
-          className="px-4 py-1.5 md:px-5 md:py-2 rounded-md bg-card border border-card-border text-sm font-medium text-foreground hover:bg-card-border transition-colors whitespace-nowrap"
+          className="px-4 py-1.5 md:px-5 md:py-2 rounded-md bg-card border border-card-border text-sm font-medium text-foreground hover:bg-card-border transition-colors whitespace-nowrap cursor-pointer"
         >
           Sign In
         </Link>

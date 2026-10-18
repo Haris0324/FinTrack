@@ -366,7 +366,7 @@ export default function SettingsPage() {
             toggleTheme();
             toast.success(`Switched to ${theme === "dark" ? "Light" : "Dark"} Mode`);
           }}
-          className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-background border border-card-border hover:border-primary text-foreground text-xs font-semibold shadow-sm transition-all shrink-0 hover:bg-card-border/20"
+          className="flex items-center gap-2.5 px-4 py-2 rounded-xl bg-background border border-card-border hover:border-primary text-foreground text-xs font-semibold shadow-sm transition-all shrink-0 hover:bg-card-border/20 cursor-pointer"
         >
           {theme === "dark" ? (
             <>
@@ -764,7 +764,7 @@ export default function SettingsPage() {
           </div>
           <button
             onClick={() => signOut({ callbackUrl: '/signin' })}
-            className="flex items-center gap-2 px-4 py-2 bg-card border border-card-border text-danger text-sm font-medium rounded-lg hover:bg-danger/10 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-card border border-card-border text-danger text-sm font-medium rounded-lg hover:bg-danger/10 transition-colors cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             Sign Out
@@ -778,7 +778,7 @@ export default function SettingsPage() {
           <div className="w-full lg:w-64 shrink-0 flex flex-col gap-2 p-4 rounded-xl bg-card border border-card-border">
             <button
               onClick={() => setActiveTab("profile")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${activeTab === "profile"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left cursor-pointer ${activeTab === "profile"
                   ? "bg-primary text-white"
                   : "text-muted hover:bg-background hover:text-foreground"
                 }`}
@@ -788,7 +788,7 @@ export default function SettingsPage() {
             </button>
             <button
               onClick={() => setActiveTab("appearance")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${activeTab === "appearance"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left cursor-pointer ${activeTab === "appearance"
                   ? "bg-primary text-white"
                   : "text-muted hover:bg-background hover:text-foreground"
                 }`}
@@ -798,7 +798,7 @@ export default function SettingsPage() {
             </button>
             <button
               onClick={() => setActiveTab("security")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${activeTab === "security"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left cursor-pointer ${activeTab === "security"
                   ? "bg-primary text-white"
                   : "text-muted hover:bg-background hover:text-foreground"
                 }`}
@@ -808,7 +808,7 @@ export default function SettingsPage() {
             </button>
             <button
               onClick={() => setActiveTab("notifications")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${activeTab === "notifications"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left cursor-pointer ${activeTab === "notifications"
                   ? "bg-primary text-white"
                   : "text-muted hover:bg-background hover:text-foreground"
                 }`}
@@ -818,7 +818,7 @@ export default function SettingsPage() {
             </button>
             <button
               onClick={() => setActiveTab("activity")}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left ${activeTab === "activity"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-left cursor-pointer ${activeTab === "activity"
                   ? "bg-primary text-white"
                   : "text-muted hover:bg-background hover:text-foreground"
                 }`}

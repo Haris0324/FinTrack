@@ -147,8 +147,8 @@ export default function AdminPanel() {
             <span className={`h-2 w-2 rounded-full ${data?.metrics.isIngestionRecent ? "bg-emerald-400" : "bg-amber-400"}`} />
             {data?.metrics.lastScrapedAt ? `Last article ${new Date(data.metrics.lastScrapedAt).toLocaleString()}` : "No ingestion timestamp"}
           </span>
-          <button type="button" disabled={loading} onClick={() => { setLoading(true); void refresh(); }} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-card-border bg-card px-3 py-2 text-sm text-foreground transition hover:bg-card-border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />Refresh</button>
-          <Link href="/dashboard/settings" className="inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Account settings</Link>
+          <button type="button" disabled={loading} onClick={() => { setLoading(true); void refresh(); }} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-card-border bg-card px-3 py-2 text-sm text-foreground transition hover:bg-card-border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"><RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />Refresh</button>
+          <Link href="/dashboard/settings" className="inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer">Account settings</Link>
         </div>
       </div>
 
@@ -178,7 +178,7 @@ export default function AdminPanel() {
                   <td className="px-5 py-3"><span className={`inline-flex items-center gap-2 text-xs ${source.enabled ? "text-emerald-400" : "text-muted"}`}><span className={`h-1.5 w-1.5 rounded-full ${source.enabled ? "bg-emerald-400" : "bg-slate-500"}`} />{source.enabled ? "Active" : "Paused"}</span></td>
                   <td className="max-w-[300px] px-5 py-3"><p className="font-medium text-foreground">{source.name}</p><p className="truncate text-xs text-muted">{source.url}</p></td>
                   <td className="px-5 py-3 text-foreground">{source.articles24h}</td>
-                  <td className="px-5 py-3 text-right"><button disabled={savingUrl === source.url} onClick={() => void toggleSource(source)} className="rounded-md border border-card-border px-3 py-1.5 text-xs text-foreground hover:bg-card-border disabled:opacity-50">{savingUrl === source.url ? "Saving…" : source.enabled ? "Pause" : "Enable"}</button></td>
+                  <td className="px-5 py-3 text-right"><button disabled={savingUrl === source.url} onClick={() => void toggleSource(source)} className="rounded-md border border-card-border px-3 py-1.5 text-xs text-foreground hover:bg-card-border disabled:opacity-50 cursor-pointer">{savingUrl === source.url ? "Saving…" : source.enabled ? "Pause" : "Enable"}</button></td>
                 </tr>)}
               </tbody>
             </table>
@@ -186,13 +186,13 @@ export default function AdminPanel() {
           <form onSubmit={addSource} className="grid grid-cols-1 gap-2 border-t border-card-border p-4 sm:grid-cols-[1fr_2fr_auto]">
             <input required value={sourceName} onChange={event => setSourceName(event.target.value)} placeholder="Source name" className="rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary" />
             <input required type="url" value={sourceUrl} onChange={event => setSourceUrl(event.target.value)} placeholder="https://example.com/feed.xml" className="rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary" />
-            <button disabled={adding} className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"><Plus className="h-4 w-4" />Add source</button>
+            <button disabled={adding} className="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50 cursor-pointer"><Plus className="h-4 w-4" />Add source</button>
           </form>
           <form onSubmit={saveKeywords} className="grid grid-cols-1 gap-3 border-t border-card-border p-4 sm:grid-cols-[1fr_auto] sm:items-end">
             <label className="block text-xs text-muted">Monitored keywords <span className="ml-1">(comma separated; empty means no keyword filter)</span>
               <input value={keywordsInput} onChange={event => setKeywordsInput(event.target.value)} placeholder="bitcoin, BTC, Ethereum" className="mt-2 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary" />
             </label>
-            <button disabled={savingKeywords} className="rounded-lg border border-card-border px-4 py-2 text-sm text-foreground hover:bg-card-border disabled:opacity-50">{savingKeywords ? "Saving…" : "Save keywords"}</button>
+            <button disabled={savingKeywords} className="rounded-lg border border-card-border px-4 py-2 text-sm text-foreground hover:bg-card-border disabled:opacity-50 cursor-pointer">{savingKeywords ? "Saving…" : "Save keywords"}</button>
           </form>
         </section>
 
@@ -209,7 +209,7 @@ export default function AdminPanel() {
                 <label className="flex-1 text-xs text-muted">High impact threshold (% predicted move)
                   <input type="number" min="0.25" max="15" step="0.25" required value={impactThreshold} onChange={event => setImpactThreshold(event.target.value)} className="mt-2 w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary" />
                 </label>
-                <button disabled={savingThreshold} className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white disabled:opacity-50">{savingThreshold ? "Saving…" : "Save settings"}</button>
+                <button disabled={savingThreshold} className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white disabled:opacity-50 cursor-pointer">{savingThreshold ? "Saving…" : "Save settings"}</button>
               </div>
               <label className="flex items-center gap-2 text-sm text-foreground"><input type="checkbox" checked={emailAlertsEnabled} onChange={event => setEmailAlertsEnabled(event.target.checked)} className="accent-orange-500" />Email me a digest when high impact articles are processed</label>
               <input type="email" value={alertEmail} onChange={event => setAlertEmail(event.target.value)} placeholder="Alert recipient email" className="w-full rounded-lg border border-card-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary" />

@@ -301,7 +301,7 @@ function SignInContent() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-3 mt-4 transition-colors"
+            className="w-full bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg py-3 mt-4 transition-colors cursor-pointer"
           >
             {loading ? "Signing In..." : requires2FA ? "Verify Code & Sign In" : "Sign In"}
           </button>
@@ -313,10 +313,10 @@ function SignInContent() {
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4">
-          <button type="button" onClick={() => signIn("google", { callbackUrl: "/auth/redirect" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border bg-card rounded-lg hover:bg-card-border text-foreground transition-colors text-sm font-medium">
+          <button type="button" onClick={() => signIn("google", { callbackUrl: "/auth/redirect" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border bg-card rounded-lg hover:bg-card-border text-foreground transition-colors text-sm font-medium cursor-pointer">
             Google
           </button>
-          <button type="button" onClick={() => signIn("github", { callbackUrl: "/auth/redirect" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border bg-card rounded-lg hover:bg-card-border text-foreground transition-colors text-sm font-medium">
+          <button type="button" onClick={() => signIn("github", { callbackUrl: "/auth/redirect" })} className="flex items-center justify-center gap-2 py-2.5 border border-card-border bg-card rounded-lg hover:bg-card-border text-foreground transition-colors text-sm font-medium cursor-pointer">
             GitHub
           </button>
         </div>

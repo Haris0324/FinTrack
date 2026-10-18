@@ -50,7 +50,7 @@ export default function HeaderActions() {
     <div className="flex items-center gap-3 md:gap-4">
       <button 
         onClick={scrollToNews}
-        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-card-border text-xs font-medium hover:bg-card-border transition-colors text-foreground"
+        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-card-border text-xs font-medium hover:bg-card-border transition-colors text-foreground cursor-pointer"
       >
         <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
         Live Updates
@@ -61,7 +61,7 @@ export default function HeaderActions() {
         onClick={toggleTheme}
         aria-label="Toggle theme"
         title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        className="p-2 rounded-full hover:bg-card border border-transparent hover:border-card-border transition-colors relative focus:outline-none"
+        className="p-2 rounded-full hover:bg-card border border-transparent hover:border-card-border transition-colors relative focus:outline-none cursor-pointer"
       >
         {theme === "dark" ? (
           <Sun className="w-5 h-5 text-amber-400 hover:rotate-45 transition-transform duration-300" />
@@ -73,7 +73,7 @@ export default function HeaderActions() {
       <div className="relative">
         <button 
           onClick={handleOpenNotifications}
-          className="p-2 rounded-full hover:bg-card border border-transparent hover:border-card-border transition-colors relative focus:outline-none"
+          className="p-2 rounded-full hover:bg-card border border-transparent hover:border-card-border transition-colors relative focus:outline-none cursor-pointer"
         >
           <Bell className="w-5 h-5 text-muted hover:text-foreground transition-colors" />
           {hasUnread && (
