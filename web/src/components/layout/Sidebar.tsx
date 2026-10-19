@@ -11,7 +11,6 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
 
   const navItems = [
     { icon: <LayoutDashboard className="w-5 h-5" />, label: "Dashboard", href: "/dashboard" },
-    { icon: <ArrowLeftRight className="w-5 h-5" />, label: "Bitcoin Trading", href: "/dashboard/trade" },
     { icon: <Settings className="w-5 h-5" />, label: "Sentiment Analysis", href: "/dashboard/sentiment" },
     { icon: <History className="w-5 h-5" />, label: "Historical Patterns", href: "/dashboard/history" },
     { icon: <Bell className="w-5 h-5" />, label: "Predictions & Alerts", href: "/dashboard/alerts" },
@@ -20,6 +19,8 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
   if (session?.user && (session.user as any).role === "admin") {
     navItems.push({ icon: <Settings className="w-5 h-5" />, label: "Admin Panel", href: "/admin" });
   }
+
+  navItems.push({ icon: <ArrowLeftRight className="w-5 h-5" />, label: "Bitcoin Trading", href: "/dashboard/trade" });
 
   return (
     <>
