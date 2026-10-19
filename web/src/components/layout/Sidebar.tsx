@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, History, Bell, Settings, User as UserIcon, X } from "lucide-react";
+import { LayoutDashboard, History, Bell, Settings, ArrowLeftRight } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 
@@ -11,6 +11,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
 
   const navItems = [
     { icon: <LayoutDashboard className="w-5 h-5" />, label: "Dashboard", href: "/dashboard" },
+    { icon: <ArrowLeftRight className="w-5 h-5" />, label: "Bitcoin Trading", href: "/dashboard/trade" },
     { icon: <Settings className="w-5 h-5" />, label: "Sentiment Analysis", href: "/dashboard/sentiment" },
     { icon: <History className="w-5 h-5" />, label: "Historical Patterns", href: "/dashboard/history" },
     { icon: <Bell className="w-5 h-5" />, label: "Predictions & Alerts", href: "/dashboard/alerts" },

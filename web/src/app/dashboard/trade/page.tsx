@@ -20,22 +20,24 @@ export default function BitcoinTradingPage() {
             <p className="mt-4 max-w-2xl text-sm leading-6 text-muted md:text-base">
               Request a live THORChain quote and trade BTC ↔ ETH from FinTrack with your own wallet. You review each transaction in your wallet before it is signed or sent.
             </p>
-            <Link
-              href="/dashboard/bitcoin-quote"
-              className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
-            >
-              Start a trade in FinTrack
-              <ArrowLeftRight className="h-4 w-4" />
-            </Link>
-            <a
-              href={SWAP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-card-border px-5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-background"
-            >
-              Open THORChain&apos;s swap site
-              <ExternalLink className="h-4 w-4" />
-            </a>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                href="/dashboard/bitcoin-quote"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+              >
+                Start a trade in FinTrack
+                <ArrowLeftRight className="h-4 w-4" />
+              </Link>
+              <a
+                href={SWAP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-card-border px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-background"
+              >
+                Open THORChain&apos;s swap site
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
             <p className="mt-3 text-xs text-muted">FinTrack never asks for your recovery phrase or private key. Mainnet trading must be enabled by the operator.</p>
           </div>
 
