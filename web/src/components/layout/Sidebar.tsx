@@ -16,11 +16,11 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
     { icon: <Bell className="w-5 h-5" />, label: "Predictions & Alerts", href: "/dashboard/alerts" },
   ];
 
+  navItems.push({ icon: <ArrowLeftRight className="w-5 h-5" />, label: "Bitcoin Trading", href: "/dashboard/trade" });
+
   if (session?.user && (session.user as any).role === "admin") {
     navItems.push({ icon: <Settings className="w-5 h-5" />, label: "Admin Panel", href: "/admin" });
   }
-
-  navItems.push({ icon: <ArrowLeftRight className="w-5 h-5" />, label: "Bitcoin Trading", href: "/dashboard/trade" });
 
   return (
     <>

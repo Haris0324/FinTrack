@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, User as UserIcon, Sun, Moon } from "lucide-react";
+import { Bell, User as UserIcon, Sun, Moon, ArrowLeftRight } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
@@ -48,6 +48,16 @@ export default function HeaderActions() {
 
   return (
     <div className="flex items-center gap-3 md:gap-4">
+      <Link
+        href="/dashboard/trade"
+        title="Trade Bitcoin"
+        aria-label="Trade Bitcoin"
+        className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-2.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-white sm:px-3"
+      >
+        <ArrowLeftRight className="h-4 w-4" />
+        <span className="hidden sm:inline">Trade BTC</span>
+      </Link>
+
       <button 
         onClick={scrollToNews}
         className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-card-border text-xs font-medium hover:bg-card-border transition-colors text-foreground cursor-pointer"
