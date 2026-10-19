@@ -50,9 +50,10 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
           {navItems.map((item, i) => {
             // For dashboard, we only want exact match to avoid matching /dashboard/history too.
             // For others, we can match startsWith or exact.
+            const isBitcoinQuoteRoute = item.href === "/dashboard/trade" && pathname.startsWith("/dashboard/bitcoin-quote");
             const isActive = item.href === '/dashboard' 
               ? pathname === '/dashboard' 
-              : pathname.startsWith(item.href);
+              : pathname.startsWith(item.href) || isBitcoinQuoteRoute;
 
             return (
               <Link

@@ -6,12 +6,14 @@ import HeaderActions from "./HeaderActions";
 import SessionTimeout from "../auth/SessionTimeout";
 import { Menu, Loader2 } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
+  const isBitcoinTradingPage = pathname?.startsWith("/dashboard/trade") || pathname?.startsWith("/dashboard/bitcoin-quote");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -43,7 +45,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h2 className="text-sm font-medium text-muted hidden sm:block">Overview</h2>
+            <h2 className={isBitcoinTradingPage ? "flex items-center gap-2 text-sm font-semibold text-foreground" : "hidden text-sm font-medium text-muted sm:block"}>
+              {isBitcoinTradingPage ? (
+                <>
+                  <span className="text-primary">FinTrack</span>
+                  <span className="text-muted">/</span>
+                  <span>Bitcoin Trading</span>
+                </>
+              ) : "Overview"}
+            </h2>
           </div>
           <HeaderActions />
         </header>
